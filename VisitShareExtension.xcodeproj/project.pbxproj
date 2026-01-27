@@ -562,7 +562,7 @@
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtension/VisitShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 01.01.26C027;
-				DEVELOPMENT_TEAM = J434W9VGHF;
+				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtension/Info.plist;
@@ -578,7 +578,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.02;
-				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -598,7 +598,7 @@
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtension/VisitShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 01.01.26C027;
-				DEVELOPMENT_TEAM = J434W9VGHF;
+				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtension/Info.plist;
@@ -614,7 +614,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.02;
-				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -716,7 +716,7 @@
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtensionAppEx/VisitShareExtensionAppEx.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 01.01.26C027;
-				DEVELOPMENT_TEAM = J434W9VGHF;
+				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtensionAppEx/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VisitShareExtensionAppEx;
@@ -729,7 +729,7 @@
 				);
 				MACH_O_TYPE = mh_execute;
 				MARKETING_VERSION = 1.02;
-				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension.VisitShareExtensionAppEx;
+				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension1.VisitShareExtensionAppEx;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -747,7 +747,7 @@
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtensionAppEx/VisitShareExtensionAppEx.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 01.01.26C027;
-				DEVELOPMENT_TEAM = J434W9VGHF;
+				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtensionAppEx/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VisitShareExtensionAppEx;
@@ -760,7 +760,7 @@
 				);
 				MACH_O_TYPE = mh_execute;
 				MARKETING_VERSION = 1.02;
-				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension.VisitShareExtensionAppEx;
+				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension1.VisitShareExtensionAppEx;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

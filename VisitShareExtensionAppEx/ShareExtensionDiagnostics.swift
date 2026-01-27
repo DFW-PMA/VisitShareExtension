@@ -199,7 +199,7 @@ struct ShareExtensionDiagnostics
         // Note: This is in the .entitlements file, not Info.plist, so may not be accessible this way
         appLogMsg("  Note: App Group entitlement is in .entitlements file, verify in Xcode:")
         appLogMsg("    Target → Signing & Capabilities → App Groups")
-        appLogMsg("    Should include: group.com.PreferredMobileApplications.sharedVisitApps")
+        appLogMsg("    Should include: group.com.PreferredMobileApplications.sharedVisitApps1")
     }
     
 }

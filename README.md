@@ -30,7 +30,7 @@ VisitShareExtension.app (Helper/Container App)
 
 All JustMacApps products share a single App Group:
 ```
-group.com.PreferredMobileApplications.sharedVisitApps
+group.com.PreferredMobileApplications.sharedVisitApps1
 ```
 
 This allows:
@@ -81,12 +81,12 @@ VisitShareExtension/
 
 **Apple Developer Portal:**
 1. Identifiers → App Groups → Add
-2. Create: `group.com.PreferredMobileApplications.sharedVisitApps`
+2. Create: `group.com.PreferredMobileApplications.sharedVisitApps1`
 
 **In Xcode (Helper App + Extension):**
 1. Select target → Signing & Capabilities
 2. + Capability → App Groups
-3. Check `group.com.PreferredMobileApplications.sharedVisitApps`
+3. Check `group.com.PreferredMobileApplications.sharedVisitApps1`
 
 **In each Target App (VisitVerify, VMA, etc.):**
 1. Add the same App Group capability

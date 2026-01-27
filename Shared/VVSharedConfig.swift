@@ -31,7 +31,7 @@ enum VVSharedConfig
     // - All participating apps' entitlements
     // - Share Extension entitlements
 
-    static let appGroupID                   = "group.com.PreferredMobileApplications.sharedVisitApps"
+    static let appGroupID                   = "group.com.PreferredMobileApplications.sharedVisitApps1"
     
     // MARK:- File Paths
     
