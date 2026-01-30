@@ -1,20 +1,50 @@
 //
-//  HelperContentView.swift
+//  ContentView.swift
 //  VisitShareExtension
 //
 //  Main view showing instructions and available target apps
+//  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
 import Foundation
 import SwiftUI
 
-struct HelperContentView:View
+struct ContentView:View
 {
     
+    struct ClassInfo
+    {
+        static let sClsId        = "ContentView"
+        static let sClsVers      = "v1.0501"
+        static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        static let bClsTrace     = true
+        static let bClsFileLog   = true
+    }
+
+    // App Data field(s):
+
+//  @Environment(\.dismiss)              var dismiss
+    @Environment(\.presentationMode)     var presentationMode
+    @Environment(\.openURL)              var openURL
+    @Environment(\.appGlobalDeviceType)  var appGlobalDeviceType
+
+                            var appGlobalInfo:AppGlobalInfo   = AppGlobalInfo.ClassSingleton.appGlobalInfo
+
+    @State          private var cAppAboutButtonPresses:Int    = 0
+    @State          private var cAppSettingsButtonPresses:Int = 0
+
+    @State          private var isAppAboutViewModal:Bool      = false
+    @State          private var showingSettingsView:Bool      = false
+
     var body:some View
     {
+        
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - [\(String(describing:JmXcodeBuildSettings.jmAppVersionAndBuildNumber))]...")
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'appGlobalDeviceType' is (\(String(describing:appGlobalDeviceType)))...")
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'AppGlobalInfo.bIsAppLoggingByVisitor' is [\(AppGlobalInfo.bIsAppLoggingByVisitor)] and 'AppGlobalInfo.sAppLoggingMethod' is [\(AppGlobalInfo.sAppLoggingMethod)]...")
 
-        NavigationView
+        NavigationStack
         {
             ScrollView
             {
@@ -30,6 +60,69 @@ struct HelperContentView:View
             }
             .navigationTitle("VisitShareExtension")
             .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar
+            {
+                ToolbarItem(placement:.navigationBarLeading) 
+                {
+                    Button
+                    {
+                        self.cAppAboutButtonPresses += 1
+                
+                        let _ = appLogMsg("\(ClassInfo.sClsDisp):ContentView.Button(Xcode).'App About'.#(\(self.cAppAboutButtonPresses))...")
+                
+                        self.isAppAboutViewModal.toggle()
+                    }
+                    label:
+                    {
+                        VStack(alignment:.center)
+                        {
+                            Label("", systemImage: "questionmark.diamond")
+                                .help(Text("App About Information"))
+                                .imageScale(.small)
+                            Text("About")
+                                .font(.caption2)
+                        }
+                    }
+                    .fullScreenCover(isPresented:$isAppAboutViewModal)
+                    {
+                        AppAboutView()
+                    }
+                #if os(macOS)
+                    .buttonStyle(.borderedProminent)
+                //  .background(???.isPressed ? .blue : .gray)
+                    .cornerRadius(10)
+                    .foregroundColor(Color.primary)
+                #endif
+                    .padding()
+                }
+
+                ToolbarItem(placement:.navigationBarTrailing) 
+                {
+                    Button
+                    {
+                        self.cAppSettingsButtonPresses += 1
+
+                        let _ = appLogMsg("\(ClassInfo.sClsDisp):ContentView.Button(Xcode).'Settings'.#(\(self.cAppSettingsButtonPresses))...")
+
+                        self.showingSettingsView.toggle()
+                    }
+                    label:
+                    {
+                        Label("Settings", systemImage:"gear")
+                    }
+                #if os(macOS)
+                    .buttonStyle(.borderedProminent)
+                    .cornerRadius(10)
+                    .foregroundColor(Color.primary)
+                #endif
+                    .padding()
+                }
+            }
+            .fullScreenCover(isPresented:$showingSettingsView)
+            {
+                SettingsSingleView()
+            }
         }
 
     }
@@ -196,6 +289,6 @@ struct TargetAppRow:View
 
 #Preview
 {
-    HelperContentView()
+    ContentView()
 }
 

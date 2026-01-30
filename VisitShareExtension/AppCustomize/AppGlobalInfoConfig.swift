@@ -22,7 +22,7 @@ struct AppGlobalInfoConfig
 {
     
     static let sGlobalInfoAppId:String                                   = "VisitShareExtension"
-    static let sGlobalInfoAppVers:String                                 = "v1.5601"
+    static let sGlobalInfoAppVers:String                                 = "v1.5603"
     static let sGlobalInfoAppDisp:String                                 = sGlobalInfoAppId+".("+sGlobalInfoAppVers+"): "
     static let sGlobalInfoAppCopyRight:String                            = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
     static let sGlobalInfoAppLogFilespecMaxSize:Int64                    = 10000000
@@ -57,7 +57,7 @@ struct AppGlobalInfoConfig
     static let bIssueShortAppUserNotifications:Bool                      = true
     static let bPerformAppCoreLocationTesting:Bool                       = false
     static let bPerformAppDevTesting:Bool                                = false
-    static let bEnableAppReleaseDownloads:Bool                           = false
+    static let bEnableAppReleaseDownloads:Bool                           = true
     static let bEnableAppAdsPlaceholder:Bool                             = false
     static let bEnableAppAdsTesting:Bool                                 = false
     static let sAdSenseAppAdsTesting:String                              = "ca-app-pub-3940256099942544/2435281174"     // Google AdMod 'test' Ads...
@@ -68,7 +68,7 @@ struct AppGlobalInfoConfig
     static let bTestStringManipulations:Bool                             = false
     static let bTestAppBigTestTracking1:Bool                             = false
     static let bTestAppBigTestTracking2:Bool                             = false
-    static let bTestAppDeepCopyUtility:Bool                              = false
+    static let bTestAppDeepCopyUtility:Bool                              = true
     static let sAppUploadNotifyFrom:String                               = "dcox@justmacapps.net"
     static let iAlertViaSwiftUITimeout:Double                            = 20.00
     static let iAlertViaUIKitTimeout:Double                              = 5.00

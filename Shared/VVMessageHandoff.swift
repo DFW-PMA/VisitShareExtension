@@ -15,7 +15,7 @@ struct VVMessageHandoff:Codable, Equatable
     struct ClassInfo
     {
         static let sClsId        = "VVMessageHandoff"
-        static let sClsVers      = "v1.0601"
+        static let sClsVers      = "v1.0701"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2025. All Rights Reserved."
         static let bClsTrace     = false
@@ -54,7 +54,7 @@ struct VVMessageHandoff:Codable, Equatable
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         
-        appLogMsg("\(sCurrMethodDisp) Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked...")
         
         self.requestID         = requestID
         self.targetApp         = targetApp.rawValue
@@ -66,7 +66,7 @@ struct VVMessageHandoff:Codable, Equatable
 
         // Exit...
         
-        appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Exiting - 'self' is [\(self.debugDescription)]...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Exiting - 'self' is [\(self.debugDescription)]...")
         
         return
 
@@ -80,7 +80,7 @@ struct VVMessageHandoff:Codable, Equatable
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         
-        appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked...")
         
         // Write this handoff to the shared container (ensure directory exists)...
         
@@ -96,7 +96,7 @@ struct VVMessageHandoff:Codable, Equatable
         let data                     = try encoder.encode(self)
         try data.write(to:fileURL, options:.atomic)
         
-        appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Exiting - Wrote handoff to: [\(fileURL.lastPathComponent)]...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Exiting - Wrote handoff to: [\(fileURL.lastPathComponent)]...")
 
         return
 
@@ -112,7 +112,7 @@ struct VVMessageHandoff:Codable, Equatable
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         
-        appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Invoked - 'fileURL' is [\(fileURL)]...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked - 'fileURL' is [\(fileURL)]...")
         
         let data                     = try Data(contentsOf:fileURL)
         let decoder                  = JSONDecoder()
@@ -128,7 +128,7 @@ struct VVMessageHandoff:Codable, Equatable
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         
-        appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Invoked - 'targetApp' is [\(targetApp.displayName)] - 'requestID' is [\(requestID)]...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked - 'targetApp' is [\(targetApp.displayName)] - 'requestID' is [\(requestID)]...")
         
         // Read a specific handoff by target app and request ID...
 
@@ -138,7 +138,7 @@ struct VVMessageHandoff:Codable, Equatable
         guard FileManager.default.fileExists(atPath:fileURL.path) 
         else { throw VVHandoffError.handoffNotFound }
         
-        appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Intermediate - 'targetApp' is [\(targetApp.displayName)] - 'requestID' is [\(requestID)] - 'fileURL' is [\(fileURL)]...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Intermediate - 'targetApp' is [\(targetApp.displayName)] - 'requestID' is [\(requestID)] - 'fileURL' is [\(fileURL)]...")
         
         return try read(from:fileURL)
 
@@ -150,7 +150,7 @@ struct VVMessageHandoff:Codable, Equatable
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         
-        appLogMsg("\(sCurrMethodDisp) Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked...")
         
         // Delete this handoff file...
 
@@ -160,7 +160,7 @@ struct VVMessageHandoff:Codable, Equatable
         
         try? FileManager.default.removeItem(at:fileURL)
 
-        appLogMsg("\(sCurrMethodDisp) Deleted handoff: [\(fileURL.lastPathComponent)]...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Deleted handoff: [\(fileURL.lastPathComponent)]...")
 
         return
 
@@ -172,7 +172,7 @@ struct VVMessageHandoff:Codable, Equatable
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         
-        appLogMsg("\(sCurrMethodDisp) Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked...")
         
         // Delete a handoff by target and ID...
 
@@ -181,7 +181,7 @@ struct VVMessageHandoff:Codable, Equatable
         
         try? FileManager.default.removeItem(at:fileURL)
 
-        appLogMsg("\(sCurrMethodDisp) Deleted handoff: [\(fileURL.lastPathComponent)]...")
+        appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Deleted handoff: [\(fileURL.lastPathComponent)]...")
 
         return
 

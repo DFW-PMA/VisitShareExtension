@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F08843542F2D022F0097C911 /* ObjcExceptionBridging in Frameworks */ = {isa = PBXBuildFile; productRef = F08843532F2D022F0097C911 /* ObjcExceptionBridging */; };
+		F08843562F2D022F0097C911 /* XCGLogger in Frameworks */ = {isa = PBXBuildFile; productRef = F08843552F2D022F0097C911 /* XCGLogger */; };
+		F0F616092F2D17EE00D8A2BA /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = F0F616082F2D17EE00D8A2BA /* MarkdownUI */; };
 		F0FF3D942F17FAC000B5B936 /* VisitShareExtensionAppEx.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F03293832F1687B8002ACF91 /* VisitShareExtensionAppEx.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -138,6 +141,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F0F616092F2D17EE00D8A2BA /* MarkdownUI in Frameworks */,
+				F08843542F2D022F0097C911 /* ObjcExceptionBridging in Frameworks */,
+				F08843562F2D022F0097C911 /* XCGLogger in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,6 +226,9 @@
 			);
 			name = VisitShareExtension;
 			packageProductDependencies = (
+				F08843532F2D022F0097C911 /* ObjcExceptionBridging */,
+				F08843552F2D022F0097C911 /* XCGLogger */,
+				F0F616082F2D17EE00D8A2BA /* MarkdownUI */,
 			);
 			productName = VisitShareExtension;
 			productReference = F03293552F1686C1002ACF91 /* VisitShareExtension.app */;
@@ -329,6 +338,10 @@
 			);
 			mainGroup = F032934C2F1686C1002ACF91;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F08843522F2D022F0097C911 /* XCRemoteSwiftPackageReference "XCGLogger" */,
+				F0F616072F2D17EE00D8A2BA /* XCRemoteSwiftPackageReference "MarkdownUI" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F03293562F1686C1002ACF91 /* Products */;
 			projectDirPath = "";
@@ -561,14 +574,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtension/VisitShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 01.03.26C027;
+				CURRENT_PROJECT_VERSION = 04.03.26C030;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VisitShareExtension;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © JustMacApps 2023-2026. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © DFWPMA 2024-2026. All rights reserved.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -578,6 +591,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.02;
+				OTHER_SWIFT_FLAGS = "-DUSE_APP_LOGGING_BY_VISITOR";
 				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -597,14 +611,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtension/VisitShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 01.03.26C027;
+				CURRENT_PROJECT_VERSION = 04.03.26C030;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VisitShareExtension;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © JustMacApps 2023-2026. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © DFWPMA 2024-2026. All rights reserved.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -614,6 +628,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.02;
+				OTHER_SWIFT_FLAGS = "-DUSE_APP_LOGGING_BY_VISITOR";
 				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtension1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -715,12 +730,12 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtensionAppEx/VisitShareExtensionAppEx.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 01.03.26C027;
+				CURRENT_PROJECT_VERSION = 04.02.26C030;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtensionAppEx/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VisitShareExtensionAppEx;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © DFWPMA 2024-2026. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -746,12 +761,12 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtensionAppEx/VisitShareExtensionAppEx.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 01.03.26C027;
+				CURRENT_PROJECT_VERSION = 04.02.26C030;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtensionAppEx/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VisitShareExtensionAppEx;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © DFWPMA 2024-2026. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -821,6 +836,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F08843522F2D022F0097C911 /* XCRemoteSwiftPackageReference "XCGLogger" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/DaveWoodCom/XCGLogger";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.1.5;
+			};
+		};
+		F0F616072F2D17EE00D8A2BA /* XCRemoteSwiftPackageReference "MarkdownUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/MarkdownUI";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F08843532F2D022F0097C911 /* ObjcExceptionBridging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F08843522F2D022F0097C911 /* XCRemoteSwiftPackageReference "XCGLogger" */;
+			productName = ObjcExceptionBridging;
+		};
+		F08843552F2D022F0097C911 /* XCGLogger */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F08843522F2D022F0097C911 /* XCRemoteSwiftPackageReference "XCGLogger" */;
+			productName = XCGLogger;
+		};
+		F0F616082F2D17EE00D8A2BA /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0F616072F2D17EE00D8A2BA /* XCRemoteSwiftPackageReference "MarkdownUI" */;
+			productName = MarkdownUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F032934D2F1686C1002ACF91 /* Project object */;
 }
