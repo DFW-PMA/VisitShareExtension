@@ -14,7 +14,7 @@ struct SettingsSingleViewCore:View
     struct ClassInfo
     {
         static let sClsId        = "SettingsSingleViewCore"
-        static let sClsVers      = "v1.2603"
+        static let sClsVers      = "v1.2604"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -953,7 +953,7 @@ struct SettingsSingleViewCore:View
         {
             // Open the URL that will download (and install) the App Release UPDATE...
 
-            let urlToOpen:URL = URL(string:"itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/DFW-PMA/VisitShareExtension/refs/heads/main/VisitShareExtension.plist")!
+            let urlToOpen:URL = URL(string:"itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/DFW-PMA/VisitShareExtension/refs/heads/main/VisitShareExtension/VisitShareExtension.plist")!
 
             appLogMsg("\(sCurrMethodDisp) Calling 'AppDelegate.openAppSuppliedURL(urlToOpen:)' to download and install the App Release on the URL of [\(urlToOpen)]...")
 
@@ -988,7 +988,7 @@ struct SettingsSingleViewCore:View
         {
             // Open the URL that will download (and install) the App Release UPDATE...
 
-            let urlToOpen:URL = URL(string:"itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/DFW-PMA/VisitShareExtension/refs/heads/main/VisitShareExtension_Pre.plist")!
+            let urlToOpen:URL = URL(string:"itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/DFW-PMA/VisitShareExtension/refs/heads/main/VisitShareExtension/VisitShareExtension_Pre.plist")!
 
             appLogMsg("\(sCurrMethodDisp) Calling 'AppDelegate.openAppSuppliedURL(urlToOpen:)' to download and install the App Pre-Release on the URL of [\(urlToOpen)]...")
 
