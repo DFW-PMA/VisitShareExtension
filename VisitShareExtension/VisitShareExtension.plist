@@ -11,7 +11,8 @@
                     <key>kind</key>
                     <string>software-package</string>
                     <key>url</key>
-                    <string>https://github.com/DFW-PMA/VisitShareExtension/releases/download/VSX-04/VisitShareExtension.1.02.04.05.26C030.ipa</string>
+                    <string>https://github.com/DFW-PMA/VisitShareExtension/releases/download/VSX-04.2/VisitShareExtension.1.02.04.07.26C030.ipa</string>
+                <!--<string>https://github.com/DFW-PMA/VisitShareExtension/releases/download/VSX-04/VisitShareExtension.1.02.04.05.26C030.ipa</string> -->
                 </dict>
             </array>
             <key>metadata</key>
@@ -19,7 +20,7 @@
                 <key>bundle-identifier</key>
                 <string>com.PreferredMobileApplications.VisitShareExtension1</string>
                 <key>bundle-version</key>
-                <string>1.01</string>
+                <string>1.02</string>
                 <key>kind</key>
                 <string>software</string>
                 <key>title</key>
