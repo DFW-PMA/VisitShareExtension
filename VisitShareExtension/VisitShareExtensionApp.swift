@@ -17,7 +17,7 @@ struct VisitShareExtensionApp:App
     struct ClassInfo
     {
         static let sClsId        = "VisitShareExtensionApp"
-        static let sClsVers      = "v1.0703"
+        static let sClsVers      = "v1.0704"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -102,6 +102,7 @@ struct VisitShareExtensionApp:App
         WindowGroup
         {
             ContentView()
+                .environment(\.appGlobalDeviceType, appGlobalDeviceType)
                 .onOpenURL 
                 { url in
 
