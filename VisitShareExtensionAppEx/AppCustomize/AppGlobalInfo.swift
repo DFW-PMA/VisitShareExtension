@@ -2,6 +2,8 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
+//  AppGlobalInfo.swift - v1.5709...
+//  Updated by Daryl Cox on 02/03/2026.
 //  Created by Daryl Cox on 06/19/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
@@ -176,12 +178,23 @@ extension EnvironmentValues
 
 // MARK: App 'global' information...
 
+@objcMembers
+@objc(AppGlobalInfo)
 public class AppGlobalInfo:NSObject
 {
     
     struct ClassSingleton
     {
         static var appGlobalInfo:AppGlobalInfo                           = AppGlobalInfo()
+    }
+    
+    // Objective-C accessor for singleton (computed property):
+    //     - Swift code continues to use: AppGlobalInfo.ClassSingleton.appGlobalInfo
+    //     - Objective-C code uses:       [AppGlobalInfo shared] or AppGlobalInfo.shared...
+
+    @objc public static var shared: AppGlobalInfo
+    {
+        return ClassSingleton.appGlobalInfo
     }
 
     static let sGlobalInfoAppId:String                                   = AppGlobalInfoConfig.sGlobalInfoAppId
@@ -551,7 +564,7 @@ public class AppGlobalInfo:NSObject
            var iGlobalDeviceCPUPhysicalCores:Int                         = 0
            var iGlobalDeviceCPULogicalCores:Int                          = 0
 
-           var iGlobalDeviceType:AppGlobalDeviceType                     = AppGlobalDeviceType.appGlobalDeviceUndefined
+  @nonobjc var iGlobalDeviceType:AppGlobalDeviceType                     = AppGlobalDeviceType.appGlobalDeviceUndefined
            var sGlobalDeviceType:String                                  = "-unknown-"   // Values: "Mac", "iPad", "iPhone, "AppleWatch"
            var bGlobalDeviceIsMac:Bool                                   = false
            var bGlobalDeviceIsIPad:Bool                                  = false
@@ -567,9 +580,9 @@ public class AppGlobalInfo:NSObject
            var sGlobalDeviceLocalizedModel:String                        = "-unknown-"
 
        #if os(iOS)
-           var idiomGlobalDeviceUserInterfaceIdiom:UIUserInterfaceIdiom? = nil
+  @nonobjc var idiomGlobalDeviceUserInterfaceIdiom:UIUserInterfaceIdiom? = nil
            var iGlobalDeviceUserInterfaceIdiom:Int                       = 0
-           var uuidGlobalDeviceIdForVendor:UUID?                         = nil
+  @nonobjc var uuidGlobalDeviceIdForVendor:UUID?                         = nil
            var fGlobalDeviceCurrentBatteryLevel:Float                    = 1.0
        #endif
 
@@ -590,7 +603,7 @@ public class AppGlobalInfo:NSObject
 
    // Various 'auth' (authentication) information:
 
-          var iGlobalAuthType:AppGlobalAuthType                          = AppGlobalAuthType.appGlobalAuthTypeUndefined
+ @nonobjc var iGlobalAuthType:AppGlobalAuthType                          = AppGlobalAuthType.appGlobalAuthTypeUndefined
           var sGlobalAuthType:String                                     = "-unknown-"   // Values: "Undefined", "User", "Patient",
           var bGlobalAuthTypeIsUndefined:Bool                            = false
           var bGlobalAuthTypeIsUser:Bool                                 = false
@@ -607,6 +620,10 @@ public class AppGlobalInfo:NSObject
            var sAppVersionAndBuildNumber:String                          = "-unknown-"
            var sAppCopyright:String                                      = "-unknown-"
            var sAppUserDefaultsFileLocation:String                       = "-unknown-"
+
+           var bAppIsInTheBackground:Bool                                = false
+                                                                           // false: App is NOT in the Background...
+                                                                           // true:  App is NOW in the Background...
 
 #if USE_APP_LOGGING_BY_VISITOR
     // App 'delegate' Visitor:
@@ -788,6 +805,8 @@ public class AppGlobalInfo:NSObject
         self.sAppCopyright                          = JmXcodeBuildSettings.jmAppCopyright      
         self.sAppUserDefaultsFileLocation           = JmXcodeBuildSettings.getAppUserDefaultsFileLocation(bIsBootstrapInit:true)
 
+        self.bAppIsInTheBackground                  = false
+
         self.updateUIDeviceOrientation()
 
     #if !USE_APP_LOGGING_BY_VISITOR
@@ -943,6 +962,24 @@ public class AppGlobalInfo:NSObject
             appLogMsg("------------------------------------------------------------")
         }
 
+    #if os(iOS)
+        // For iOS, add Foreground/Background 'notification(s)' observer(s)...
+
+        appLogMsg("\(sCurrMethodDisp) Intermediate - Adding Foreground/Background 'notification(s)' observer(s)...")
+
+        NotificationCenter.default.addObserver(self,
+                                               selector:#selector(appMovedToForeground),
+                                               name:    UIApplication.willEnterForegroundNotification,
+                                               object:  nil)
+
+        NotificationCenter.default.addObserver(self,
+                                               selector:#selector(appMovedToBackground),
+                                               name:    UIApplication.didEnterBackgroundNotification,
+                                               object:  nil)
+
+        appLogMsg("\(sCurrMethodDisp) Intermediate - Added  Foreground/Background 'notification(s)' observer(s)...")
+    #endif
+
         // Exit:
 
         appLogMsg("\(sCurrMethodDisp) Exiting...")
@@ -1023,7 +1060,15 @@ public class AppGlobalInfo:NSObject
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
+        // Display the various AppGlobalInfoConfig 'settings'...
+
+        appLogMsg("\(sCurrMethodDisp) ========== AppGlobalInfoConfig 'settings' ==========")
+
+        AppGlobalInfoConfig.displayAppGlobalInfoConfigSettings()
+
         // Display the various AppGlobalInfo 'settings'...
+
+        appLogMsg("\(sCurrMethodDisp) ========== AppGlobalInfo 'settings' ================")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.self' is [\(String(describing: self))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sGlobalInfoAppId' is [\(String(describing: AppGlobalInfo.sGlobalInfoAppId))]...")
@@ -1182,9 +1227,13 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sAppCopyright' is [\(String(describing: self.sAppCopyright))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sAppUserDefaultsFileLocation' is [\(String(describing: self.sAppUserDefaultsFileLocation))]...")
 
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bAppIsInTheBackground' is [\(String(describing: self.bAppIsInTheBackground))]...")
+
     #if USE_APP_LOGGING_BY_VISITOR
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.listAppGlobalInfoPreXCGLoggerMessages' has (\(listAppGlobalInfoPreXCGLoggerMessages.count)) message(s)...")
     #endif
+
+        appLogMsg("\(sCurrMethodDisp) ====================================================")
 
         // Exit:
 
@@ -1244,6 +1293,148 @@ public class AppGlobalInfo:NSObject
         return
 
     }   // End of func setAppAuthType(iGlobalAuthType:AppGlobalAuthType = AppGlobalAuthType.appGlobalAuthTypeUndefined).
+
+    // MARK: Foreground/Background 'state' setting...
+
+#if os(iOS)
+    @objc func appMovedToForeground()
+    {
+
+        let sCurrMethod:String     = #function;
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked...")
+
+        self.setAppInForeground()
+
+        // Exit...
+        
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
+        
+        return
+        
+    }   // End of func appMovedToForeground().
+
+    @objc func appMovedToBackground()
+    {
+
+        let sCurrMethod:String     = #function;
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
+
+        self.setAppInBackground()
+
+        // Exit...
+        
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
+        
+        return
+        
+    }   // End of func appMovedToBackground().
+#endif
+
+    func setAppInForeground()
+    {
+
+        let sCurrMethod:String     = #function;
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+        
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
+        
+        // Finish setting the App in the Foreground 'state'...
+
+        self.bAppIsInTheBackground = false
+
+    #if USE_APP_LOGGING_BY_VISITOR
+        if (jmAppGlobalInfoDelegateVisitor != nil)
+        {
+            // When we go into the Foreground, we make sure the CRASH Marker File is in place...
+
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - Calling 'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
+            jmAppGlobalInfoDelegateVisitor?.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - Called  'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
+        }
+    #endif
+
+        // Exit...
+        
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
+        
+        return
+        
+    }   // End of func setAppInForeground().
+
+    func setAppInBackground()
+    {
+
+        let sCurrMethod:String     = #function;
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+        
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
+        
+        // Finish setting the App in the Background 'state'...
+
+        self.bAppIsInTheBackground = true
+
+    #if USE_APP_LOGGING_BY_VISITOR
+        if (jmAppGlobalInfoDelegateVisitor != nil)
+        {
+            // When we go into the Background, we make sure the CRASH Marker File is NOT in place (we can be removed without warning)...
+
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - Calling 'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
+            jmAppGlobalInfoDelegateVisitor?.performAppDelegateVisitorTerminatingCrashLogic()
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - Called  'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
+        }
+    #endif
+
+        // Exit...
+        
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
+        
+        return
+        
+    }   // End of func setAppInBackground().
+
+    @objc func checkAppInForegroundOrBackground()->Bool
+    {
+
+        let sCurrMethod:String     = #function;
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+        
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
+        
+        // Set the App in the Foreground/Background 'state'...
+        
+    #if APP_EXTENSION
+        // Extension code - UIApplication.shared is unavailable
+
+        let stateForegroundBackground = UIApplication.State.active
+    #else
+        // Main app code
+
+        let stateForegroundBackground = UIApplication.shared.applicationState
+    #endif
+
+        switch stateForegroundBackground 
+        {
+        case .active:
+            self.setAppInForeground()
+        case .inactive:
+            self.setAppInBackground()
+        case .background:
+            self.setAppInBackground()
+        @unknown default:
+            break
+        }
+
+        // Exit...
+        
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting - 'self.bAppIsInTheBackground' is [\(self.bAppIsInTheBackground)]...")
+        
+        return self.bAppIsInTheBackground
+        
+    }   // End of @objc func checkAppInForegroundOrBackground()->Bool.
 
     // ------------------------------------------------------------------------------------------------------
     // MARK: CPU/Device Detection Methods (cross-platform)

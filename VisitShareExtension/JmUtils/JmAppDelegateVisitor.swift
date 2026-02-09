@@ -9,11 +9,11 @@
 import Foundation
 import SwiftUI
 import SwiftData
+import Combine
 import XCGLogger
 
 #if os(iOS)
 import UIKit
-import Combine
 #if INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
 import GoogleMobileAds
 #endif
@@ -28,7 +28,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.6201"
+        static let sClsVers      = "v1.6301"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -414,7 +414,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // NOTE: The method 'performAppDelegateVisitorStartupCrashLogic()' MUST be the first method called
         //       by this 'init()' method to properly handle startup if there was an App 'crash': 
  
-        self.performAppDelegateVisitorStartupCrashLogic()
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - #(\(self.cAppDelegateVisitorInitCalls)) time(s) - Calling 'self.performAppDelegateVisitorStartupCrashLogic(true, bForegroundRestore:false)'...")
+        self.performAppDelegateVisitorStartupCrashLogic(true, bForegroundRestore:false)
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - #(\(self.cAppDelegateVisitorInitCalls)) time(s) - Called  'self.performAppDelegateVisitorStartupCrashLogic(true, bForegroundRestore:false)'...")
 
         // Setup the 'logging' output (console and file):
 
@@ -423,7 +425,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         appLogMsg("\(sCurrMethodDisp) Method Invoked - #(\(self.cAppDelegateVisitorInitCalls)) time(s) - 'sApplicationName' is [\(self.sApplicationName)]...")
         appLogMsg("\(sCurrMethodDisp) AppDelegateVisitor is starting - 'self' is [\(self)]...")
         appLogMsg("\(sCurrMethodDisp) XCGLogger 'log' instance 'self.xcgLogger' is being used (default instance)...")
-        
+
         // Exit:
 
         appLogMsg("\(sCurrMethodDisp) Exiting - #(\(self.cAppDelegateVisitorInitCalls)) time(s) - 'sApplicationName' is [\(self.sApplicationName)]...")
@@ -927,7 +929,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
 
-        appLogMsg("[\(sCurrMethodDisp)] Invoked...")
+        appLogMsg("\(sCurrMethodDisp) Invoked...")
 
         // Setup the AppDelegateVisitor (physical) 'log' file:
 
@@ -938,8 +940,8 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             self.sAppDelegateVisitorLogFilespec   = self.urlAppDelegateVisitorLogFilespec?.path
             self.sAppDelegateVisitorLogFilepath   = self.urlAppDelegateVisitorLogFilepath?.path
 
-            appLogMsg("[\(sCurrMethodDisp)] 'self.sAppDelegateVisitorLogFilespec' (computed) is [\(String(describing: self.sAppDelegateVisitorLogFilespec))]...")
-            appLogMsg("[\(sCurrMethodDisp)] 'self.sAppDelegateVisitorLogFilepath' (resolved #2) is [\(String(describing: self.sAppDelegateVisitorLogFilepath))]...")
+            appLogMsg("\(sCurrMethodDisp) 'self.sAppDelegateVisitorLogFilespec' (computed) is [\(String(describing: self.sAppDelegateVisitorLogFilespec))]...")
+            appLogMsg("\(sCurrMethodDisp) 'self.sAppDelegateVisitorLogFilepath' (resolved #2) is [\(String(describing: self.sAppDelegateVisitorLogFilepath))]...")
 
             let bIsAppLogFilePresent:Bool = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorLogFilespec)
 
@@ -964,7 +966,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                     appLogMsg("\(sCurrMethodDisp) App appears to have been terminated 'successfully'...")
                 }
 
-                appLogMsg("[\(sCurrMethodDisp)] Saving the LOG Filespec of [\(String(describing: self.urlAppDelegateVisitorLogFilespec))] to the 'target' LOG Filespec of [\(String(describing: self.urlAppDelegateVisitorLogToSaveFilespec))]...")
+                appLogMsg("\(sCurrMethodDisp) Saving the LOG Filespec of [\(String(describing: self.urlAppDelegateVisitorLogFilespec))] to the 'target' LOG Filespec of [\(String(describing: self.urlAppDelegateVisitorLogToSaveFilespec))]...")
 
                 self.sAppDelegateVisitorLogToSaveFilespec = self.urlAppDelegateVisitorLogToSaveFilespec?.path
 
@@ -976,7 +978,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 {
                     try FileManager.default.removeItem(at: self.urlAppDelegateVisitorLogToSaveFilespec!)
 
-                    appLogMsg("[\(sCurrMethodDisp)] Successfully removed the 'target' LOG Filespec of [\(String(describing: self.urlAppDelegateVisitorLogToSaveFilespec))]...")
+                    appLogMsg("\(sCurrMethodDisp) Successfully removed the 'target' LOG Filespec of [\(String(describing: self.urlAppDelegateVisitorLogToSaveFilespec))]...")
                 }
 
                 // Save the Log file to the 'target' Log file:
@@ -984,7 +986,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 try FileManager.default.moveItem(at: self.urlAppDelegateVisitorLogFilespec!,
                                                  to: self.urlAppDelegateVisitorLogToSaveFilespec!)
 
-                appLogMsg("[\(sCurrMethodDisp)] Successfully 'saved' the Log Filespec of [\(String(describing: self.sAppDelegateVisitorLogFilespec))] to a 'target' Log Filespec of [\(String(describing: self.urlAppDelegateVisitorLogToSaveFilespec))]...")
+                appLogMsg("\(sCurrMethodDisp) Successfully 'saved' the Log Filespec of [\(String(describing: self.sAppDelegateVisitorLogFilespec))] to a 'target' Log Filespec of [\(String(describing: self.urlAppDelegateVisitorLogToSaveFilespec))]...")
             }
             else
             {
@@ -999,18 +1001,18 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
             self.bAppDelegateVisitorLogFilespecIsUsable = true
 
-            appLogMsg("[\(sCurrMethodDisp)] Successfully created the 'path' of [.documentDirectory] and the Log Filespec of [\(String(describing: self.sAppDelegateVisitorLogFilespec))]...")
+            appLogMsg("\(sCurrMethodDisp) Successfully created the 'path' of [.documentDirectory] and the Log Filespec of [\(String(describing: self.sAppDelegateVisitorLogFilespec))]...")
         }
         catch
         {
             self.bAppDelegateVisitorLogFilespecIsUsable = false
 
-            appLogMsg("[\(sCurrMethodDisp)] Failed to create the 'path' of [.documentDirectory] - Error: \(error)...")
+            appLogMsg("\(sCurrMethodDisp) Failed to create the 'path' of [.documentDirectory] - Error: \(error)...")
         }
 
         // Exit:
 
-        appLogMsg("[\(sCurrMethodDisp)] Exiting - 'self.bAppDelegateVisitorLogFilespecIsUsable' is [\(self.bAppDelegateVisitorLogFilespecIsUsable)] - 'self.bWasAppLogFilePresentAtStartup' is [\(self.bWasAppLogFilePresentAtStartup)]...")
+        appLogMsg("\(sCurrMethodDisp) Exiting - 'self.bAppDelegateVisitorLogFilespecIsUsable' is [\(self.bAppDelegateVisitorLogFilespecIsUsable)] - 'self.bWasAppLogFilePresentAtStartup' is [\(self.bWasAppLogFilePresentAtStartup)]...")
 
         return
 
@@ -1022,7 +1024,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
 
-        appLogMsg("[\(sCurrMethodDisp)] - Invoked...")
+        appLogMsg("\(sCurrMethodDisp) - Invoked...")
 
         // Setup the AppDelegateVisitor XCGLogger instance:
 
@@ -1062,7 +1064,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         // Exit:
 
-        appLogMsg("[\(sCurrMethodDisp)] - Exiting...")
+        appLogMsg("\(sCurrMethodDisp) - Exiting...")
 
         return
 
@@ -1443,74 +1445,100 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     // Method(s) that act as AppDelegateVistor 'crash' logic:
 
-    @objc public func performAppDelegateVisitorStartupCrashLogic(_ bForegroundRestore:Bool = false)
+    @objc public func performAppDelegateVisitorStartupCrashLogic(_ bAppFirstStartCall:Bool = false, bForegroundRestore:Bool = false)
     {
 
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
 
-        appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'bForegroundRestore' is [\(bForegroundRestore)]...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked - parameters 'bAppFirstStartCall' is [\(bAppFirstStartCall)] - 'bForegroundRestore' is [\(bForegroundRestore)]...")
 
-        // Setup the AppDelegateVisitor (physical) CRASH 'marker' file:
+        // Calculate the AppDelegateVisitor (physical) CRASH 'marker' filespec and filepath:
 
         do 
         {
-            self.urlAppDelegateVisitorCrashMarkerFilepath = try FileManager.default.url(for: .documentDirectory ,in: .userDomainMask ,appropriateFor: nil, create: true)
+            self.urlAppDelegateVisitorCrashMarkerFilepath = try FileManager.default.url(for:.documentDirectory, in:.userDomainMask, appropriateFor:nil, create:true)
             self.urlAppDelegateVisitorCrashMarkerFilespec = self.urlAppDelegateVisitorCrashMarkerFilepath?.appendingPathComponent(AppGlobalInfo.sGlobalInfoAppCrashMarkerFilespec)
             self.sAppDelegateVisitorCrashMarkerFilespec   = self.urlAppDelegateVisitorCrashMarkerFilespec?.path
             self.sAppDelegateVisitorCrashMarkerFilepath   = self.urlAppDelegateVisitorCrashMarkerFilepath?.path
 
-            appLogMsg("[\(sCurrMethodDisp)] 'self.sAppDelegateVisitorCrashMarkerFilespec' (computed) is [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
-            appLogMsg("[\(sCurrMethodDisp)] 'self.sAppDelegateVisitorCrashMarkerFilepath' (resolved #2) is [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilepath))]...")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> 'self.sAppDelegateVisitorCrashMarkerFilespec' (computed)    is [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> 'self.sAppDelegateVisitorCrashMarkerFilepath' (resolved #2) is [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilepath))]...")
 
-            try FileManager.default.createDirectory(atPath: sAppDelegateVisitorCrashMarkerFilepath, withIntermediateDirectories: true, attributes: nil)
+            try FileManager.default.createDirectory(atPath:sAppDelegateVisitorCrashMarkerFilepath, withIntermediateDirectories:true, attributes:nil)
 
-            if (bForegroundRestore == false)
-            {
-                self.bWasAppCrashFilePresentAtStartup = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
-
-                if (self.bWasAppCrashFilePresentAtStartup == false)
-                {
-                    appLogMsg("[\(sCurrMethodDisp)] <<< PREVIOUS App execution appears to have been SUCCESSFULL!!! >>>")
-
-                    let sContents = "\(sCurrMethodDisp) Invoked (CRASH 'marker' detection file) - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)]..."
-
-                    try sContents.write(toFile:self.sAppDelegateVisitorCrashMarkerFilespec, atomically:true, encoding:String.Encoding.utf8)
-
-                    self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = true
-
-                    appLogMsg("[\(sCurrMethodDisp)] Successfully created the 'path' of [.documentDirectory] and the CRASH Marker Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
-                }
-                else
-                {
-                    appLogMsg("[\(sCurrMethodDisp)] <<< PREVIOUS App execution appears to have CRASHED!!! >>>")
-
-                    self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = false
-
-                    appLogMsg("[\(sCurrMethodDisp)] Did NOT create the CRASH Marker Filespec (file already exists) of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
-                }
-            }
-
-            self.bAppDelegateVisitorCrashMarkerFilespecIsUsable = true
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Successfully created the 'path' of [.documentDirectory]...")
         }
         catch
         {
             self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = false
             self.bAppDelegateVisitorCrashMarkerFilespecIsUsable  = false
 
-            appLogMsg("[\(sCurrMethodDisp)] Failed to create the 'path' of [.documentDirectory] - Error: \(error)...")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Failed to create the 'path' of [.documentDirectory] - Detail(s):[\(error)] - Error!")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
+
+            return
         }
 
+        // If this is the actual 1st 'start' call, then determine if the AppDelegateVisitor (physical) CRASH 'marker' file is present...
+
+        if (bAppFirstStartCall == true)
+        {
+            self.bWasAppCrashFilePresentAtStartup = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
+
+            if (self.bWasAppCrashFilePresentAtStartup == false)
+            {
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <<< PREVIOUS App execution appears to have been SUCCESSFULL!!! >>>")
+            }
+            else
+            {
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <<< PREVIOUS App execution appears to have CRASHED!!! >>>")
+            }
+        }
+
+        // (Possibly) Setup the AppDelegateVisitor (physical) CRASH 'marker' file:
+
+        let bDoesAppCrashFileExist:Bool = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
+
+        if (bDoesAppCrashFileExist == false)
+        {
+            do 
+            {
+                let sContents = "\(sCurrMethodDisp) <VisitorCrashLogic> Invoked (CRASH 'marker' detection file) - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)]..."
+
+                try sContents.write(toFile:self.sAppDelegateVisitorCrashMarkerFilespec, atomically:true, encoding:String.Encoding.utf8)
+
+                self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = true
+                self.bAppDelegateVisitorCrashMarkerFilespecIsUsable  = true
+
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Successfully created the CRASH Marker Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
+            }
+            catch
+            {
+                self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = false
+                self.bAppDelegateVisitorCrashMarkerFilespecIsUsable  = false
+
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <VisitorCrashLogic> Failed to create the CRASH Marker Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - Detail(s):[\(error)] - Error!")
+            }
+        }
+        else
+        {
+            self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = false
+            self.bAppDelegateVisitorCrashMarkerFilespecIsUsable  = true
+
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Did NOT create the CRASH Marker Filespec (file already exists) of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
+        }
+        
         // Exit:
 
-        appLogMsg("\(sCurrMethodDisp) 'self.bAppDelegateVisitorCrashMarkerFilespecIsCreated' is [\(self.bAppDelegateVisitorCrashMarkerFilespecIsCreated)]...")
-        appLogMsg("\(sCurrMethodDisp) 'self.bAppDelegateVisitorCrashMarkerFilespecIsUsable' is [\(self.bAppDelegateVisitorCrashMarkerFilespecIsUsable)]...")
-        appLogMsg("\(sCurrMethodDisp) 'self.bWasAppCrashFilePresentAtStartup' is [\(self.bWasAppCrashFilePresentAtStartup)]...")
-        appLogMsg("\(sCurrMethodDisp) Exiting...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> 'self.bAppDelegateVisitorCrashMarkerFilespecIsCreated' is [\(self.bAppDelegateVisitorCrashMarkerFilespecIsCreated)]...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> 'self.bAppDelegateVisitorCrashMarkerFilespecIsUsable' is [\(self.bAppDelegateVisitorCrashMarkerFilespecIsUsable)]...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> 'self.bWasAppCrashFilePresentAtStartup' is [\(self.bWasAppCrashFilePresentAtStartup)]...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting - 'bDoesAppCrashFileExist' is [\(bDoesAppCrashFileExist)] - parameters were 'bAppFirstStartCall' is [\(bAppFirstStartCall)] - 'bForegroundRestore' is [\(bForegroundRestore)]...")
 
         return
 
-    }   // End of @objc public func performAppDelegateVisitorStartupCrashLogic(_ bForegroundRestore:Bool = false).
+    }   // End of @objc public func performAppDelegateVisitorStartupCrashLogic(_ bAppFirstStartCall:Bool, bForegroundRestore:Bool).
 
     @objc public func performAppDelegateVisitorTerminatingCrashLogic()
     {
@@ -1518,7 +1546,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
 
-        appLogMsg("\(sCurrMethodDisp) Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
 
         // (Possibly) remove the AppDelegateVisitor (physical) CRASH 'marker' file:
 
@@ -1530,14 +1558,14 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             {
                 try FileManager.default.removeItem(at:self.urlAppDelegateVisitorCrashMarkerFilespec!)
 
-                appLogMsg("[\(sCurrMethodDisp)] Successfully removed the CRASH 'marker' Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Successfully removed the CRASH 'marker' Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
 
                 self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = false
             }
         }
         catch
         {
-            appLogMsg("[\(sCurrMethodDisp)] Failed to remove the CRASH 'marker' Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - Error: \(error)...") 
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Failed to remove the CRASH 'marker' Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - Error: \(error)...") 
         }
 
         self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = false
@@ -1546,10 +1574,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         // Exit:
 
-        appLogMsg("\(sCurrMethodDisp) 'self.bAppDelegateVisitorCrashMarkerFilespecIsCreated' is [\(self.bAppDelegateVisitorCrashMarkerFilespecIsCreated)]...")
-        appLogMsg("\(sCurrMethodDisp) 'self.bAppDelegateVisitorCrashMarkerFilespecIsUsable' is [\(self.bAppDelegateVisitorCrashMarkerFilespecIsUsable)]...")
-        appLogMsg("\(sCurrMethodDisp) 'self.bWasAppCrashFilePresentAtStartup' is [\(self.bWasAppCrashFilePresentAtStartup)]...")
-        appLogMsg("\(sCurrMethodDisp) Exiting...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> 'self.bAppDelegateVisitorCrashMarkerFilespecIsCreated' is [\(self.bAppDelegateVisitorCrashMarkerFilespecIsCreated)]...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> 'self.bAppDelegateVisitorCrashMarkerFilespecIsUsable' is [\(self.bAppDelegateVisitorCrashMarkerFilespecIsUsable)]...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> 'self.bWasAppCrashFilePresentAtStartup' is [\(self.bWasAppCrashFilePresentAtStartup)]...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
 
         return
 
@@ -4879,6 +4907,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         self.dumpAppCommandLineArgs()
 
+        // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Foreground...
+
+        self.appGlobalInfo.setAppInForeground()
+
         // Exit:
 
         appLogMsg("\(sCurrMethodDisp) Exiting...")
@@ -4929,6 +4961,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         }
     #endif
 
+        // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Foreground...
+
+        self.appGlobalInfo.setAppInForeground()
+
         // Exit:
 
         appLogMsg("\(sCurrMethodDisp) Exiting...")
@@ -4936,6 +4972,29 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         return
 
     }   // End of appDelegateVisitorDidBecomeActive(_ aNotification:Notification).
+
+    @objc public func appDelegateVisitorDidResignActive(_ aNotification:Notification) 
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)]...")
+
+        appLogMsg("\(sCurrMethodDisp) Current '\(ClassInfo.sClsId)' is [\(self.toString())]...")
+        appLogMsg("\(sCurrMethodDisp) AppDelegateVisitor did resign active...")
+
+        // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Background...
+
+        self.appGlobalInfo.setAppInBackground()
+
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of appDelegateVisitorDidResignActive(_ aNotification:Notification).
 
     @objc public func appDelegateVisitorWillTerminate(_ aNotification:Notification) 
     {
@@ -4957,7 +5016,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         }
     #endif
 
-        self.performAppDelegateVisitorTerminatingCrashLogic()
+        // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Background...
+
+        self.appGlobalInfo.setAppInBackground()
+    //  self.performAppDelegateVisitorTerminatingCrashLogic()
 
         // Exit:
 
@@ -5036,6 +5098,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         self.dumpAppCommandLineArgs()
 
+        // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Foreground...
+
+        self.appGlobalInfo.setAppInForeground()
+
         // Exit:
 
         appLogMsg("\(sCurrMethodDisp) Exiting...")
@@ -5054,6 +5120,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         self.dumpAppCommandLineArgs()
 
+        // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Foreground...
+
+        self.appGlobalInfo.setAppInForeground()
+
         // Exit:
 
         appLogMsg("\(sCurrMethodDisp) Exiting...")
@@ -5070,6 +5140,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(String(describing: uiApplication))] - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)]...")
         
+        // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Foreground...
+
+        self.appGlobalInfo.setAppInForeground()
+
     #if INSTANTIATE_APP_CORELOCATIONSUPPORT && INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
         appLogMsg("\(sCurrMethodDisp) <AppBGTasks> App entering foreground - checking for stale sync...")
 
@@ -5088,6 +5162,42 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         return
 
     }   // End of @objc public func applicationWillEnterForeground(_ application:UIApplication).
+
+    @objc public func applicationWillResignActive(_ uiApplication:UIApplication) 
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(String(describing: uiApplication))] - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)]...")
+        
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of @objc public func applicationWillResignActive(_ application:UIApplication).
+
+    @objc public func applicationDidEnterBackground(_ uiApplication:UIApplication) 
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(String(describing: uiApplication))] - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)]...")
+        
+        // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Background...
+
+        self.appGlobalInfo.setAppInBackground()
+
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of @objc public func applicationDidEnterBackground(_ application:UIApplication).
 
     @objc public func appDelegateVisitorWillTerminate(_ uiApplication:UIApplication)
     {
@@ -5112,7 +5222,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         appLogMsg("\(sCurrMethodDisp) Current '\(ClassInfo.sClsId)' is [\(self.toString())]...")
         appLogMsg("\(sCurrMethodDisp) AppDelegateVisitor is stopping...")
 
-        self.performAppDelegateVisitorTerminatingCrashLogic()
+        // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Background...
+
+        self.appGlobalInfo.setAppInBackground()
+    //  self.performAppDelegateVisitorTerminatingCrashLogic()
 
         // Exit:
 
