@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F0803DB62F47736700B6BD8A /* XMLCoder in Frameworks */ = {isa = PBXBuildFile; productRef = F0803DB52F47736700B6BD8A /* XMLCoder */; };
 		F08843542F2D022F0097C911 /* ObjcExceptionBridging in Frameworks */ = {isa = PBXBuildFile; productRef = F08843532F2D022F0097C911 /* ObjcExceptionBridging */; };
 		F08843562F2D022F0097C911 /* XCGLogger in Frameworks */ = {isa = PBXBuildFile; productRef = F08843552F2D022F0097C911 /* XCGLogger */; };
 		F0F616092F2D17EE00D8A2BA /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = F0F616082F2D17EE00D8A2BA /* MarkdownUI */; };
@@ -143,6 +144,7 @@
 			files = (
 				F0F616092F2D17EE00D8A2BA /* MarkdownUI in Frameworks */,
 				F08843542F2D022F0097C911 /* ObjcExceptionBridging in Frameworks */,
+				F0803DB62F47736700B6BD8A /* XMLCoder in Frameworks */,
 				F08843562F2D022F0097C911 /* XCGLogger in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -229,6 +231,7 @@
 				F08843532F2D022F0097C911 /* ObjcExceptionBridging */,
 				F08843552F2D022F0097C911 /* XCGLogger */,
 				F0F616082F2D17EE00D8A2BA /* MarkdownUI */,
+				F0803DB52F47736700B6BD8A /* XMLCoder */,
 			);
 			productName = VisitShareExtension;
 			productReference = F03293552F1686C1002ACF91 /* VisitShareExtension.app */;
@@ -341,6 +344,7 @@
 			packageReferences = (
 				F08843522F2D022F0097C911 /* XCRemoteSwiftPackageReference "XCGLogger" */,
 				F0F616072F2D17EE00D8A2BA /* XCRemoteSwiftPackageReference "MarkdownUI" */,
+				F0803DB42F47736700B6BD8A /* XCRemoteSwiftPackageReference "XMLCoder" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F03293562F1686C1002ACF91 /* Products */;
@@ -574,7 +578,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtension/VisitShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 05.01.26C040;
+				CURRENT_PROJECT_VERSION = 06.02.26C050;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -611,7 +615,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtension/VisitShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 05.01.26C040;
+				CURRENT_PROJECT_VERSION = 06.02.26C050;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -730,7 +734,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtensionAppEx/VisitShareExtensionAppEx.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 05.01.26C040;
+				CURRENT_PROJECT_VERSION = 06.02.26C050;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtensionAppEx/Info.plist;
@@ -762,7 +766,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtensionAppEx/VisitShareExtensionAppEx.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 05.01.26C040;
+				CURRENT_PROJECT_VERSION = 06.02.26C050;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtensionAppEx/Info.plist;
@@ -840,6 +844,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		F0803DB42F47736700B6BD8A /* XCRemoteSwiftPackageReference "XMLCoder" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/CoreOffice/XMLCoder";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.18.0;
+			};
+		};
 		F08843522F2D022F0097C911 /* XCRemoteSwiftPackageReference "XCGLogger" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/DaveWoodCom/XCGLogger";
@@ -859,6 +871,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		F0803DB52F47736700B6BD8A /* XMLCoder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0803DB42F47736700B6BD8A /* XCRemoteSwiftPackageReference "XMLCoder" */;
+			productName = XMLCoder;
+		};
 		F08843532F2D022F0097C911 /* ObjcExceptionBridging */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F08843522F2D022F0097C911 /* XCRemoteSwiftPackageReference "XCGLogger" */;

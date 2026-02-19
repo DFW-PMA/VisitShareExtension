@@ -1,5 +1,5 @@
 {
-  "originHash" : "e7d0d7b76d2c3b390fd00e53db44055ed68373a97c98b8cbff5d22e01462141f",
+  "originHash" : "4ca928f5794317d90869b8dbd1613675119a1fa58c304ea113d6d0b3a0f6611b",
   "pins" : [
     {
       "identity" : "markdownui",
@@ -35,6 +35,15 @@
       "state" : {
         "revision" : "4def3c1c772ca90ad5e7bfc8ac437c3b0b4276cf",
         "version" : "7.1.5"
+      }
+    },
+    {
+      "identity" : "xmlcoder",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/CoreOffice/XMLCoder",
+      "state" : {
+        "revision" : "5e1ada828d2618ecb79c974e03f79c8f4df90b71",
+        "version" : "0.18.0"
       }
     }
   ],

@@ -28,7 +28,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.6301"
+        static let sClsVers      = "v1.6501"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -1085,9 +1085,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         if (cTestFilespecSize > AppGlobalInfo.sGlobalInfoAppLogFilespecMaxSize)
         {
             appLogMsg("\(sCurrMethodDisp) Current Log file size of (\(cTestFilespecSize)) is greater then (\(AppGlobalInfo.sGlobalInfoAppLogFilespecMaxSize)) - clearing the file [\(String(describing: self.sAppDelegateVisitorLogFilespec))]...")
-
             self.clearAppDelegateVisitorTraceLogFile()
-        
             appLogMsg("\(sCurrMethodDisp) Cleared the current Log file [\(String(describing: self.sAppDelegateVisitorLogFilespec))]...")
         }
 
@@ -1158,7 +1156,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             return
         }
 
-        // Construct and set-up a <new> 'default' FileDestination:
+        // Construct and set-up a <new> 'default' FileDestination...
 
         let xcgFileDestination               = FileDestination(writeToFile: self.urlAppDelegateVisitorLogFilespec!, 
                                                                identifier:  XCGLogger.Constants.fileDestinationIdentifier)
@@ -1172,7 +1170,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         xcgFileDestination.showLineNumber    = false
         xcgFileDestination.showDate          = true
         
-        // Process this destination in the background:
+        // Process this destination in the background...
         
         xcgFileDestination.logQueue          = XCGLogger.logQueue
         
@@ -1181,6 +1179,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         self.xcgLogger?.add(destination:xcgFileDestination)
         
         appLogMsg("\(sCurrMethodDisp) XCGLogger 'log' FileDestination with 'identifier' of [\(xcgFileDestination.identifier)] is writing to [\(String(describing: xcgFileDestination.writeToFileURL))]...")
+
+        // Re-add the AppGlobalInfo data 'dump' to the new log...
+
+        self.displayAppGlobalInfoFields()
 
         // Exit:
 
@@ -1504,7 +1506,14 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         {
             do 
             {
-                let sContents = "\(sCurrMethodDisp) <VisitorCrashLogic> Invoked (CRASH 'marker' detection file) - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)]..."
+                let dtFormatterDateStamp        = DateFormatter()
+                dtFormatterDateStamp.locale     = Locale(identifier: "en_US")
+                dtFormatterDateStamp.timeZone   = TimeZone.current
+                dtFormatterDateStamp.dateFormat = "yyyy-MM-dd hh:mm:ss.SSS"
+
+                let dateStampNow                = Date.now
+                let sDateStamp                  = "\(dtFormatterDateStamp.string(from: dateStampNow)) >> "
+                let sContents                   = "\(sCurrMethodDisp) <VisitorCrashLogic> Invoked (CRASH 'marker' detection file) - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)] - 'sDateStamp' is [\(sDateStamp)]...\n"
 
                 try sContents.write(toFile:self.sAppDelegateVisitorCrashMarkerFilespec, atomically:true, encoding:String.Encoding.utf8)
 
@@ -1527,6 +1536,23 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             self.bAppDelegateVisitorCrashMarkerFilespecIsUsable  = true
 
             appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Did NOT create the CRASH Marker Filespec (file already exists) of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
+
+            if (bAppFirstStartCall == true)
+            {
+                let dtFormatterDateStamp        = DateFormatter()
+                dtFormatterDateStamp.locale     = Locale(identifier: "en_US")
+                dtFormatterDateStamp.timeZone   = TimeZone.current
+                dtFormatterDateStamp.dateFormat = "yyyy-MM-dd hh:mm:ss.SSS"
+
+                let dateStampNow                = Date.now
+                let sDateStamp                  = "\(dtFormatterDateStamp.string(from: dateStampNow)) >> "
+                let sNewContents                = "\(sCurrMethodDisp) <VisitorCrashLogic> Invoked (CRASH 'marker' detection file) <AlreadyExisting> - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)] - 'sDateStamp' is [\(sDateStamp)]...\n"
+                let bWriteFile                  = JmFileIO.writeFile(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec, sContents:sNewContents, bAppendToFile:true)
+            }
+
+            let sCrashMarkerFileContents = JmFileIO.readFile(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
+
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <CrashMarkerContents> CRASH Marker Filespec (file already exists) of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - 'sCrashMarkerFileContents' is [\(sCrashMarkerFileContents)]...")
         }
         
         // Exit:
@@ -1558,19 +1584,50 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             {
                 try FileManager.default.removeItem(at:self.urlAppDelegateVisitorCrashMarkerFilespec!)
 
-                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Successfully removed the CRASH 'marker' Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <1st Attempt> Successfully removed the CRASH 'marker' Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
 
                 self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = false
             }
         }
         catch
         {
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Failed to remove the CRASH 'marker' Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - Error: \(error)...") 
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <do/catch> <1st Attempt> Failed to remove the CRASH 'marker' Filespec of [\(String(describing:self.sAppDelegateVisitorCrashMarkerFilespec))] - Details:[\(error)] - Error!") 
         }
 
         self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = false
         self.bAppDelegateVisitorCrashMarkerFilespecIsUsable  = false
         self.bWasAppCrashFilePresentAtStartup                = false
+
+        let bDoesAppCrashFileExist:Bool = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
+
+        if (bDoesAppCrashFileExist == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <PostCheck> Failed to remove the CRASH 'marker' Filespec of [\(String(describing:self.sAppDelegateVisitorCrashMarkerFilespec))] - file STILL exists - SEVERE Error!") 
+
+            let dtFormatterDateStamp        = DateFormatter()
+            dtFormatterDateStamp.locale     = Locale(identifier: "en_US")
+            dtFormatterDateStamp.timeZone   = TimeZone.current
+            dtFormatterDateStamp.dateFormat = "yyyy-MM-dd hh:mm:ss.SSS"
+
+            let dateStampNow                = Date.now
+            let sDateStamp                  = "\(dtFormatterDateStamp.string(from: dateStampNow)) >> "
+            let sNewContents                = "\(sCurrMethodDisp) <VisitorCrashLogic> <PostCheck> Failed to remove the CRASH 'marker' Filespec <AlreadyExisting> - 'sApplicationName' is [\(self.sApplicationName)] - 'self' is [\(self)] - 'sDateStamp' is [\(sDateStamp)]...\n"
+            let bWriteFile                  = JmFileIO.writeFile(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec, sContents:sNewContents, bAppendToFile:true)
+            let sCrashMarkerFileContents    = JmFileIO.readFile(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
+
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <CrashMarkerContents> CRASH Marker Filespec (file already exists) of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - 'sCrashMarkerFileContents' is [\(sCrashMarkerFileContents)]...")
+
+            do 
+            {
+                try FileManager.default.removeItem(at:self.urlAppDelegateVisitorCrashMarkerFilespec!)
+
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <2nd Attempt> Successfully removed the CRASH 'marker' Filespec of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))]...")
+            }
+            catch
+            {
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <do/catch> <2nd Attempt> Failed to remove the CRASH 'marker' Filespec of [\(String(describing:self.sAppDelegateVisitorCrashMarkerFilespec))] - Details:[\(error)] - Error!") 
+            }
+        }
 
         // Exit:
 

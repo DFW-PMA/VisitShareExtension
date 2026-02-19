@@ -24,7 +24,7 @@ final class AppGlobalInfoConfig:NSObject
 {
     
     static let sGlobalInfoAppId:String                                   = "VisitShareExtension"
-    static let sGlobalInfoAppVers:String                                 = "v1.5701"
+    static let sGlobalInfoAppVers:String                                 = "v1.5801"
     static let sGlobalInfoAppDisp:String                                 = sGlobalInfoAppId+".("+sGlobalInfoAppVers+"): "
     static let sGlobalInfoAppCopyRight:String                            = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
     static let sGlobalInfoAppLogFilespecMaxSize:Int64                    = 10000000
@@ -58,7 +58,7 @@ final class AppGlobalInfoConfig:NSObject
     static let bIssueTestAppUserNotifications:Bool                       = false
     static let bIssueShortAppUserNotifications:Bool                      = true
     static let bPerformAppCoreLocationTesting:Bool                       = false
-    static let bPerformAppDevTesting:Bool                                = false
+    static let bPerformAppDevTesting:Bool                                = true
     static let bEnableAppReleaseDownloads:Bool                           = true
     static let bEnableAppAdsPlaceholder:Bool                             = false
     static let bEnableAppAdsTesting:Bool                                 = false

@@ -2,8 +2,9 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.5709...
-//  Updated by Daryl Cox on 02/03/2026.
+//  AppGlobalInfo.swift - v1.5803...
+//  Updated by Daryl Cox on 02/18/2026.
+//  Updated by Daryl Cox on 02/11/2026.
 //  Created by Daryl Cox on 06/19/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
@@ -1406,6 +1407,13 @@ public class AppGlobalInfo:NSObject
         
         // Set the App in the Foreground/Background 'state'...
         
+#if os(macOS)
+        // Main app code
+
+        let stateForegroundBackground = true
+        self.setAppInForeground()
+#endif
+#if os(iOS)
     #if APP_EXTENSION
         // Extension code - UIApplication.shared is unavailable
 
@@ -1427,6 +1435,7 @@ public class AppGlobalInfo:NSObject
         @unknown default:
             break
         }
+#endif
 
         // Exit...
         

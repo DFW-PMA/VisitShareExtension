@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import Foundation
 import SwiftUI
 
 struct SettingsSingleViewCore:View 
@@ -14,7 +15,7 @@ struct SettingsSingleViewCore:View
     struct ClassInfo
     {
         static let sClsId        = "SettingsSingleViewCore"
-        static let sClsVers      = "v1.2604"
+        static let sClsVers      = "v1.2703"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -33,6 +34,8 @@ struct SettingsSingleViewCore:View
                    var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
     
            private var bInternalZipTest:Bool                     = false
+           private var bInternalDocumentsFileReader:Bool         = true
+
            private var bIsAppUploadUsingLongMsg:Bool             = true
 
     @State private var isAppExecutionCurrentShowing:Bool         = false
@@ -62,6 +65,9 @@ struct SettingsSingleViewCore:View
     @State private var isAppAboutViewModal:Bool                  = false
     @State private var isAppHelpViewModal:Bool                   = false
     @State private var isAppLogViewModal:Bool                    = false
+
+    @State private var isDocumentsFileReaderShowing:Bool         = false
+    @State private var isDataGridSettingsShowing:Bool            = false
 
 #if os(iOS)
     @State private var cAppReleaseUpdateButtonPresses:Int        = 0
@@ -442,18 +448,102 @@ struct SettingsSingleViewCore:View
                         UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
                     }
                 }
+
+                Spacer()
             #endif
+            }
+
+            Spacer()
+      
+        if (AppGlobalInfo.bPerformAppDevTesting == true)
+        {
+            HStack(alignment:.center)
+            {
+                Spacer()
+
+                Button
+                {
+                    let _ = appLogMsg("\(ClassInfo.sClsDisp):SettingsSingleViewCore in Button(Xcode).'App DataGrid Settings'...")
+
+                #if os(iOS)
+                    self.isDataGridSettingsShowing.toggle()
+                #endif
+                #if os(macOS)
+                    openWindow(id:"SettingsDataGridView")
+                #endif
+                }
+                label:
+                {
+                    VStack(alignment:.center)
+                    {
+                        Label("", systemImage: "grid")
+                            .help(Text("App DataGrid Settings Viewer"))
+                            .imageScale(.large)
+                        Text("DataGrid")
+                            .font(.caption)
+                    }
+                }
+            #if os(iOS)
+                .fullScreenCover(isPresented:$isDataGridSettingsShowing)
+                {
+                    SettingsDataGridView()
+                }
+            #endif
+            #if os(macOS)
+                .buttonStyle(.borderedProminent)
+            //  .background(???.isPressed ? .blue : .gray)
+                .cornerRadius(10)
+                .foregroundColor(Color.primary)
+            #endif
+                .padding(1.00)
 
                 Spacer()
 
-            if (AppGlobalInfo.bPerformAppDevTesting == true)
+            if (self.bInternalDocumentsFileReader == true)
             {
                 Button
                 {
+                    let _ = appLogMsg("\(ClassInfo.sClsDisp):SettingsSingleViewCore in Button(Xcode).'(Dev) Directories'...")
+
+                #if os(iOS)
+                    self.isDocumentsFileReaderShowing.toggle()
+                #endif
+                #if os(macOS)
+                    openWindow(id:"AppDocumentsFileReaderView")
+                #endif
+                }
+                label:
+                {
+                    VStack(alignment:.center)
+                    {
+                        Label("", systemImage:"testtube.2")
+                            .help(Text("(Dev) Directories"))
+                            .imageScale(.large)
+                        Text("(Dev) Directories")
+                            .font(.caption)
+                    }
+                }
+            #if os(iOS)
+                .fullScreenCover(isPresented:$isDocumentsFileReaderShowing)
+                {
+                    AppDocumentsFileReaderView()
+                }
+            #endif
+            #if os(macOS)
+                .buttonStyle(.borderedProminent)
+                .cornerRadius(10)
+                .foregroundColor(Color.primary)
+            #endif
+                .padding(1.00)
+
+                Spacer()
+
+                Button
+                {
                     self.cAppZipFileButtonPresses += 1
-      
+          
                     let _ = appLogMsg("\(ClassInfo.sClsDisp)SettingsSingleViewCore in Button(Xcode).'App ZipFile'.#(\(self.cAppZipFileButtonPresses))...")
-      
+          
                     self.isAppZipFileShowing.toggle()
                 }
                 label:
@@ -476,7 +566,7 @@ struct SettingsSingleViewCore:View
                     Button("Ok", role:.destructive)
                     {
                         let _ = appLogMsg("\(ClassInfo.sClsDisp) User pressed 'Ok' to 'test' the App ZIP File - testing...")
-      
+          
                         self.uploadCurrentAppLogToDevs()
                     }
                 }
@@ -486,34 +576,27 @@ struct SettingsSingleViewCore:View
                 .cornerRadius(10)
                 .foregroundColor(Color.primary)
             #endif
-      
+          
                 Spacer()
-      
+          
                 Button
                 {
-      
                     self.cAppCrashButtonPresses += 1
-      
+          
                     let _ = appLogMsg("\(ClassInfo.sClsDisp)SettingsSingleViewCore in Button(Xcode).'App Crash'.#(\(self.cAppCrashButtonPresses))...")
-      
+          
                     self.isAppCrashShowing.toggle()
-      
                 }
                 label:
                 {
-      
                     VStack(alignment:.center)
                     {
-      
                         Label("", systemImage: "autostartstop.slash")
                             .help(Text("FORCE this App to CRASH"))
                             .imageScale(.large)
-      
                         Text("Force CRASH")
                             .font(.caption2)
-      
                     }
-      
                 }
                 .alert("Are you sure you want to 'crash' this App?", isPresented:$isAppCrashShowing)
                 {
@@ -524,7 +607,7 @@ struct SettingsSingleViewCore:View
                     Button("Ok", role:.destructive)
                     {
                         let _ = appLogMsg("\(ClassInfo.sClsDisp) User pressed 'Ok' to 'crash' the App - crashing...")
-      
+          
                         fatalError("The User pressed 'Ok' to force an App 'crash'!")
                     }
                 }
@@ -538,6 +621,7 @@ struct SettingsSingleViewCore:View
                 Spacer()
             }
             }
+        }
       
         #if os(iOS)
         if (AppGlobalInfo.bEnableAppReleaseDownloads == true)
@@ -656,13 +740,11 @@ struct SettingsSingleViewCore:View
         }
         #endif
 
+            Spacer()
+
             Text("")            
                 .hidden()
-                .onAppear(
-                    perform:
-                    {
-                        let _ = self.finishAppInitialization()
-                    })
+                .onAppear(perform:{ let _ = self.finishAppInitialization() })
                 .frame(minWidth: 1, idealWidth: 2, maxWidth: 3,
                        minHeight:1, idealHeight:2, maxHeight:3)
         }
@@ -681,9 +763,7 @@ struct SettingsSingleViewCore:View
         // Finish the App 'initialization'...
   
         appLogMsg("\(ClassInfo.sClsDisp) Invoking the 'jmAppDelegateVisitor.checkAppDelegateVisitorTraceLogFileForSize()'...")
-
         self.jmAppDelegateVisitor.checkAppDelegateVisitorTraceLogFileForSize()
-
         appLogMsg("\(ClassInfo.sClsDisp) Invoked  the 'jmAppDelegateVisitor.checkAppDelegateVisitorTraceLogFileForSize()'...")
 
         // Exit...
@@ -701,7 +781,6 @@ struct SettingsSingleViewCore:View
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
-  
         appLogMsg("\(sCurrMethodDisp) 'jmAppDelegateVisitor' is [\(String(describing: jmAppDelegateVisitor))] - details are [\(jmAppDelegateVisitor.toString())]...")
   
         let bWasAppLogPresentAtStart:Bool = jmAppDelegateVisitor.bWasAppLogFilePresentAtStartup
@@ -721,11 +800,8 @@ struct SettingsSingleViewCore:View
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
-  
         appLogMsg("\(sCurrMethodDisp) 'jmAppDelegateVisitor' is [\(String(describing: jmAppDelegateVisitor))] - details are [\(jmAppDelegateVisitor.toString())]...")
-  
         let bDidAppCrashOnLastRun:Bool = jmAppDelegateVisitor.bWasAppCrashFilePresentAtStartup
-  
         appLogMsg("\(sCurrMethodDisp) 'bDidAppCrashOnLastRun' is [\(String(describing: bDidAppCrashOnLastRun))]...")
         
         // Exit...
