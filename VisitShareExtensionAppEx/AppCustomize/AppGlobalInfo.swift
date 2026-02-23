@@ -2,7 +2,9 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.5803...
+//  AppGlobalInfo.swift - v1.6001...
+//  Updated by Daryl Cox on 02/23/2026.
+//  Updated by Daryl Cox on 02/22/2026.
 //  Updated by Daryl Cox on 02/18/2026.
 //  Updated by Daryl Cox on 02/11/2026.
 //  Created by Daryl Cox on 06/19/2025.
@@ -227,6 +229,7 @@ public class AppGlobalInfo:NSObject
     //                              ENABLE_APP_USER_AUTHENTICATION
     //                              ENABLE_APP_USER_AUTH_TYPE
     //                              ENABLE_APP_PARSECORE_FOR_SWIFT
+    //                              ENABLE_APP_IAP_CAPABILITY
     //                              INSTANTIATE_APP_VV
     //                              INSTANTIATE_APP_VV_UIKIT_ALERTS
     //                              INSTANTIATE_APP_VMA
@@ -291,6 +294,15 @@ public class AppGlobalInfo:NSObject
     static let isEnabledParseCoreForSwift:Bool                           =
     {
     #if ENABLE_APP_PARSECORE_FOR_SWIFT
+        return true
+    #else
+        return false
+    #endif
+    }()
+
+    static let isEnabledAppIAPCapability:Bool                            =
+    {
+    #if ENABLE_APP_IAP_CAPABILITY
         return true
     #else
         return false
@@ -1234,7 +1246,17 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.listAppGlobalInfoPreXCGLoggerMessages' has (\(listAppGlobalInfoPreXCGLoggerMessages.count)) message(s)...")
     #endif
 
-        appLogMsg("\(sCurrMethodDisp) ====================================================")
+    #if ENABLE_APP_IAP_CAPABILITY
+        // Display the various AppGlobalInfoConfigIAP 'settings'...
+
+        appLogMsg("\(sCurrMethodDisp) ========== AppGlobalInfoConfigIAP 'settings' ==========")
+
+        let appGlobalInfoConfigIAP:AppGlobalInfoConfigIAP = AppGlobalInfoConfigIAP.ClassSingleton.appGlobalInfoConfigIAP
+
+        appGlobalInfoConfigIAP.displayAppGlobalInfoConfigIAPSettings()
+    #endif
+
+        appLogMsg("\(sCurrMethodDisp) =======================================================")
 
         // Exit:
 

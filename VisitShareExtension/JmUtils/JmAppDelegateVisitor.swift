@@ -28,7 +28,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.6501"
+        static let sClsVers      = "v1.6601"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -1552,7 +1552,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
             let sCrashMarkerFileContents = JmFileIO.readFile(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
 
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <CrashMarkerContents> CRASH Marker Filespec (file already exists) of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - 'sCrashMarkerFileContents' is [\(sCrashMarkerFileContents)]...")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <CrashMarkerContents> CRASH Marker Filespec (file already exists) of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - 'sCrashMarkerFileContents' is [\(String(describing: sCrashMarkerFileContents))]...")
         }
         
         // Exit:
@@ -1615,7 +1615,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             let bWriteFile                  = JmFileIO.writeFile(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec, sContents:sNewContents, bAppendToFile:true)
             let sCrashMarkerFileContents    = JmFileIO.readFile(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
 
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <CrashMarkerContents> CRASH Marker Filespec (file already exists) of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - 'sCrashMarkerFileContents' is [\(sCrashMarkerFileContents)]...")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <CrashMarkerContents> CRASH Marker Filespec (file already exists) of [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilespec))] - 'sCrashMarkerFileContents' is [\(String(describing: sCrashMarkerFileContents))]...")
 
             do 
             {
