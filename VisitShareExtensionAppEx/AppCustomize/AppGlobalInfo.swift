@@ -2,7 +2,8 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.6001...
+//  AppGlobalInfo.swift - v1.6003...
+//  Updated by Daryl Cox on 02/23/2026. (Auto-sync background trigger added)
 //  Updated by Daryl Cox on 02/23/2026.
 //  Updated by Daryl Cox on 02/22/2026.
 //  Updated by Daryl Cox on 02/18/2026.
@@ -1330,6 +1331,26 @@ public class AppGlobalInfo:NSObject
 
         self.setAppInForeground()
 
+    #if INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+        // Refresh the CLRequestGoodItem list from SwiftData so the UI reflects
+        // any items upserted during the background sync step.
+        // This is a read-only fetch+sort on the observable - no network, no writes.
+
+        appLogMsg("\(sCurrMethodDisp) <AppBGTasks> <AutoSyncCLLocs> Intermediate - Dispatching 'CLRequestGoodModelObservable.clRequestGoodModelObservable.generateCLRequestGoodItemsList()' onto MainActor...")
+
+        // 'generateCLRequestGoodItemsList()' is @MainActor-isolated so dispatch via Task...
+
+        Task
+        { @MainActor in
+
+            CLRequestGoodModelObservable.clRequestGoodModelObservable.generateCLRequestGoodItemsList()
+
+            appLogMsg("\(sCurrMethodDisp) <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'CLRequestGoodModelObservable.clRequestGoodModelObservable.generateCLRequestGoodItemsList()' on MainActor...")
+
+        }
+
+    #endif
+
         // Exit...
         
         appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
@@ -1347,6 +1368,17 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
 
         self.setAppInBackground()
+
+    #if INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+        // Trigger one step of the CLLocation auto-sync cycle.
+        // Runs inside a UIApplication background task so iOS grants ~30 seconds
+        // after backgrounding.  currentAutoSyncStep is persisted in @AppStorage
+        // so an interrupted cycle resumes on the next background entry.
+
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()'...")
+        JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()'...")
+    #endif
 
         // Exit...
         
@@ -1374,9 +1406,9 @@ public class AppGlobalInfo:NSObject
         {
             // When we go into the Foreground, we make sure the CRASH Marker File is in place...
 
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - Calling 'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
             jmAppGlobalInfoDelegateVisitor?.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - Called  'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
         }
     #endif
 
@@ -1405,9 +1437,9 @@ public class AppGlobalInfo:NSObject
         {
             // When we go into the Background, we make sure the CRASH Marker File is NOT in place (we can be removed without warning)...
 
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - Calling 'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
             jmAppGlobalInfoDelegateVisitor?.performAppDelegateVisitorTerminatingCrashLogic()
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Intermediate - Called  'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
         }
     #endif
 
