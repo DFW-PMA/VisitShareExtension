@@ -159,7 +159,7 @@ struct AppDocumentsFileReaderView:View
     struct ClassInfo
     {
         static let sClsId        = "AppDocumentsFileReaderView"
-        static let sClsVers      = "v1.1203"
+        static let sClsVers      = "v1.1401"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -1569,7 +1569,7 @@ struct AppDocumentsFileItemDetails:View
     struct ClassInfo
     {
         static let sClsId        = "AppDocumentsFileItemDetails"
-        static let sClsVers      = "v1.1101"
+        static let sClsVers      = "v1.1201"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -1645,10 +1645,12 @@ struct AppDocumentsFileItemDetails:View
                 #endif
                     .padding()
                 }
-                ToolbarItem(placement:.principal)
+                ToolbarItem(placement:.primaryAction)
                 {
                     Button
                     {
+                        self.fileUrl = self.item.url
+
                         let _ = appLogMsg("\(ClassInfo.sClsDisp):Button('Upload File') performed for the URL of [\(String(describing:self.fileUrl))]...")
 
                         self.isAppUploadFileShowing.toggle()
