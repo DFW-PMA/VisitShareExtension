@@ -21,6 +21,8 @@ import UniformTypeIdentifiers
 enum AppGeneralFileDisplayMode
 {
     case progress
+    case image          // Tier 0 - image media (jpg, jpeg, png, gif, heic, heif, webp, tiff, tif, bmp)
+    case video          // Tier 0 - video media (mp4, mov, m4v, avi, mkv, wmv, flv, webm, mpeg, mpg, 3gp)
     case spreadsheet
     case json
     case rawText
@@ -35,7 +37,7 @@ struct AppGeneralFileView:View
     struct ClassInfo
     {
         static let sClsId        = "AppGeneralFileView"
-        static let sClsVers      = "v1.0601"
+        static let sClsVers      = "v1.0703"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -74,7 +76,24 @@ struct AppGeneralFileView:View
     
     @State          private var isTopExpanded:Bool                     = false
     @State          private var isBottomExpanded:Bool                  = false
-    
+
+    // MARK: - Tier 0 Media State (Change 2)
+    //
+    // transientCineViewItem: Built on-the-fly from the fileURL when a media
+    //   extension is detected.  @StateObject keeps it alive across the SwiftUI
+    //   branch swap when displayMode transitions from .progress to .image/.video
+    //   and the NavigationStack is torn down and mediaView is mounted.
+    //   All CineViewLocItem fields are var so they can be populated on MainActor
+    //   inside the Task before displayMode flips.
+    //
+    // bIsMediaPresented: The Binding<Bool> contract required by both viewers.
+    //   In practice both viewers dismiss via presentationMode.wrappedValue.dismiss()
+    //   rather than toggling this flag - it is informational, not the dismiss
+    //   mechanism.  Initialised true because we are presenting when this view appears.
+
+    @StateObject    private var transientCineViewItem:CineViewLocItem  = CineViewLocItem()
+    @State          private var bIsMediaPresented:Bool                 = true
+
     // XML to JSON converter...
 
                     private let xmlToJSONConverter                     = AppXmlToJsonConverter()
@@ -154,69 +173,102 @@ struct AppGeneralFileView:View
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'fileURL' (full) is [\(fileURL)]...")
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'fileURL' (path) is [\(fileURL.path)]...")
 
-        NavigationStack
+        // CHANGE 5: Body restructure.
+        //
+        // Media modes (.image / .video) bypass the NavigationStack entirely so
+        // full-screen viewers are not capped by nav-bar chrome.
+        //
+        // displayMode starts as .progress so the NavigationStack branch always
+        // renders first and onAppear fires processFile(at:fileURL).
+        // If Tier 0 detects a media extension, it populates transientCineViewItem
+        // on MainActor then flips displayMode to .image or .video.  SwiftUI
+        // re-evaluates the if/else, tears down the NavigationStack, and mounts
+        // mediaView.  The @StateObject transientCineViewItem is owned by
+        // AppGeneralFileView and survives the branch swap with all fields intact.
+        //
+        // Non-media files follow the original NavigationStack / three-tier path
+        // with zero regression risk.
+
+        if displayMode == .image || displayMode == .video
         {
-            VStack
-            {
-                // Three-Tier Display System - Main Content:
+            // Tier 0 path: full-screen media viewer, no NavigationStack chrome.
 
-                Group
-                {
-                    switch displayMode
-                    {
-                    case .progress:
-                        progressView
-                    case .spreadsheet:
-                        spreadsheetView
-                    case .json:
-                        jsonView
-                    case .rawText:
-                        rawTextView
-                    case .error:
-                        errorView
-                    }
-                }
-            }
-            .navigationTitle("File Viewer")
-        #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-        #endif
-            .toolbar
-            {
-            //  ToolbarItem(placement:.navigationBarTrailing)
-                ToolbarItem(placement:.primaryAction)
-                {
-                    Button
-                    {
-                        let _ = appLogMsg("\(ClassInfo.sClsDisp):AppGeneralFileView.Button(Xcode).'Dismiss' pressed...")
+            mediaView
+        }
+        else
+        {
+            // Tiers 1-3 / Error path: original NavigationStack layout unchanged.
 
-                        self.presentationMode.wrappedValue.dismiss()
-                    }
-                    label:
+            NavigationStack
+            {
+                VStack
+                {
+                    // Four-Tier Display System - Main Content:
+
+                    Group
                     {
-                        VStack(alignment:.center)
+                        switch displayMode
                         {
-                            Label("", systemImage:"xmark.circle")
-                                .help(Text("Dismiss this Screen"))
-                                .imageScale(.small)
-                            Text("Dismiss")
-                                .font(.caption2)
+                        case .progress:
+                            progressView
+                        case .spreadsheet:
+                            spreadsheetView
+                        case .json:
+                            jsonView
+                        case .rawText:
+                            rawTextView
+                        case .error:
+                            errorView
+                        default:
+                            // .image and .video are handled in the if-branch above.
+                            // This default is unreachable at runtime but required by
+                            // the compiler because AppGeneralFileDisplayMode is not
+                            // exhaustively matched here.
+                            EmptyView()
                         }
                     }
-                #if os(macOS)
-                    .buttonStyle(.borderedProminent)
-                    .cornerRadius(10)
-                    .foregroundColor(Color.primary)
-                #endif
-                    .padding()
                 }
-            }
-            .onAppear
-            {
-                let _ = appLogMsg("\(ClassInfo.sClsDisp):AppGeneralFileView.onAppear() - Starting file processing...")
+                .navigationTitle("File Viewer")
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
+                .toolbar
+                {
+                //  ToolbarItem(placement:.navigationBarTrailing)
+                    ToolbarItem(placement:.primaryAction)
+                    {
+                        Button
+                        {
+                            let _ = appLogMsg("\(ClassInfo.sClsDisp):AppGeneralFileView.Button(Xcode).'Dismiss' pressed...")
 
-                // Immediately process the file
-                processFile(at:fileURL)
+                            self.presentationMode.wrappedValue.dismiss()
+                        }
+                        label:
+                        {
+                            VStack(alignment:.center)
+                            {
+                                Label("", systemImage:"xmark.circle")
+                                    .help(Text("Dismiss this Screen"))
+                                    .imageScale(.small)
+                                Text("Dismiss")
+                                    .font(.caption2)
+                            }
+                        }
+                    #if os(macOS)
+                        .buttonStyle(.borderedProminent)
+                        .cornerRadius(10)
+                        .foregroundColor(Color.primary)
+                    #endif
+                        .padding()
+                    }
+                }
+                .onAppear
+                {
+                    let _ = appLogMsg("\(ClassInfo.sClsDisp):AppGeneralFileView.onAppear() - Starting file processing...")
+
+                    // Immediately process the file
+                    processFile(at:fileURL)
+                }
             }
         }
 
@@ -462,7 +514,61 @@ struct AppGeneralFileView:View
         }
         .padding()
     }
-    
+
+    // MARK: - CHANGE 3: Media View
+    //
+    // Rendered instead of NavigationStack when displayMode is .image or .video.
+    //
+    // transientCineViewItem is fully populated (all var fields assigned) before
+    // displayMode is switched on MainActor, so both viewers receive valid data
+    // on first render.
+    //
+    // For video: bCanResume on CineViewLocItem delegates to
+    //   videoMetadata?.bCanResume which requires progress > 5s AND < 95%.
+    //   This works automatically for any video that already has a .cineview
+    //   sidecar - the sidecar is loaded in processFile Tier 0 block below.
+    //
+    // Both viewers dismiss via presentationMode.wrappedValue.dismiss() which
+    // dismisses the .fullScreenCover that presented AppGeneralFileView itself.
+
+    private var mediaView:some View
+    {
+
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):mediaView - Rendering for: [\(fileURL.lastPathComponent)] mediaType: [\(transientCineViewItem.mediaType.displayName)]...")
+
+        return Group
+        {
+            switch displayMode
+            {
+            case .image:
+
+                let _ = appLogMsg("\(ClassInfo.sClsDisp):mediaView - Presenting FullScreenImageViewer...")
+
+                FullScreenImageViewer(
+                    imageURL:    fileURL,
+                    isPresented: $bIsMediaPresented,
+                    cineViewItem:transientCineViewItem
+                )
+
+            case .video:
+
+                let _ = appLogMsg("\(ClassInfo.sClsDisp):mediaView - Presenting FullScreenVideoPlayer - bCanResume: [\(transientCineViewItem.bCanResume)]...")
+
+                FullScreenVideoPlayer(
+                    videoURL:            fileURL,
+                    isPresented:         $bIsMediaPresented,
+                    cineViewItem:        transientCineViewItem,
+                    bResumeFromProgress: transientCineViewItem.bCanResume
+                )
+
+            default:
+                // Unreachable: body if-guard ensures only .image/.video reach here.
+                EmptyView()
+            }
+        }
+
+    }   // End of private var mediaView:some View.
+
     // MARK: - File Processing Functions
     
     private func processFile(at url:URL)
@@ -492,7 +598,8 @@ struct AppGeneralFileView:View
             }
         }
 
-        // After "File exists at path: [true]"
+        // After "File exists at path: [true]"...
+
         do
         {
             let attrs = try FileManager.default.attributesOfItem(atPath:url.path)
@@ -513,6 +620,7 @@ struct AppGeneralFileView:View
         }
         
         // Run the import asynchronously to avoid blocking the UI...
+
         Task
         {
             // CRITICAL CHECK: Is this actually a directory?
@@ -549,7 +657,78 @@ struct AppGeneralFileView:View
             {
                 appLogMsg("\(sCurrMethodDisp) Could not verify if directory: \(error)")
             }
-            
+
+            // MARK: - CHANGE 4: Tier 0 - Media Early Exit
+            //
+            // Uses MediaType.from(fileExtension:) from CineViewLocItem.swift -
+            // the same extension classifier used across all CinemaPack apps.
+            //
+            // Runs BEFORE any file Data read.  Media files are never loaded into
+            // memory here; FullScreenImageViewer uses UIImage(contentsOfFile:)
+            // and FullScreenVideoPlayer uses AVPlayer - both handle their own I/O.
+            //
+            // Steps:
+            //   1. Detect extension via MediaType.from()
+            //   2. Pull file size + mod date via resourceValues  (no full read)
+            //   3. Load any existing .cineview sidecar  (gives video resume free)
+            //   4. Populate all var fields on transientCineViewItem on MainActor
+            //   5. Set displayMode to .image or .video  ->  body branch-swaps
+            //   6. return  -  skips the entire three-tier text pipeline
+            //
+            // Supported image extensions : jpg  jpeg  png  gif  heic  heif
+            //                              webp  tiff  tif  bmp
+            // Supported video extensions : mp4  mov  m4v  avi  mkv  wmv  flv
+            //                              webm  mpeg  mpg  3gp
+
+            let fileExtension = url.pathExtension.lowercased()
+
+            appLogMsg("\(sCurrMethodDisp) Tier 0 check - file extension: [\(fileExtension)]...")
+
+            if let detectedMediaType = MediaType.from(fileExtension:fileExtension)
+            {
+                appLogMsg("\(sCurrMethodDisp) Tier 0 match - mediaType: [\(detectedMediaType.displayName)] file: [\(url.lastPathComponent)]...")
+
+                // Pull file size and modification date without a full Data read...
+
+                let iFileSize    = (try? url.resourceValues(forKeys:[.fileSizeKey]).fileSize) ?? 0
+                let dateModified = (try? url.resourceValues(forKeys:[.contentModificationDateKey])
+                                        .contentModificationDate) ?? Date()
+
+                let sSizeMB             = formatFileSize(iFileSize)
+                let dateFormatter       = DateFormatter()
+                dateFormatter.dateStyle = .short
+                dateFormatter.timeStyle = .short
+                let sModifiedOn         = dateFormatter.string(from:dateModified)
+
+                // Load any existing .cineview sidecar.
+                // For video: supplies bCanResume / dPlaybackProgressSeconds so
+                // FullScreenVideoPlayer can seek to the last position automatically.
+                // For image: carries prior-viewed state (bHasBeenWatched).
+
+                let existingMetadata = VideoMetadataManager.shared.loadMetadata(for:url)
+
+                appLogMsg("\(sCurrMethodDisp) Tier 0 - size: [\(sSizeMB)] sidecar: [\((existingMetadata != nil) ? "found" : "none")]...")
+                          
+                await MainActor.run
+                {
+                    transientCineViewItem.sCineViewLocFilespec       = url.path
+                    transientCineViewItem.sCineViewLocFilenameExt    = url.lastPathComponent
+                    transientCineViewItem.urlCineViewLocFile         = url
+                    transientCineViewItem.sCineViewLocFileSizeMB     = sSizeMB
+                    transientCineViewItem.sCineViewLocFileModifiedOn = sModifiedOn
+                    transientCineViewItem.dateItemTimestamp          = dateModified
+                    transientCineViewItem.mediaType                  = detectedMediaType
+                    transientCineViewItem.videoMetadata              = existingMetadata
+
+                    displayMode = (detectedMediaType == .image) ? .image : .video
+                }
+
+                appLogMsg("\(sCurrMethodDisp) Tier 0 complete - displayMode set to [\(detectedMediaType.displayName)] - Exiting...")
+                return
+            }
+
+            appLogMsg("\(sCurrMethodDisp) Tier 0 - not a media file, continuing to three-tier text pipeline...")
+
             do
             {
                 // Determine if we need security-scoped resource access
@@ -627,6 +806,7 @@ struct AppGeneralFileView:View
                 }
                 
                 // Check if we successfully read data
+
                 guard let fileData = data 
                 else
                 {
@@ -635,11 +815,11 @@ struct AppGeneralFileView:View
                     if (sFileContents        != nil &&
                         sFileContents!.count  > 0)
                     {
-                        appLogMsg("\(sCurrMethodDisp) Success - JmFileIO.readFile(sFilespec:\(url.path)) read the file contents of [\(sFileContents)]...")
+                        appLogMsg("\(sCurrMethodDisp) Success - JmFileIO.readFile(sFilespec:\(url.path)) read the file contents of [\(String(describing: sFileContents))]...")
                     }
                     else
                     {
-                        appLogMsg("\(sCurrMethodDisp) Failed - JmFileIO.readFile(sFilespec:\(url.path)) read of the file contents of [\(sFileContents)] - Error!")
+                        appLogMsg("\(sCurrMethodDisp) Failed - JmFileIO.readFile(sFilespec:\(url.path)) read of the file contents of [\(String(describing: sFileContents))] - Error!")
                     }
 
                     appLogMsg("\(sCurrMethodDisp) Failed - ALL read methods failed!")
@@ -662,6 +842,7 @@ struct AppGeneralFileView:View
                 appLogMsg("\(sCurrMethodDisp) Processing - Successfully read #(\(fileData.count)) bytes using [\(readMethod)]")
                 
                 // Check for empty file...
+
                 if fileData.isEmpty
                 {
                     appLogMsg("\(sCurrMethodDisp) Warning - File is empty!")
@@ -722,10 +903,12 @@ struct AppGeneralFileView:View
                 
                 appLogMsg("\(sCurrMethodDisp) Success - Using Raw Text View (Tier 3) - always works!")
             }
-            catch
-            {
-                appLogMsg("\(sCurrMethodDisp) Failed - Outer 'Task' catch - Unable to read 'url' of [\(url)] - Detail(s): [\(error)] - Error!")
-            }
+        //  NOTE: the do{} block doen't have a 'throws', so this catch{} is unreachable...
+        //
+        //  catch
+        //  {
+        //      appLogMsg("\(sCurrMethodDisp) Failed - Outer 'Task' catch - Unable to read 'url' of [\(url)] - Detail(s): [\(error)] - Error!")
+        //  }
             
             appLogMsg("\(sCurrMethodDisp) Exiting...")
         }
@@ -804,6 +987,7 @@ struct AppGeneralFileView:View
                 }
                 
                 // Success - show spreadsheet view
+
                 await MainActor.run
                 {
                     parsedWorkbook         = workbook
@@ -824,6 +1008,7 @@ struct AppGeneralFileView:View
         }
         
         // Handle XML/XLS files with SpreadsheetXML parser
+
         appLogMsg("\(sCurrMethodDisp) Using SpreadsheetXML parser for file extension: [\(fileExtension)]...")
         
         let parser = SpreadsheetXMLParser()
@@ -914,11 +1099,13 @@ struct AppGeneralFileView:View
         do
         {
             // Try to parse as JSON directly...
+
             let jsonObject = try JSONSerialization.jsonObject(with:data, options:[])
             
             appLogMsg("\(sCurrMethodDisp) Processing - Successfully parsed JSON data...")
             
             // Convert to display items using JsonDisplayItem's static methods...
+
             var displayItems:[JsonDisplayItem] = []
             
             if let jsonDict = jsonObject as? [String:Any]
@@ -932,6 +1119,7 @@ struct AppGeneralFileView:View
                 appLogMsg("\(sCurrMethodDisp) Processing - JSON is an Array with #(\(jsonArray.count)) element(s)...")
                 
                 // Wrap array in a dictionary so we can use fromDictionary (since fromArray is private)...
+
                 let wrappedDict:[String:Any] = ["root": jsonArray]
                 displayItems = JsonDisplayItem.fromDictionary(wrappedDict)
             }

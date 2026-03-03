@@ -28,7 +28,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.6601"
+        static let sClsVers      = "v1.6701"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -4788,7 +4788,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         return
 
-    }   // End of @objc public func appDelegateVisitorSendEmailUpload().
+    }   // End of @objc public func appDelegateVisitorSendSilentUpload().
 
     private func appDelegateVisitorSendUploadCore(alertIsBypassed:Bool,
                                                   emailAddressTo:String,
