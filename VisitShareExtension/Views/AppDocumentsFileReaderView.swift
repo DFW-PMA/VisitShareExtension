@@ -159,7 +159,7 @@ struct AppDocumentsFileReaderView:View
     struct ClassInfo
     {
         static let sClsId        = "AppDocumentsFileReaderView"
-        static let sClsVers      = "v1.1401"
+        static let sClsVers      = "v1.1501"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -539,7 +539,7 @@ struct AppDocumentsFileReaderView:View
                     .padding()
                 }
                 
-                ToolbarItem(placement:.principal) 
+                ToolbarItem(placement:.primaryAction) 
                 {
                     Button
                     {
@@ -584,7 +584,7 @@ struct AppDocumentsFileReaderView:View
                 #endif
                     .padding()
                 }
-                ToolbarItem(placement:.principal)
+                ToolbarItem(placement:.primaryAction)
                 {
                     Button
                     {

@@ -16,7 +16,7 @@ struct SpreadsheetXMLViewer:View
     struct ClassInfo
     {
         static let sClsId        = "SpreadsheetXMLViewer"
-        static let sClsVers      = "v1.0601"
+        static let sClsVers      = "v1.0701"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
         static let bClsTrace     = true
@@ -312,7 +312,7 @@ struct SpreadsheetXMLViewer:View
     {
         
     //  ToolbarItem(placement:.navigationBarLeading)
-        ToolbarItem(placement:.principal)
+        ToolbarItem(placement:.primaryAction)
         {
             Button(action:
                    {
@@ -324,7 +324,7 @@ struct SpreadsheetXMLViewer:View
         }
         
     //  ToolbarItem(placement:.navigationBarLeading)
-        ToolbarItem(placement:.principal)
+        ToolbarItem(placement:.primaryAction)
         {
             Button(action:
                    {

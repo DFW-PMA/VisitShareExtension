@@ -96,7 +96,7 @@ struct AppJsonDisplayView:View
     //          rawViewButton
     //      }
     //  }
-        .sheet(isPresented:$showRawView)
+        .fullScreenCover(isPresented:$showRawView)
         {
             RawDataView(data:rawData)
         }
