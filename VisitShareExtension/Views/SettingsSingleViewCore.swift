@@ -1029,7 +1029,7 @@ struct SettingsSingleViewCore:View
         {
             // Open the URL that will download (and install) the App Release UPDATE...
 
-            let urlToOpen:URL = URL(string:"itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/DFW-PMA/VisitShareExtension/refs/heads/main/VisitShareExtension/VisitShareExtension.plist")!
+            let urlToOpen:URL = URL(string:"itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/DFW-PMA/VisitShareExtension_VSX-Releases/refs/heads/main/VisitShareExtension.plist")!
 
             appLogMsg("\(sCurrMethodDisp) Calling 'AppDelegate.openAppSuppliedURL(urlToOpen:)' to download and install the App Release on the URL of [\(urlToOpen)]...")
 
@@ -1064,7 +1064,7 @@ struct SettingsSingleViewCore:View
         {
             // Open the URL that will download (and install) the App Release UPDATE...
 
-            let urlToOpen:URL = URL(string:"itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/DFW-PMA/VisitShareExtension/refs/heads/main/VisitShareExtension/VisitShareExtension_Pre.plist")!
+            let urlToOpen:URL = URL(string:"itms-services://?action=download-manifest&url=https://raw.githubusercontent.com/DFW-PMA/VisitShareExtension_VSX-Releases/refs/heads/main/VisitShareExtension_Pre.plist")!
 
             appLogMsg("\(sCurrMethodDisp) Calling 'AppDelegate.openAppSuppliedURL(urlToOpen:)' to download and install the App Pre-Release on the URL of [\(urlToOpen)]...")
 
