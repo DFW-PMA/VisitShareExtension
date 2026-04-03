@@ -25,7 +25,7 @@ enum StringCleaning
     case removeWhitespacesAndNewlines
 }
 
-// Extension class to add extra method(s) to String - v8.0801.
+// Extension class to add extra method(s) to String - v8.0701.
 
 extension String
 {
@@ -506,25 +506,38 @@ extension String
 
     }   // func extractPrefixAndSuffix(delimiter:String)->(prefix:String, suffix:String)?.
 
-    // Computed 'value': Alternative validation method as a String extension...
+    // MARK:- Pass 0 - Typographic Quote Normalization
 
-    var isValidNetworkURL:Bool 
+    // Replaces Unicode typographic/curly quote variants with ASCII straight
+    // quotes before any JSONSerialization attempt.
+    // iOS autocorrect and on-device SLMs emit curly quotes that JSONSerialization
+    // cannot parse, causing HTTP 500 from Sashido.
+
+    func normalizeQuotes()->String
     {
-        guard !self.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty 
-        else { return false }
 
-        guard let url = URL(string:self) 
-        else { return false }
+        if (self.count < 1)
+        {
+            return self
+        }
 
-        guard let scheme = url.scheme?.lowercased(),
-              (scheme == "http" || scheme == "https") 
-        else { return false }
+        var result = self
 
-        guard let host = url.host, !host.isEmpty 
-        else { return false }
+        // Double quote variants -> ASCII straight double quote...
 
-        return true
-    }
+        result = result.replacingOccurrences(of:"“", with:"\"")  // “ LEFT DOUBLE QUOTATION MARK
+        result = result.replacingOccurrences(of:"”", with:"\"")  // ” RIGHT DOUBLE QUOTATION MARK
+        result = result.replacingOccurrences(of:"„", with:"\"")  // „ DOUBLE LOW-9 QUOTATION MARK
+
+        // Single quote variants -> ASCII straight single quote...
+
+        result = result.replacingOccurrences(of:"‘", with:"'")   // ‘ LEFT SINGLE QUOTATION MARK
+        result = result.replacingOccurrences(of:"’", with:"'")   // ’ RIGHT SINGLE QUOTATION MARK
+        result = result.replacingOccurrences(of:"‛", with:"'")   // ‛ SINGLE HIGH-REVERSED-9 MARK
+
+        return result
+
+    }   // End of func normalizeQuotes()->String.
 
 }   // End of extension String.
 

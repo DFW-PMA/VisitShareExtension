@@ -1,6 +1,6 @@
 //
 //  DataItemRepo.swift
-//  JmUtils_Library
+//  <<< App 'dependent' >>>
 //
 //  Created by Daryl Cox on 06/26/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
