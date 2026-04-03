@@ -28,10 +28,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.6701"
+        static let sClsVers      = "v1.7001"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
+        static let bClsTrace     = false
         static let bClsFileLog   = true
     }
 
@@ -46,7 +46,6 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     
     struct GlobalAlertRequest
     {
-
         let alertMessage:String
         let alertButtonText:String
         let requestTimestamp:Date
@@ -54,19 +53,15 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         
         init(alertMessage:String, alertButtonText:String)
         {
-
             self.alertMessage     = alertMessage
             self.alertButtonText  = alertButtonText
             self.requestTimestamp = Date()
             self.requestId        = UUID()
-
         }
-
     }
     
     struct CompletionAlertRequest
     {
-
         let alertMessage:String
         let alertButtonText1:String
         let alertButtonText2:String
@@ -81,7 +76,6 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
              completionHandler1:(()->())?,
              completionHandler2:(()->())?)
         {
-
             self.alertMessage       = alertMessage
             self.alertButtonText1   = alertButtonText1
             self.alertButtonText2   = alertButtonText2
@@ -89,9 +83,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             self.completionHandler2 = completionHandler2
             self.requestTimestamp   = Date()
             self.requestId          = UUID()
-
         }
-
     }
 
     // 'Internal' Trace flag:
@@ -199,6 +191,12 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     // App <possible> ParseCore (Client) Background Data Repo #4 instance:
 
     var jmAppParseCoreBkgdDataRepo4:JmAppParseCoreBkgdDataRepo4?   = nil
+#endif
+
+#if INSTANTIATE_APP_PARSECOREBKGDDATAREPO5
+    // App <possible> ParseCore (Client) Background Data Repo #5 instance:
+
+    var jmAppParseCoreBkgdDataRepo5:JmAppParseCoreBkgdDataRepo5?   = nil
 #endif
 
 #if INSTANTIATE_APP_CORELOCATIONSUPPORT
@@ -425,9 +423,6 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         appLogMsg("\(sCurrMethodDisp) Method Invoked - #(\(self.cAppDelegateVisitorInitCalls)) time(s) - 'sApplicationName' is [\(self.sApplicationName)]...")
         appLogMsg("\(sCurrMethodDisp) AppDelegateVisitor is starting - 'self' is [\(self)]...")
         appLogMsg("\(sCurrMethodDisp) XCGLogger 'log' instance 'self.xcgLogger' is being used (default instance)...")
-
-        // Exit:
-
         appLogMsg("\(sCurrMethodDisp) Exiting - #(\(self.cAppDelegateVisitorInitCalls)) time(s) - 'sApplicationName' is [\(self.sApplicationName)]...")
 
         return
@@ -454,7 +449,6 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Setup the Objective-C/Swift Bridge:
   
         self.jmObjCSwiftEnvBridge = JmObjCSwiftEnvBridge.sharedObjCSwiftEnvBridge
-
         self.jmObjCSwiftEnvBridge?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
   
         appLogMsg("\(sCurrMethodDisp) 'self' is [\(self)] and 'self.jmObjCSwiftEnvBridge' is (\(String(describing: self.jmObjCSwiftEnvBridge))) and 'self.xcgLogger' is [\(String(describing: self.xcgLogger))]...")
@@ -472,37 +466,25 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             definesObjCModule.initInstance()
           
             appLogMsg("\(sCurrMethodDisp) Objective-C call #1 - called  'definesObjCModule.initInstance()' with NO parameter(s)...")
-
             appLogMsg("\(sCurrMethodDisp) Objective-C call #2 - calling 'definesObjCModule.customLoggerTest1()' with 1 parameter(s)...")
-          
             let sHelloMessage1:String = "Message from 'JmAppDelegateVisitor' to 'definesObjCModule.customLoggerTest1(sHelloMessage1)'..."
-
             definesObjCModule.customLoggerTest1(sHelloMessage1)
-
             appLogMsg("\(sCurrMethodDisp) Objective-C call #2 - called  'definesObjCModule.customLoggerTest1()' with a parameter of [\(String(describing: sHelloMessage1))]...")
 
             // Initialize and call the class CalledObjCModule...
 
             let calledObjCModule = CalledObjCModule()
-
             appLogMsg("\(sCurrMethodDisp) Objective-C call #3 - calling 'calledObjCModule.initInstance()' with NO parameter(s)...")
-
             calledObjCModule.initInstance()
-
             appLogMsg("\(sCurrMethodDisp) Objective-C call #3 - called  'calledObjCModule.initInstance()' with NO parameter(s)...")
 
             appLogMsg("\(sCurrMethodDisp) Objective-C call #4 - calling 'calledObjCModule.getInternalVariable()' with 1 parameter(s)...")
-          
             let sInternalVariable:String? = calledObjCModule.getInternalVariable()
-
             appLogMsg("\(sCurrMethodDisp) Objective-C call #4 - called  'calledObjCModule.getInternalVariable()' - returned parameter 'sInternalVariable' is [\(String(describing: sInternalVariable))]...")
 
             appLogMsg("\(sCurrMethodDisp) Objective-C call #5 - calling 'calledObjCModule.sayHello()' with 1 parameter(s)...")
-          
             let sHelloMessage2:String = "Message from 'JmAppDelegateVisitor' to 'calledObjCModule.sayHello(sHelloMessage2)'..."
-
             calledObjCModule.sayHello(sHelloMessage2)
-
             appLogMsg("\(sCurrMethodDisp) Objective-C call #5 - called  'calledObjCModule.sayHello()' with a parameter of [\(String(describing: sHelloMessage2))]...")
         }
     #endif
@@ -510,12 +492,17 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     #if INSTANTIATE_APP_JMSWIFTDATAMANAGER
         // Instantiate the JmAppSwiftDataManager...
         
+        appLogMsg("\(sCurrMethodDisp) Instantiating the 'PFAdminsModelObservable.appPFAdminsModelObservable.loadFromJsonCacheOnStartup()' instance...")
+        PFAdminsModelObservable.appPFAdminsModelObservable.loadFromJsonCacheOnStartup()
+        appLogMsg("\(sCurrMethodDisp) Instantiated  the 'PFAdminsModelObservable.appPFAdminsModelObservable.loadFromJsonCacheOnStartup()' instance...")
+    #endif
+
+    #if INSTANTIATE_APP_PFADMINSDATAMODEL
+        // Instantiate the 'PFAdmins' Data Model...
+        
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppSwiftDataManager' instance...")
-        
         self.jmAppSwiftDataManager = JmAppSwiftDataManager.ClassSingleton.appSwiftDataManager
-        
         self.jmAppSwiftDataManager?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-        
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppSwiftDataManager' instance...")
     #endif
 
@@ -523,11 +510,8 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the jmAppMetricKitManager...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppMetricKitManager' instance...")
-
         self.jmAppMetricKitManager = JmAppMetricKitManager()
-
         self.jmAppMetricKitManager?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-        
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppMetricKitManager' instance...")
     #endif
 
@@ -535,12 +519,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the jmAppUserNotificationManager...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppUserNotificationManager' instance...")
-
     //  self.jmAppUserNotificationManager = JmAppUserNotificationManager()
         self.jmAppUserNotificationManager = JmAppUserNotificationManager.ClassSingleton.appUserNotificationManager
-
         self.jmAppUserNotificationManager?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-        
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppUserNotificationManager' instance...")
     #endif
 
@@ -548,12 +529,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the JmAppParseCoreManager...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppParseCoreManager' instance...")
-
     //  self.jmAppParseCoreManager = JmAppParseCoreManager()
         self.jmAppParseCoreManager = JmAppParseCoreManager.ClassSingleton.appParseCoreManager
-
         self.jmAppParseCoreManager?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-      
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreManager' instance...")
     #endif
 
@@ -561,11 +539,8 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the JmAppParseCoreBkgdDataRepo...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppParseCoreBkgdDataRepo' instance...")
-
         self.jmAppParseCoreBkgdDataRepo = JmAppParseCoreBkgdDataRepo.ClassSingleton.appParseCodeBkgdDataRepo
-
         self.jmAppParseCoreBkgdDataRepo?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-        
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreBkgdDataRepo' instance...")
     #endif
 
@@ -573,11 +548,8 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the JmAppParseCoreBkgdDataRepo2...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppParseCoreBkgdDataRepo2' instance...")
-
         self.jmAppParseCoreBkgdDataRepo2 = JmAppParseCoreBkgdDataRepo2.appParseCodeBkgdDataRepo2
-
         self.jmAppParseCoreBkgdDataRepo2?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-        
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreBkgdDataRepo2' instance...")
     #endif
 
@@ -585,11 +557,8 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the JmAppParseCoreBkgdDataRepo3...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppParseCoreBkgdDataRepo3' instance...")
-
         self.jmAppParseCoreBkgdDataRepo3 = JmAppParseCoreBkgdDataRepo3.appParseCodeBkgdDataRepo3
-
         self.jmAppParseCoreBkgdDataRepo3?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-        
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreBkgdDataRepo3' instance...")
     #endif
 
@@ -597,25 +566,28 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the JmAppParseCoreBkgdDataRepo4...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppParseCoreBkgdDataRepo4' instance...")
-
         self.jmAppParseCoreBkgdDataRepo4 = JmAppParseCoreBkgdDataRepo4.appParseCodeBkgdDataRepo4
-
         self.jmAppParseCoreBkgdDataRepo4?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-        
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreBkgdDataRepo4' instance...")
+    #endif
+
+    #if INSTANTIATE_APP_PARSECOREBKGDDATAREPO5
+        // Instantiate the JmAppParseCoreBkgdDataRepo5...
+
+        appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppParseCoreBkgdDataRepo5' instance...")
+        self.jmAppParseCoreBkgdDataRepo5 = JmAppParseCoreBkgdDataRepo5.appParseCodeBkgdDataRepo5
+        self.jmAppParseCoreBkgdDataRepo5?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
+        appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreBkgdDataRepo5' instance...")
     #endif
 
     #if INSTANTIATE_APP_CORELOCATIONSUPPORT
         // Instantiate the CoreLocationModelObservable()...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppCLModelObservable2' instance...")
-
     //  self.jmAppCLModelObservable2 = CoreLocationModelObservable2.ClassSingleton.appCoreLocationModel
         self.jmAppCLModelObservable2 = CoreLocationModelObservable2.appCoreLocationModel
-
     //  NOTE: No longer needed with 'appLogMsg()'...
     //  self.jmAppCLModelObservable2?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppCLModelObservable2' instance...")
     #endif
 
@@ -623,11 +595,8 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the NWSWeatherModelObservable()...
      
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.nwsWeatherModelObservable' instance...")
-     
         self.nwsWeatherModelObservable = NWSWeatherModelObservable.ClassSingleton.appNWSWeatherModelObservable
-     
         self.nwsWeatherModelObservable?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-      
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.nwsWeatherModelObservable' instance...")
     #endif
 
@@ -636,9 +605,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Setup the NSStatusBar MenuBar menu(s)...
     
     //  self.appStatusBar = JmObjCSwiftEnvBridge.sharedObjCSwiftEnvBridge
-    
         self.appStatusBar.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self.jmAppDelegateVisitor)
-    
         appLogMsg("\(sCurrMethodDisp) 'self' is [\(self)] and 'self.appStatusBar' is (\(String(describing: self.appStatusBar)))...")
     #endif
     #endif
@@ -648,11 +615,8 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         
         appLogMsg("------------------------------------------------------------")
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'VisitVerifyAppBigTestTracking' instance...")
-        
     //  let vvAppBigTestTracking:VisitVerifyAppBigTestTracking = VisitVerifyAppBigTestTracking.vvAppBigTestTracking
-        
         self.vvAppBigTestTracking.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
-        
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'VisitVerifyAppBigTestTracking' instance...")
         appLogMsg("------------------------------------------------------------")
     #endif
@@ -662,9 +626,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Setup the App 'main' Window...
 
         appLogMsg("\(sCurrMethodDisp) <AppWindowPosition> Invoking 'self.setupAppMainWindow()'...")
-
         self.setupAppMainWindow()
-
         appLogMsg("\(sCurrMethodDisp) <AppWindowPosition> Invoked  'self.setupAppMainWindow()'...")
 
     //  // Wait a bit longer after launch to ensure system is fully ready...
@@ -704,9 +666,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             // ----------------------------------------------------------------------------------------------
 
             appLogMsg("\(sCurrMethodDisp) <GoogleMobileAds> Starting the 'MobileAds.shared.start()' shared instance...")
-
             MobileAds.shared.start(completionHandler:nil)
-
             appLogMsg("\(sCurrMethodDisp) <GoogleMobileAds> Started  the 'MobileAds.shared.start()' shared instance...")
         }
     #endif
@@ -799,6 +759,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     #endif
     #if INSTANTIATE_APP_PARSECOREBKGDDATAREPO4
         asToString.append("jmAppParseCoreBkgdDataRepo4': [\(String(describing: self.jmAppParseCoreBkgdDataRepo4))],")
+    #endif
+    #if INSTANTIATE_APP_PARSECOREBKGDDATAREPO5
+        asToString.append("jmAppParseCoreBkgdDataRepo5': [\(String(describing: self.jmAppParseCoreBkgdDataRepo5))],")
     #endif
     #if INSTANTIATE_APP_CORELOCATIONSUPPORT
         asToString.append("jmAppCLModelObservable2': [\(String(describing: self.jmAppCLModelObservable2))],")
@@ -5158,6 +5121,21 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Foreground...
 
         self.appGlobalInfo.setAppInForeground()
+
+    #if INSTANTIATE_APP_GLOBALMEMORYOVERLAY
+        // Deferred so the main UIWindow exists and has a windowScene by the 
+        // time we attempt install. Scene delegate fires first if scene-based,
+        // so isInstalled flag will already be true and this becomes a no-op.
+
+        appLogMsg("\(sCurrMethodDisp) <AppMemory> - Launching 'AppMemoryMonitorOverlayManager.shared.install(in:)' with 'delay'...")
+
+        DispatchQueue.main.async
+        {
+            appLogMsg("\(sCurrMethodDisp) <AppMemory> - Calling 'AppMemoryMonitorOverlayManager.shared.install(in:\(UIApplication.shared.keyWindow))' in 'delay' closure...")
+            AppMemoryMonitorOverlayManager.shared.install(in:UIApplication.shared.keyWindow)
+            appLogMsg("\(sCurrMethodDisp) <AppMemory> - Called  'AppMemoryMonitorOverlayManager.shared.install(in:\(UIApplication.shared.keyWindow))' in 'delay' closure...")
+        }
+    #endif
 
         // Exit:
 

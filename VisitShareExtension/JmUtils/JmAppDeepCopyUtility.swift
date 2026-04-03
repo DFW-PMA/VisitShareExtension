@@ -2,8 +2,22 @@
 //  JmAppDeepCopyUtility.swift
 //  JmUtils_Library
 //
-//  Created by Daryl Cox on 09/09/2025.
+//  Modified by Daryl Cox on 03/16/2026 - v1.0401.
+//  Created  by Daryl Cox on 09/09/2025 - v1.0101.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
+//
+//  Refactor Notes (v1.0401):
+//  - Added autoreleasepool {} wrapping to the three ObjC autorelease pressure points:
+//    (1) deepCopyAny NSCopying branch: wraps the single .copy() call so the autoreleased
+//        return is flushed before the method returns rather than accumulating on the
+//        thread's runloop drain.
+//    (2) deepCopyArray NSArray branch: wraps the per-item loop body so autoreleased
+//        intermediates from .add() and NSMutableArray are flushed each iteration.
+//        Critical for collections of 50+ items (dictPFAdminsDataItems) or 1000+ items
+//        (dictExportSchedPatientLocItems) rebuilt on the 3-minute background cycle.
+//    (3) deepCopyDictionary NSDictionary branch: same per-entry loop body wrapping.
+//  - Swift Array, Swift Dictionary, and JmAppDeepCopyProtocol paths are pure Swift
+//    allocation and do NOT need autoreleasepool wrapping.
 //
 
 import Foundation
@@ -42,7 +56,7 @@ class JmAppDeepCopyUtility
     struct ClassInfo
     {
         static let sClsId        = "JmAppDeepCopyUtility"
-        static let sClsVers      = "v1.1703"
+        static let sClsVers      = "v1.1901"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = false
@@ -225,11 +239,14 @@ class JmAppDeepCopyUtility
         case "Null":
             return NSNull()
         default:
-            // For custom objects, try to use NSCopying if available...
+            // For custom objects, try to use NSCopying if available.
+            // autoreleasepool: .copy() returns an autoreleased ObjC object;
+            // wrapping ensures it is flushed before this method returns rather
+            // than accumulating on the thread's runloop drain.
 
             if let copyable = object as? NSCopying
             {
-                return copyable.copy()
+                return autoreleasepool { copyable.copy() }
             }
 
             // NSCopying did NOT work - check if object implements JmAppDeepCopyProtocol:
@@ -243,8 +260,6 @@ class JmAppDeepCopyUtility
                 
                 return deepCopyableObject.createDeepCopy()
             }
-
-            // For other objects, return as-is (reference copy)
             // You might want to add custom handling here for specific types...
 
             appLogMsg("\(sCurrMethodDisp) Warning::Performing 'shallow' copy for unmatched type:[\(type(of:object))] - simply returning the object...")
@@ -275,11 +290,18 @@ class JmAppDeepCopyUtility
         {
             let mutableCopy = NSMutableArray(capacity:nsArray.count)
             
+            // autoreleasepool: NSMutableArray intermediates are ObjC autoreleased objects.
+            // Wrapping the per-item loop body flushes each iteration rather than
+            // accumulating across all items — critical for 50+ or 1000+ item collections.
+
             for item in nsArray
             {
-                let copiedItem = deepCopyAny(item)
-                
-                mutableCopy.add(copiedItem)
+                autoreleasepool
+                {
+                    let copiedItem = deepCopyAny(item)
+                    
+                    mutableCopy.add(copiedItem)
+                }
             }
             
             return mutableCopy.copy()
@@ -333,19 +355,25 @@ class JmAppDeepCopyUtility
         }
         
         // Perform 'dictionary' deep copies:
-        
         // Handle NSDictionary...
         
         if let nsDict = object as? NSDictionary
         {
             let mutableCopy = NSMutableDictionary(capacity:nsDict.count)
             
+            // autoreleasepool: NSMutableDictionary intermediates are ObjC autoreleased objects.
+            // Wrapping the per-entry loop body flushes each iteration rather than
+            // accumulating across all entries — critical for large Parse-originated dictionaries.
+
             for (key, value) in nsDict
             {
-                let copiedKey   = deepCopyAny(key)
-                let copiedValue = deepCopyAny(value)
-                
-                mutableCopy.setObject(copiedValue, forKey:copiedKey as! NSCopying)
+                autoreleasepool
+                {
+                    let copiedKey   = deepCopyAny(key)
+                    let copiedValue = deepCopyAny(value)
+                    
+                    mutableCopy.setObject(copiedValue, forKey:copiedKey as! NSCopying)
+                }
             }
             
             return mutableCopy.copy()
@@ -367,7 +395,6 @@ class JmAppDeepCopyUtility
             
             return copiedDict
         }
-        
         
         // Exit:
         

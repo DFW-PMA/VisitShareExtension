@@ -1,6 +1,6 @@
 //
 //  ProgressOverlay.swift
-//  DataGridPack
+//  <<< App 'dependent' >>>
 //
 //  Created by Daryl Cox on 05/01/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
@@ -8,10 +8,7 @@
 
 import Foundation
 import SwiftUI
-
-#if os(iOS)
 import Combine
-#endif
 
 // Reusable ProgressOverlay 'trigger' (Bool wrapper) class:
 
@@ -21,7 +18,7 @@ class ProgressOverlayTrigger:ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "ProgressOverlayTrigger"
-        static let sClsVers      = "v1.0401"
+        static let sClsVers      = "v1.0501"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true

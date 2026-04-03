@@ -18,7 +18,7 @@ class JmAppDeepCopyExamples
     struct ClassInfo
     {
         static let sClsId        = "JmAppDeepCopyExamples"
-        static let sClsVers      = "v1.0201"
+        static let sClsVers      = "v1.0301"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = false
@@ -30,8 +30,11 @@ class JmAppDeepCopyExamples
         
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
-        
-        appLogMsg("\(sCurrMethodDisp) Invoked...")
+
+        if (ClassInfo.bClsTrace == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) Invoked...")
+        }
         
         // Perform 'dictionary' deep copies...
         
@@ -122,7 +125,10 @@ class JmAppDeepCopyExamples
         
         // Exit:
         
-        appLogMsg("\(sCurrMethodDisp) Exiting...")
+        if (ClassInfo.bClsTrace == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) Exiting...")
+        }
         
         return
         

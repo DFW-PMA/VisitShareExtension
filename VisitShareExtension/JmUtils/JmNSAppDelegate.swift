@@ -8,17 +8,17 @@
 
 import Foundation
 import SwiftUI
+import Combine
 import XCGLogger
 
 #if os(macOS)
-//class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
-class JmNSAppDelegate:NSObject, NSApplicationDelegate
+class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
 {
 
     struct ClassInfo
     {
         static let sClsId        = "JmNSAppDelegate"
-        static let sClsVers      = "v1.2101"
+        static let sClsVers      = "v1.2201"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -145,6 +145,24 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate
         return
 
     }   // End of func applicationDidBecomeActive(_ aNotification:Notification).
+
+    func applicationDidResignActive(_ aNotification:Notification) 
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
+
+        self.jmAppDelegateVisitor.appDelegateVisitorDidResignActive(aNotification)
+
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Method Exiting...")
+
+        return
+
+    }   // End of func applicationDidResignActive(_ aNotification:Notification).
 
     func applicationWillTerminate(_ aNotification:Notification) 
     {

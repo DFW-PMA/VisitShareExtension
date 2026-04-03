@@ -2,7 +2,10 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.6003...
+//  AppGlobalInfo.swift - v1.6201...
+//  Updated by Daryl Cox on 04/02/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO5).
+//  Updated by Daryl Cox on 03/16/2026. (Added INSTANTIATE_APP_PFADMINSDATAMODEL).
+//  Updated by Daryl Cox on 03/13/2026. (Added App 'Global' Memory Overlay).
 //  Updated by Daryl Cox on 02/23/2026. (Auto-sync background trigger added)
 //  Updated by Daryl Cox on 02/23/2026.
 //  Updated by Daryl Cox on 02/22/2026.
@@ -237,6 +240,7 @@ public class AppGlobalInfo:NSObject
     //                              INSTANTIATE_APP_OBJCSWIFTBRIDGE
     //                              INSTANTIATE_APP_JMSWIFTDATAMANAGER
     //                              INSTANTIATE_APP_SWIFTDATAMANAGER
+    //                              INSTANTIATE_APP_PFADMINSDATAMODEL
     //                              INSTANTIATE_APP_METRICKITMANAGER
     //                              INSTANTIATE_APP_USERNOTIFICATIONSMANAGER
     //                              INSTANTIATE_APP_PARSECOREMANAGER
@@ -244,6 +248,7 @@ public class AppGlobalInfo:NSObject
     //                              INSTANTIATE_APP_PARSECOREBKGDDATAREPO2
     //                              INSTANTIATE_APP_PARSECOREBKGDDATAREPO3
     //                              INSTANTIATE_APP_PARSECOREBKGDDATAREPO4
+    //                              INSTANTIATE_APP_PARSECOREBKGDDATAREPO5
     //                              INSTANTIATE_APP_CORELOCATIONSUPPORT
     //                              INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
     //                              INSTANTIATE_APP_NWSWEATHERMODELOBSERVABLE
@@ -251,6 +256,7 @@ public class AppGlobalInfo:NSObject
     //                              INSTANTIATE_APP_WINDOWPOSITIONMANAGER
     //                              INSTANTIATE_APP_BIGTESTTRACKING
     //                              INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
+    //                              INSTANTIATE_APP_GLOBALMEMORYOVERLAY
     //
     // ------------------------------------------------------------------------------------------------------
 
@@ -364,6 +370,15 @@ public class AppGlobalInfo:NSObject
     #endif
     }()
 
+    static let bInstantiateAppPFAdminsDataModel:Bool                     =
+    {
+    #if INSTANTIATE_APP_PFADMINSDATAMODEL
+        return true
+    #else
+        return false
+    #endif
+    }()
+
     static let bInstantiateAppMetricKitManager:Bool                      =
     {
     #if INSTANTIATE_APP_METRICKITMANAGER
@@ -427,6 +442,15 @@ public class AppGlobalInfo:NSObject
     #endif
     }()
 
+    static let bInstantiateAppParseCoreBkgdDataRepo5:Bool                =
+    {
+    #if INSTANTIATE_APP_PARSECOREBKGDDATAREPO5
+        return true
+    #else
+        return false
+    #endif
+    }()
+
     static let bInstantiateAppCoreLocationSupport:Bool                   =
     {
     #if INSTANTIATE_APP_CORELOCATIONSUPPORT
@@ -484,6 +508,15 @@ public class AppGlobalInfo:NSObject
     static let bInstantiateAppGoogleAdMobMobileAds:Bool                  =
     {
     #if INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
+        return true
+    #else
+        return false
+    #endif
+    }()
+
+    static let bInstantiateAppGlobalMemoryOverlay:Bool                   =
+    {
+    #if INSTANTIATE_APP_GLOBALMEMORYOVERLAY
         return true
     #else
         return false
@@ -593,10 +626,11 @@ public class AppGlobalInfo:NSObject
            var sGlobalDeviceModel:String                                 = "-unknown-"
            var sGlobalDeviceLocalizedModel:String                        = "-unknown-"
 
+  @nonobjc var uuidGlobalDeviceIdForVendor:UUID?                         = nil
+
        #if os(iOS)
   @nonobjc var idiomGlobalDeviceUserInterfaceIdiom:UIUserInterfaceIdiom? = nil
            var iGlobalDeviceUserInterfaceIdiom:Int                       = 0
-  @nonobjc var uuidGlobalDeviceIdForVendor:UUID?                         = nil
            var fGlobalDeviceCurrentBatteryLevel:Float                    = 1.0
        #endif
 
@@ -735,6 +769,30 @@ public class AppGlobalInfo:NSObject
         let cpuCoresMac                             = self.getCPUCoreCount()
         self.iGlobalDeviceCPUPhysicalCores          = cpuCoresMac.physical
         self.iGlobalDeviceCPULogicalCores           = cpuCoresMac.logical
+
+        // Mac device UUID — generated once, persisted via JmUserDefaults.
+        // Provides the same stable per-install identity as
+        // UIDevice.current.identifierForVendor on iOS.
+        // Used by SSEClient/CLLocsMessageConsumer for SSE echo suppression.
+
+        let jmUserDefaultsMac:JmUserDefaults        = JmUserDefaults()
+        let sSSEDeviceUUIDKey:String                = "sSSEDeviceUUID"
+
+        if let sExistingUUID:String = jmUserDefaultsMac.getObjectForKey(sSSEDeviceUUIDKey) as? String,
+           let existingUUID:UUID    = UUID(uuidString:sExistingUUID)
+        {
+            self.uuidGlobalDeviceIdForVendor = existingUUID
+
+            appLogMsg("\(sCurrMethodDisp) <SSEBroker> Mac device UUID (existing) = [\(existingUUID.uuidString)]...")
+        }
+        else
+        {
+            let newUUID:UUID                 = UUID()
+            jmUserDefaultsMac.setObjectForKey(newUUID.uuidString, forKey:sSSEDeviceUUIDKey)
+            self.uuidGlobalDeviceIdForVendor = newUUID
+
+            appLogMsg("\(sCurrMethodDisp) <SSEBroker> Mac device UUID (generated) = [\(newUUID.uuidString)]...")
+        }
     #elseif os(iOS)
         // Get various 'device' setting(s):
         // (Alternate test: if UIDevice.current.userInterfaceIdiom == .pad { ... } ).
@@ -1115,6 +1173,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppObjCSwiftBridge' is [\(String(describing: AppGlobalInfo.bInstantiateAppObjCSwiftBridge))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppJmSwiftDataManager' is [\(String(describing: AppGlobalInfo.bInstantiateAppJmSwiftDataManager))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppSwiftDataManager' is [\(String(describing: AppGlobalInfo.bInstantiateAppSwiftDataManager))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppPFAdminsDataModel' is [\(String(describing: AppGlobalInfo.bInstantiateAppPFAdminsDataModel))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppMetricKitManager' is [\(String(describing: AppGlobalInfo.bInstantiateAppMetricKitManager))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppUserNotificationsManager' is [\(String(describing: AppGlobalInfo.bInstantiateAppUserNotificationsManager))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppParseCoreManager' is [\(String(describing: AppGlobalInfo.bInstantiateAppParseCoreManager))]...")
@@ -1122,6 +1181,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo2' is [\(String(describing: AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo2))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo3' is [\(String(describing: AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo3))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo4' is [\(String(describing: AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo4))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo5' is [\(String(describing: AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo5))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppCoreLocationSupport' is [\(String(describing: AppGlobalInfo.bInstantiateAppCoreLocationSupport))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppCoreLocationAutoSyncSupport' is [\(String(describing: AppGlobalInfo.bInstantiateAppCoreLocationAutoSyncSupport))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppNWSWeatherModelObservable' is [\(String(describing: AppGlobalInfo.bInstantiateAppNWSWeatherModelObservable))]...")
@@ -1129,6 +1189,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppWindowPositionManager' is [\(String(describing: AppGlobalInfo.bInstantiateAppWindowPositionManager))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppBigTestTracking' is [\(String(describing: AppGlobalInfo.bInstantiateAppBigTestTracking))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppGoogleAdMobMobileAds' is [\(String(describing: AppGlobalInfo.bInstantiateAppGoogleAdMobMobileAds))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppGlobalMemoryOverlay' is [\(String(describing: AppGlobalInfo.bInstantiateAppGlobalMemoryOverlay))]...")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.eUseLatitudeLongitudePrecision' is [\(String(describing: AppGlobalInfo.eUseLatitudeLongitudePrecision))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bAppIsADrcBuildDistribution' is [\(String(describing: AppGlobalInfo.bAppIsADrcBuildDistribution))]...")
@@ -1205,11 +1266,12 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sGlobalDeviceCPUSubtype' is [\(String(describing: self.sGlobalDeviceCPUSubtype))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.iGlobalDeviceCPUPhysicalCores' is (\(String(describing: self.iGlobalDeviceCPUPhysicalCores)))...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.iGlobalDeviceCPULogicalCores' is (\(String(describing: self.iGlobalDeviceCPULogicalCores)))...")
+
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.uuidGlobalDeviceIdForVendor' is [\(String(describing: self.uuidGlobalDeviceIdForVendor))]...")
         
     #if os(iOS)
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.idiomGlobalDeviceUserInterfaceIdiom' is (\(String(describing: self.idiomGlobalDeviceUserInterfaceIdiom)))...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.iGlobalDeviceUserInterfaceIdiom' is (\(String(describing: self.iGlobalDeviceUserInterfaceIdiom)))...")
-        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.uuidGlobalDeviceIdForVendor' is [\(String(describing: self.uuidGlobalDeviceIdForVendor))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.fGlobalDeviceCurrentBatteryLevel' is (\(String(describing: self.fGlobalDeviceCurrentBatteryLevel)))...")
     #endif
         
@@ -1483,7 +1545,8 @@ public class AppGlobalInfo:NSObject
         case .active:
             self.setAppInForeground()
         case .inactive:
-            self.setAppInBackground()
+        //  self.setAppInBackground()
+            break
         case .background:
             self.setAppInBackground()
         @unknown default:

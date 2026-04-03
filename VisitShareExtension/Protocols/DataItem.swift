@@ -1,18 +1,24 @@
 //
 //  DataItem.swift
-//  JmUtils_Library
+//  <<< App 'dependent' >>>
 //
-//  Created by Daryl Cox on 06/26/2025.
+//  Modified by Daryl Cox on 03/16/2026 - v1.0201.
+//  Created  by Daryl Cox on 06/26/2025 - v1.0101.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
 import Foundation
 import SwiftUI
-import SwiftData
 
 // MARK: - DataItem Protocol (for individual data instances):
+//
+// Pure in-memory data item protocol. Does NOT require PersistentModel.
+// Use DataItem for classes stored in memory only (dictionaries, arrays, etc.)
+//     that are NOT inserted into a SwiftData ModelContext.
+// Use PersistentDataItem (which inherits DataItem) for @Model classes
+//     that ARE inserted into a SwiftData ModelContext.
 
-protocol DataItem:Identifiable, Comparable, PersistentModel where ID:CustomStringConvertible
+protocol DataItem:Identifiable, Comparable where ID:CustomStringConvertible
 {
 
     // Validation method...
@@ -28,13 +34,9 @@ protocol DataItem:Identifiable, Comparable, PersistentModel where ID:CustomStrin
     func update(from other:Self)
 //  mutating func update(from other:Self)
 
-    // Method to create a fetch descriptor for logical equality...
-
-    static func fetchDescriptorForLogicalEquality(to item:Self)->FetchDescriptor<Self>
-
     // Display the field(s) of the DataItem to the Log...
 
     func displayDataItemToLog()
 
-}   // End of protocol DataItem:Identifiable, Codable.
+}   // End of protocol DataItem:Identifiable, Comparable.
 

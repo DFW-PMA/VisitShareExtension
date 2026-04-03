@@ -1,6 +1,6 @@
 //
 //  SwiftDataManager.swift
-//  JmUtils_Library
+//  <<< App 'dependent' >>>
 //
 //  Created by Daryl Cox on 06/26/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
@@ -20,23 +20,31 @@ protocol SwiftDataManager:DataItemRepo
 
     // SwiftData-specific upsert for PersistentModel...
 
-    func upsertPersistentModel<T:PersistentModel & DataItem>(_ item:T) async throws
+    func upsertPersistentModel<T:PersistentModel & PersistentDataItem>(_ item:T) async throws
 
     // SwiftData-specific fetch with predicates...
 
-    func fetchPersistentModels<T:PersistentModel & DataItem>(predicate:Predicate<T>?, sortBy:[SortDescriptor<T>]) async throws->[T]
+    func fetchPersistentModels<T:PersistentModel & PersistentDataItem>(predicate:Predicate<T>?, sortBy:[SortDescriptor<T>]) async throws->[T]
 
     // SwiftData-specific delete with IndexSet offsets...
 
-    func deletePersistentModels<T:PersistentModel & DataItem>(from items:[T], at offsets:IndexSet) async throws->[T]
+    func deletePersistentModels<T:PersistentModel & PersistentDataItem>(from items:[T], at offsets:IndexSet) async throws->[T]
 
     // SwiftData-specific delete for PersistentModel...
 
-    func deletePersistentModel<T:PersistentModel & DataItem>(_ item:T) async throws
+    func deletePersistentModel<T:PersistentModel & PersistentDataItem>(_ item:T) async throws
 
     // Reacquire (set) the storage for a PersistentModel...
 
-    func reacquireStoragePersistentModels<T:DataItem>(from items:[T])
+    func reacquireStoragePersistentModels<T:PersistentDataItem>(from items:[T])
+
+    // 'clear' ALL SwiftData by 'fetch' (and 'delete') for a PersistentModel...
+
+    func clearAllDataByFetchInPersistentModel<T:PersistentModel & PersistentDataItem>(from items:[T]) async throws
+
+    // NOTE: This method will 'nuke' the SwiftData store (all the SqlLite files). Use with CAUTION...
+
+    func nukeAppSwiftDataStore()
 
 }   // End of protocol SwiftDataManager:DataManager.
 
