@@ -8,17 +8,17 @@
 
 import Foundation
 import SwiftUI
+import Combine
 import XCGLogger
 
 #if os(iOS)
-//class JmUIAppDelegate:NSObject, UIApplicationDelegate, ObservableObject
-class JmUIAppDelegate:NSObject, UIApplicationDelegate
+class JmUIAppDelegate:NSObject, UIApplicationDelegate, ObservableObject
 {
 
     struct ClassInfo
     {
         static let sClsId        = "JmUIAppDelegate"
-        static let sClsVers      = "v1.2101"
+        static let sClsVers      = "v1.2301"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -33,7 +33,9 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
     // Various App field(s):
 
                var appGlobalInfo:AppGlobalInfo                = AppGlobalInfo.ClassSingleton.appGlobalInfo
+    #if USE_APP_LOGGING_BY_VISITOR
                var jmAppDelegateVisitor:JmAppDelegateVisitor  = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
+    #endif
 
                var cAppDelegateInitCalls:Int                  = 0
 
@@ -48,15 +50,17 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
         ClassSingleton.appDelegate  = self
         self.cAppDelegateInitCalls += 1
         
-        appLogMsg("\(sCurrMethodDisp) Invoked - #(\(self.cAppDelegateInitCalls)) time(s) - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)]...")
+        appLogMsg("\(sCurrMethodDisp) Invoked - #(\(self.cAppDelegateInitCalls)) time(s)...")
 
+    #if USE_APP_LOGGING_BY_VISITOR
         // Run the AppDelegateVisitor 'post' initialization Task(s)...
 
         self.jmAppDelegateVisitor.runPostInitializationTasks()
+    #endif
 
         // Exit:
 
-        appLogMsg("\(sCurrMethodDisp) Exiting - #(\(self.cAppDelegateInitCalls)) time(s) - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)]...")
+        appLogMsg("\(sCurrMethodDisp) Exiting - #(\(self.cAppDelegateInitCalls)) time(s)...")
 
         return
 
@@ -77,9 +81,11 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
         asToString.append("],")
         asToString.append("[")
         asToString.append("'cAppDelegateInitCalls': (\(self.cAppDelegateInitCalls)),")
+    #if USE_APP_LOGGING_BY_VISITOR
         asToString.append("],")
         asToString.append("[")
         asToString.append("'jmAppDelegateVisitor': [\(self.jmAppDelegateVisitor)],")
+    #endif
         asToString.append("],")
         asToString.append("]")
 
@@ -96,10 +102,12 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
 
-    //  appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
-        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(uiApplication)] - 'willFinishLaunchingWithOptions' is [\(willFinishLaunchingWithOptions)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
+    //  appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'self' is [\(self)]...")
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(uiApplication)] - 'willFinishLaunchingWithOptions' is [\(willFinishLaunchingWithOptions)] - 'self' is [\(self)]...")
 
+    #if USE_APP_LOGGING_BY_VISITOR
         let _ = self.jmAppDelegateVisitor.appDelegateVisitorWillFinishLaunchingWithOptions(uiApplication, willFinishLaunchingWithOptions:willFinishLaunchingWithOptions)
+    #endif
 
         // Exit:
 
@@ -116,10 +124,12 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
 
-    //  appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
-        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(uiApplication)] - 'didFinishLaunchingWithOptions' is [\(didFinishLaunchingWithOptions)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
+    //  appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'self' is [\(self)]...")
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(uiApplication)] - 'didFinishLaunchingWithOptions' is [\(didFinishLaunchingWithOptions)] - 'self' is [\(self)]...")
 
+    #if USE_APP_LOGGING_BY_VISITOR
         let _ = self.jmAppDelegateVisitor.appDelegateVisitorWillFinishLaunchingWithOptions(uiApplication, willFinishLaunchingWithOptions:didFinishLaunchingWithOptions)
+    #endif
 
         // Exit:
 
@@ -135,9 +145,11 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
 
-        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(String(describing: uiApplication))] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(String(describing: uiApplication))] - 'self' is [\(self)]...")
 
+    #if USE_APP_LOGGING_BY_VISITOR
         let _ = self.jmAppDelegateVisitor.applicationWillEnterForeground(uiApplication)
+    #endif
 
         // Exit:
 
@@ -147,6 +159,46 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
 
     }   // End of func applicationWillEnterForeground(_ application:UIApplication).
 
+    @objc public func applicationWillResignActive(_ uiApplication:UIApplication) 
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(String(describing: uiApplication))] - 'self' is [\(self)]...")
+
+    #if USE_APP_LOGGING_BY_VISITOR
+        let _ = self.jmAppDelegateVisitor.applicationWillResignActive(uiApplication)
+    #endif
+        
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of @objc public func applicationWillResignActive(_ application:UIApplication).
+
+    @objc public func applicationDidEnterBackground(_ uiApplication:UIApplication) 
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(String(describing: uiApplication))] - 'self' is [\(self)]...")
+
+    #if USE_APP_LOGGING_BY_VISITOR
+        let _ = self.jmAppDelegateVisitor.applicationDidEnterBackground(uiApplication)
+    #endif
+        
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of @objc public func applicationDidEnterBackground(_ application:UIApplication).
+
 //  func applicationWillTerminate(_ aNotification:Notification) 
     func applicationWillTerminate(_ uiApplication:UIApplication)
     {
@@ -154,12 +206,14 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
 
-    //  appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
-        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(uiApplication)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
+    //  appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'self' is [\(self)]...")
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(uiApplication)] - 'self' is [\(self)]...")
         appLogMsg("\(sCurrMethodDisp) Current '\(ClassInfo.sClsId)' is [\(self.toString())]...")
         appLogMsg("\(sCurrMethodDisp) AppDelegate is stopping...")
 
+    #if USE_APP_LOGGING_BY_VISITOR
         self.jmAppDelegateVisitor.appDelegateVisitorWillTerminate(uiApplication)
+    #endif
 
         // Exit:
 
@@ -182,7 +236,9 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
         appLogMsg("\(sCurrMethodDisp) Current '\(ClassInfo.sClsId)' is [\(self.toString())]...")
         appLogMsg("\(sCurrMethodDisp) -> Unhandled url(s) -> \(urls)")
 
+    #if USE_APP_LOGGING_BY_VISITOR
         self.jmAppDelegateVisitor.appDelegateVisitorApplication(application, open:urls)
+    #endif
 
         // Exit:
 
@@ -192,6 +248,6 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate
 
     }   // End of func application(_ application:UIApplication, open urls:[URL]).
 
-}   // End of class JustAMultiplatformClock1NSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject.
+}   // End of class JmUIAppDelegate:NSObject, UIApplicationDelegate, ObservableObject.
 #endif
 

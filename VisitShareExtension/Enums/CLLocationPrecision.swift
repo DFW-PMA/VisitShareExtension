@@ -1,6 +1,6 @@
 //
 //  CLLocationPrecision.swift
-//  JSONSwiftDataDemoApp1
+//  <<< App 'dependent' >>>
 //
 //  Created by Daryl Cox on 08/08/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.

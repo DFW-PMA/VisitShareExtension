@@ -28,7 +28,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.7001"
+        static let sClsVers      = "v1.7101"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = false
@@ -490,11 +490,14 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     #endif
 
     #if INSTANTIATE_APP_JMSWIFTDATAMANAGER
-        // Instantiate the JmAppSwiftDataManager...
-        
-        appLogMsg("\(sCurrMethodDisp) Instantiating the 'PFAdminsModelObservable.appPFAdminsModelObservable.loadFromJsonCacheOnStartup()' instance...")
-        PFAdminsModelObservable.appPFAdminsModelObservable.loadFromJsonCacheOnStartup()
-        appLogMsg("\(sCurrMethodDisp) Instantiated  the 'PFAdminsModelObservable.appPFAdminsModelObservable.loadFromJsonCacheOnStartup()' instance...")
+        Task
+        { @MainActor in
+            // Instantiate the PFAdminsModelObservable (MUST be @MainActor)...
+            
+            appLogMsg("\(sCurrMethodDisp) Instantiating the 'PFAdminsModelObservable.appPFAdminsModelObservable.loadFromJsonCacheOnStartup()' instance...")
+            PFAdminsModelObservable.appPFAdminsModelObservable.loadFromJsonCacheOnStartup()
+            appLogMsg("\(sCurrMethodDisp) Instantiated  the 'PFAdminsModelObservable.appPFAdminsModelObservable.loadFromJsonCacheOnStartup()' instance...")
+        }
     #endif
 
     #if INSTANTIATE_APP_PFADMINSDATAMODEL
