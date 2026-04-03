@@ -25,7 +25,7 @@ enum StringCleaning
     case removeWhitespacesAndNewlines
 }
 
-// Extension class to add extra method(s) to String - v8.0701.
+// Extension class to add extra method(s) to String - v8.0901.
 
 extension String
 {
@@ -505,6 +505,26 @@ extension String
         return (sPrefix, sSuffix)
 
     }   // func extractPrefixAndSuffix(delimiter:String)->(prefix:String, suffix:String)?.
+
+    // Computed 'value': Alternative validation method as a String extension...
+
+    var isValidNetworkURL:Bool 
+    {
+        guard !self.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty 
+        else { return false }
+
+        guard let url = URL(string:self) 
+        else { return false }
+
+        guard let scheme = url.scheme?.lowercased(),
+              (scheme == "http" || scheme == "https") 
+        else { return false }
+
+        guard let host = url.host, !host.isEmpty 
+        else { return false }
+
+        return true
+    }
 
     // MARK:- Pass 0 - Typographic Quote Normalization
 
