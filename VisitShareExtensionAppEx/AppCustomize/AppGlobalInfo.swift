@@ -2,7 +2,8 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.6201...
+//  AppGlobalInfo.swift - v1.6303...
+//  Updated by Daryl Cox on 04/07/2026. (Added ENABLE_APP_ALARM_CAPABILITY and ENABLE_APP_LEGACY_CORELOC2).
 //  Updated by Daryl Cox on 04/02/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO5).
 //  Updated by Daryl Cox on 03/16/2026. (Added INSTANTIATE_APP_PFADMINSDATAMODEL).
 //  Updated by Daryl Cox on 03/13/2026. (Added App 'Global' Memory Overlay).
@@ -234,6 +235,8 @@ public class AppGlobalInfo:NSObject
     //                              ENABLE_APP_USER_AUTH_TYPE
     //                              ENABLE_APP_PARSECORE_FOR_SWIFT
     //                              ENABLE_APP_IAP_CAPABILITY
+    //                              ENABLE_APP_ALARM_CAPABILITY
+    //                              ENABLE_APP_LEGACY_CORELOC2
     //                              INSTANTIATE_APP_VV
     //                              INSTANTIATE_APP_VV_UIKIT_ALERTS
     //                              INSTANTIATE_APP_VMA
@@ -310,6 +313,24 @@ public class AppGlobalInfo:NSObject
     static let isEnabledAppIAPCapability:Bool                            =
     {
     #if ENABLE_APP_IAP_CAPABILITY
+        return true
+    #else
+        return false
+    #endif
+    }()
+
+    static let isEnabledAppAlarmCapability:Bool                          =
+    {
+    #if ENABLE_APP_ALARM_CAPABILITY
+        return true
+    #else
+        return false
+    #endif
+    }()
+
+    static let isEnabledAppLegacyCoreLoc2:Bool                           =
+    {
+    #if ENABLE_APP_LEGACY_CORELOC2
         return true
     #else
         return false
@@ -1166,6 +1187,9 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isUserAuthenticationAvailable' is [\(String(describing: AppGlobalInfo.isUserAuthenticationAvailable))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isUserAuthTypeAvailable' is [\(String(describing: AppGlobalInfo.isUserAuthTypeAvailable))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledParseCoreForSwift' is [\(String(describing: AppGlobalInfo.isEnabledParseCoreForSwift))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppIAPCapability' is [\(String(describing: AppGlobalInfo.isEnabledAppIAPCapability))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppAlarmCapability' is [\(String(describing: AppGlobalInfo.isEnabledAppAlarmCapability))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppLegacyCoreLoc2' is [\(String(describing: AppGlobalInfo.isEnabledAppLegacyCoreLoc2))]...")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVV' is [\(String(describing: AppGlobalInfo.bInstantiateAppVV))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVVUIKitAlerts' is [\(String(describing: AppGlobalInfo.bInstantiateAppVVUIKitAlerts))]...")

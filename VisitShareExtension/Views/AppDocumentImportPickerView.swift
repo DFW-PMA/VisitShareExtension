@@ -1,6 +1,6 @@
 //
 //  AppDocumentImportPickerView.swift
-//  QRLinkPack
+//  QRZoomPack
 //
 //  Created by Claude/Daryl Cox on 11/17/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.

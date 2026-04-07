@@ -18,7 +18,7 @@ struct AppJsonDisplayView:View
     struct ClassInfo
     {
         static let sClsId        = "AppJsonDisplayView"
-        static let sClsVers      = "v1.0401"
+        static let sClsVers      = "v1.0501"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
         static let bClsTrace     = true
@@ -96,10 +96,12 @@ struct AppJsonDisplayView:View
     //          rawViewButton
     //      }
     //  }
+    #if os(iOS)
         .fullScreenCover(isPresented:$showRawView)
         {
             RawDataView(data:rawData)
         }
+    #endif
         .searchable(text:$searchText, prompt:"Search JSON keys and values")
         .onAppear 
         {

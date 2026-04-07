@@ -28,7 +28,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.7101"
+        static let sClsVers      = "v1.7207"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = false
@@ -489,7 +489,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         }
     #endif
 
-    #if INSTANTIATE_APP_JMSWIFTDATAMANAGER
+    #if INSTANTIATE_APP_JMSWIFTDATAMANAGER && (INSTANTIATE_APP_VV || INSTANTIATE_APP_VMA)
         Task
         { @MainActor in
             // Instantiate the PFAdminsModelObservable (MUST be @MainActor)...
@@ -587,8 +587,11 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the CoreLocationModelObservable()...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppCLModelObservable2' instance...")
-    //  self.jmAppCLModelObservable2 = CoreLocationModelObservable2.ClassSingleton.appCoreLocationModel
+    #if ENABLE_APP_LEGACY_CORELOC2
+        self.jmAppCLModelObservable2 = CoreLocationModelObservable2.ClassSingleton.appCoreLocationModel
+    #else
         self.jmAppCLModelObservable2 = CoreLocationModelObservable2.appCoreLocationModel
+    #endif
     //  NOTE: No longer needed with 'appLogMsg()'...
     //  self.jmAppCLModelObservable2?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppCLModelObservable2' instance...")
@@ -1124,8 +1127,8 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         // Construct and set-up a <new> 'default' FileDestination...
 
-        let xcgFileDestination               = FileDestination(writeToFile: self.urlAppDelegateVisitorLogFilespec!, 
-                                                               identifier:  XCGLogger.Constants.fileDestinationIdentifier)
+        let xcgFileDestination               = FileDestination(writeToFile:self.urlAppDelegateVisitorLogFilespec!, 
+                                                               identifier: XCGLogger.Constants.fileDestinationIdentifier)
         
         xcgFileDestination.outputLevel       = .verbose
         xcgFileDestination.showLogIdentifier = false
@@ -5134,9 +5137,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         DispatchQueue.main.async
         {
-            appLogMsg("\(sCurrMethodDisp) <AppMemory> - Calling 'AppMemoryMonitorOverlayManager.shared.install(in:\(UIApplication.shared.keyWindow))' in 'delay' closure...")
+            appLogMsg("\(sCurrMethodDisp) <AppMemory> - Calling 'AppMemoryMonitorOverlayManager.shared.install(in:\(String(describing: UIApplication.shared.keyWindow)))' in 'delay' closure...")
             AppMemoryMonitorOverlayManager.shared.install(in:UIApplication.shared.keyWindow)
-            appLogMsg("\(sCurrMethodDisp) <AppMemory> - Called  'AppMemoryMonitorOverlayManager.shared.install(in:\(UIApplication.shared.keyWindow))' in 'delay' closure...")
+            appLogMsg("\(sCurrMethodDisp) <AppMemory> - Called  'AppMemoryMonitorOverlayManager.shared.install(in:\(String(describing: UIApplication.shared.keyWindow)))' in 'delay' closure...")
         }
     #endif
 
