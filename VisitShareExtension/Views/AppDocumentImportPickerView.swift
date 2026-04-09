@@ -23,7 +23,7 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
     struct ClassInfo
     {
         static let sClsId        = "AppDocumentImportPickerView"
-        static let sClsVers      = "v1.0401"
+        static let sClsVers      = "v1.0501"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
         static let bClsTrace     = true
@@ -37,8 +37,7 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
     @Environment(\.openURL)              var openURL
     @Environment(\.appGlobalDeviceType)  var appGlobalDeviceType
 
-                    var appGlobalInfo:AppGlobalInfo = AppGlobalInfo.ClassSingleton.appGlobalInfo
-
+                    var appGlobalInfo:AppGlobalInfo             = AppGlobalInfo.ClassSingleton.appGlobalInfo
                     let contentTypes:[UTType]
                     let allowsMultipleSelection:Bool
                     let completion:(Result<[URL], Error>)->Void
@@ -55,7 +54,6 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
 
         self.completion =
         { result in
-
             switch result
             {
             case .success(let urls):
@@ -63,7 +61,6 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
                 {
                     completion(.success(firstURL))
                 }
-
             case .failure(let error):
                 completion(.failure(error))
             }
@@ -90,7 +87,13 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
           
         appLogMsg("\(sCurrMethodDisp) Invoked - 'allowsMultipleSelection' is [\(allowsMultipleSelection)]...")
         
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes:contentTypes)
+        // <<CHICKEN-TRACKS>> asCopy:true is REQUIRED - without it, picker uses in-place mode
+        // which enforces LSHandlerRank ownership checks. Types declared as 'Alternate' rank
+        // (like public.plain-text) get greyed out in-place because the OS won't let a non-Owner
+        // app open them in place. asCopy:true bypasses ownership checks entirely - the file is
+        // copied to the app sandbox and no LSHandlerRank restriction applies.
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes:contentTypes,
+                                                    asCopy:               true)
 
         picker.delegate                 = context.coordinator
         picker.allowsMultipleSelection  = allowsMultipleSelection
@@ -132,7 +135,7 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
         struct ClassInfo
         {
             static let sClsId        = "AppDocumentImportPickerView:Coordinator"
-            static let sClsVers      = "v1.0301"
+            static let sClsVers      = "v1.0501"
             static let sClsDisp      = sClsId+".("+sClsVers+"): "
             static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
             static let bClsTrace     = true

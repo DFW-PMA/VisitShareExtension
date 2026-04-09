@@ -28,7 +28,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.7207"
+        static let sClsVers      = "v1.7405"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = false
@@ -221,7 +221,6 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
 #if os(macOS)
 #if INSTANTIATE_APP_WINDOWPOSITIONMANAGER
-
     // App <macOS> JmAppWindowPositionManager observable instance:
 
     @StateObject private
@@ -359,6 +358,14 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     private var isProcessingGlobalAlert:Bool                       = false
     private var isProcessingCompletionAlert:Bool                   = false
+
+    // <<CHICKEN-TRACKS>> Must-complete flag: when 'true', ALL watchdog timer blocks are
+    // suppressed from auto-dismissing the current alert - the alert MUST be manually
+    // dismissed by the user.  Set via 'setAppDelegateVisitorSignalMustCompletionAlert()'
+    // and cleared by 'resetAppDelegateVisitorSignalCompletionAlert()'.
+    // Used exclusively by NomadPack alarm path - NOT @objc (pure Swift only).
+
+            var bAppDelegateVisitorAlertMustComplete:Bool          = false
 
     // App <global> 'state' control(s):
 
@@ -500,8 +507,8 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         }
     #endif
 
-    #if INSTANTIATE_APP_PFADMINSDATAMODEL
-        // Instantiate the 'PFAdmins' Data Model...
+    #if INSTANTIATE_APP_JMSWIFTDATAMANAGER
+        // Instantiate the JmAppSwiftDataManager Data Model...
         
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppSwiftDataManager' instance...")
         self.jmAppSwiftDataManager = JmAppSwiftDataManager.ClassSingleton.appSwiftDataManager
@@ -2459,6 +2466,26 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Alert [\(alertRequest.requestId)] failed to present within #(\(AppGlobalInfo.iAlertViaUIKitTimeout)) second(s) - Warning!")
                 appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Auto-resetting and advancing queue...")
 
+                // <<CHICKEN-TRACKS>> Must-complete guard - if the alarm 'must-complete' flag is
+                // set, the watchdog is NOT allowed to auto-dismiss/reset this alert...
+
+                if (self.bAppDelegateVisitorAlertMustComplete == true)
+                {
+                    appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: 'bAppDelegateVisitorAlertMustComplete' is SET - bypassing auto-reset for alert [\(alertRequest.requestId)] - alert MUST be manually dismissed...")
+                    return
+                }
+
+            #if INSTANTIATE_APP_USERNOTIFICATIONSMANAGER
+                // If we have a jmAppUserNotificationManager, tell it about this...
+
+                if (self.jmAppUserNotificationManager != nil)
+                {
+                    appLogMsg("\(sCurrMethodDisp) Passing the WATCHDOG on to the 'self.jmAppUserNotificationManager' instance...")
+                    self.jmAppUserNotificationManager?.handleAppUserNotificationEventWatchdogAlertFired()
+                    appLogMsg("\(sCurrMethodDisp) Passed  the WATCHDOG on to the 'self.jmAppUserNotificationManager' instance...")
+                }
+            #endif
+
                 // Force reset...
 
                 self.alertQueueLock.lock()
@@ -3114,6 +3141,26 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Completion alert [\(alertRequest.requestId)] failed to present within #(\(AppGlobalInfo.iAlertViaUIKitTimeout)) second(s) - Error!")
                 appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Auto-resetting and advancing queue...")
 
+                // <<CHICKEN-TRACKS>> Must-complete guard - if the alarm 'must-complete' flag is
+                // set, the watchdog is NOT allowed to auto-dismiss/reset this alert...
+
+                if (self.bAppDelegateVisitorAlertMustComplete == true)
+                {
+                    appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: 'bAppDelegateVisitorAlertMustComplete' is SET - bypassing auto-reset for alert [\(alertRequest.requestId)] - alert MUST be manually dismissed...")
+                    return
+                }
+
+            #if INSTANTIATE_APP_USERNOTIFICATIONSMANAGER
+                // If we have a jmAppUserNotificationManager, tell it about this...
+
+                if (self.jmAppUserNotificationManager != nil)
+                {
+                    appLogMsg("\(sCurrMethodDisp) Passing the WATCHDOG on to the 'self.jmAppUserNotificationManager' instance...")
+                    self.jmAppUserNotificationManager?.handleAppUserNotificationEventWatchdogAlertFired()
+                    appLogMsg("\(sCurrMethodDisp) Passed  the WATCHDOG on to the 'self.jmAppUserNotificationManager' instance...")
+                }
+            #endif
+
                 // Force reset...
 
                 self.alertQueueLock.lock()
@@ -3624,6 +3671,26 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> WATCHDOG: Alert [\(alertRequest.requestId)] NOT dismissed within #(\(AppGlobalInfo.iAlertViaSwiftUITimeout)) second(s)!")
                 appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> WATCHDOG: Auto-resetting and advancing queue...")
 
+                // <<CHICKEN-TRACKS>> Must-complete guard - if the alarm 'must-complete' flag is
+                // set, the watchdog is NOT allowed to auto-dismiss/reset this alert...
+
+                if (self.bAppDelegateVisitorAlertMustComplete == true)
+                {
+                    appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> WATCHDOG: 'bAppDelegateVisitorAlertMustComplete' is SET - bypassing auto-reset for alert [\(alertRequest.requestId)] - alert MUST be manually dismissed...")
+                    return
+                }
+
+            #if INSTANTIATE_APP_USERNOTIFICATIONSMANAGER
+                // If we have a jmAppUserNotificationManager, tell it about this...
+
+                if (self.jmAppUserNotificationManager != nil)
+                {
+                    appLogMsg("\(sCurrMethodDisp) Passing the WATCHDOG on to the 'self.jmAppUserNotificationManager' instance...")
+                    self.jmAppUserNotificationManager?.handleAppUserNotificationEventWatchdogAlertFired()
+                    appLogMsg("\(sCurrMethodDisp) Passed  the WATCHDOG on to the 'self.jmAppUserNotificationManager' instance...")
+                }
+            #endif
+
                 // Force reset...
 
                 self.alertQueueLock.lock()
@@ -4111,6 +4178,43 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     }   // End of public func setAppDelegateVisitorSignalCompletionAlert(...).
 
+    // <<CHICKEN-TRACKS>> Must-complete wrapper: sets 'bAppDelegateVisitorAlertMustComplete'
+    // true then delegates to 'setAppDelegateVisitorSignalCompletionAlert'.
+    // NOT @objc - NomadPack (pure Swift) use ONLY.  If ObjC capability is ever required,
+    // add to the bridging header and mark @objc at that time.
+
+    public func setAppDelegateVisitorSignalMustCompletionAlert(_ alertMsg:String? = nil,
+                                                               alertButtonText1:String? = nil,
+                                                               alertButtonText2:String? = nil,
+                                                               withCompletion1 completionHandler1:(()->())?,
+                                                               withCompletion2 completionHandler2:(()->())?)
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - setting 'bAppDelegateVisitorAlertMustComplete' to 'true' - parameter(s) 'alertMsg' is [\(String(describing: alertMsg))] - 'alertButtonText1' is [\(String(describing: alertButtonText1))] - 'alertButtonText2' is [\(String(describing: alertButtonText2))]...")
+
+        // Set the 'must-complete' flag BEFORE signalling - watchdog blocks check this...
+
+        self.bAppDelegateVisitorAlertMustComplete = true
+
+        appLogMsg("\(sCurrMethodDisp) 'bAppDelegateVisitorAlertMustComplete' is now [\(self.bAppDelegateVisitorAlertMustComplete)] - passing through to 'setAppDelegateVisitorSignalCompletionAlert()'...")
+
+        self.setAppDelegateVisitorSignalCompletionAlert(alertMsg,
+                                                        alertButtonText1:alertButtonText1,
+                                                        alertButtonText2:alertButtonText2,
+                                                        withCompletion1: completionHandler1,
+                                                        withCompletion2: completionHandler2)
+
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of public func setAppDelegateVisitorSignalMustCompletionAlert(...).
+
 // ============================================================================
 // SECTION B: SWIFTUI COMPLETION ALERT METHODS WITH WATCHDOG
 // Replace existing methods around lines 3430-3730
@@ -4220,6 +4324,26 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> WATCHDOG: Completion alert [\(alertRequest.requestId)] not dismissed within #(\(AppGlobalInfo.iAlertViaSwiftUITimeout)) second(s)!")
                 appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> WATCHDOG: Auto-resetting and advancing queue...")
 
+                // <<CHICKEN-TRACKS>> Must-complete guard - if the alarm 'must-complete' flag is
+                // set, the watchdog is NOT allowed to auto-dismiss/reset this alert...
+
+                if (self.bAppDelegateVisitorAlertMustComplete == true)
+                {
+                    appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> WATCHDOG: 'bAppDelegateVisitorAlertMustComplete' is SET - bypassing auto-reset for alert [\(alertRequest.requestId)] - alert MUST be manually dismissed...")
+                    return
+                }
+
+            #if INSTANTIATE_APP_USERNOTIFICATIONSMANAGER
+                // If we have a jmAppUserNotificationManager, tell it about this...
+
+                if (self.jmAppUserNotificationManager != nil)
+                {
+                    appLogMsg("\(sCurrMethodDisp) Passing the WATCHDOG on to the 'self.jmAppUserNotificationManager' instance...")
+                    self.jmAppUserNotificationManager?.handleAppUserNotificationEventWatchdogAlertFired()
+                    appLogMsg("\(sCurrMethodDisp) Passed  the WATCHDOG on to the 'self.jmAppUserNotificationManager' instance...")
+                }
+            #endif
+
                 // Force reset...
 
                 self.alertQueueLock.lock()
@@ -4265,6 +4389,11 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
 
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Invoked - 'idButtonClicked' is #(\(idButtonClicked))...")
+
+        // <<CHICKEN-TRACKS>> Clear the must-complete flag - the alert has been manually dismissed...
+
+        self.bAppDelegateVisitorAlertMustComplete = false
+        appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> 'bAppDelegateVisitorAlertMustComplete' cleared to 'false'...")
 
         // Execute completion handler if present (BEFORE clearing)...
 
@@ -5252,9 +5381,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Terminate the jmAppUserNotificationManager...
 
         appLogMsg("\(sCurrMethodDisp) Terminating the 'self.jmAppUserNotificationManager' instance...")
-
         self.jmAppUserNotificationManager?.terminateAppUserNotifications()
-          
         appLogMsg("\(sCurrMethodDisp) Terminated  the 'self.jmAppUserNotificationManager' instance...")
     #endif
 

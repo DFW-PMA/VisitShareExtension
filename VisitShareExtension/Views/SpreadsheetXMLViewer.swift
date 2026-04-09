@@ -16,7 +16,7 @@ struct SpreadsheetXMLViewer:View
     struct ClassInfo
     {
         static let sClsId        = "SpreadsheetXMLViewer"
-        static let sClsVers      = "v1.0701"
+        static let sClsVers      = "v1.0807"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
         static let bClsTrace     = true
@@ -314,6 +314,21 @@ struct SpreadsheetXMLViewer:View
     //  ToolbarItem(placement:.navigationBarLeading)
         ToolbarItem(placement:.primaryAction)
         {
+            // <<CHICKEN-TRACKS>> DIAGNOSTIC ONLY - dump UTI for every file in Documents.
+            // Read the log after tapping to find the actual contentType of the .txt file.
+            // REMOVE this toolbar item once root cause of grey-out is identified.
+            Button(action:
+                   {
+                       dumpDocumentsDirectoryUTIs()
+                   })
+            {
+                Label("Diag UTIs", systemImage:"magnifyingglass.circle")
+            }
+        }
+
+    //  ToolbarItem(placement:.navigationBarLeading)
+        ToolbarItem(placement:.primaryAction)
+        {
             Button(action:
                    {
                        showImportPicker = true
@@ -361,8 +376,36 @@ struct SpreadsheetXMLViewer:View
     #endif
     #if os(iOS)
     //  AppDocumentImportPickerView(contentTypes:[.xml, UTType(filenameExtension:"xml")!],
-        AppDocumentImportPickerView(contentTypes:[.xml, UTType(filenameExtension:"xml")!, UTType(filenameExtension:"xls")!, UTType(filenameExtension:"json")!],
+        // <<CHICKEN-TRACKS>> Added UTType("public.data") as broad-net diagnostic -
+        // public.data is the base ancestor of ALL file data types. If .txt becomes
+        // selectable with this included, it proves the file has a UTI not in our list.
+        // If .txt stays grey even with public.data, the problem is NOT UTI-based
+        // (sandbox flag, iCloud status, or file attribute issue instead).
+        // REMOVE public.data entry once root cause is identified.
+
+        AppDocumentImportPickerView(contentTypes:AppDocumentImportContentTypes.listAppDocumentImportContentTypes,
                                     completion:  handleImportResult)
+
+    //  AppDocumentImportPickerView(contentTypes:[.xml,
+    //                                            UTType(filenameExtension:"xml")!,
+    //                                            UTType(filenameExtension:"xls")!,
+    //                                            .delimitedText,
+    //                                            .commaSeparatedText,
+    //                                            .tabSeparatedText,
+    //                                            .utf8TabSeparatedText,
+    //                                            UTType(filenameExtension:"csv")!,
+    //                                            .text,
+    //                                            UTType(filenameExtension:"txt")!,
+    //                                            UTType("public.utf8-plain-text")!,
+    //                                            UTType("public.utf16-plain-text")!,
+    //                                            UTType("public.utf16-external-plain-text")!,
+    //                                            UTType("com.apple.traditional-mac-plain-text")!,
+    //                                            UTType("public.data")!,
+    //                                            .yaml,
+    //                                            UTType(filenameExtension:"yaml")!,
+    //                                            .json,
+    //                                            UTType(filenameExtension:"json")!],
+    //                              completion:  handleImportResult)
     #endif
 
     }   // End of private func importPickerView()->some View.
@@ -564,6 +607,65 @@ struct SpreadsheetXMLViewer:View
 
     }   // End of private func handleExportResult(_ result:Result<URL, Error>).
     
+    // <<CHICKEN-TRACKS>> DIAGNOSTIC ONLY - logs actual iOS-assigned UTI for every file
+    // in the Documents directory. Tap "Diag UTIs" toolbar button to trigger.
+    // Compare the contentType output for the .txt file against what we declared in
+    // CFBundleDocumentTypes and the picker contentTypes array.
+    // REMOVE once root cause of .txt grey-out is identified.
+    private func dumpDocumentsDirectoryUTIs()
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+
+        appLogMsg("\(sCurrMethodDisp) ========== BEGIN UTI DIAGNOSTIC DUMP ==========")
+
+        guard let documentsURL = FileManager.default.urls(for:.documentDirectory,
+                                                          in: .userDomainMask).first
+        else
+        {
+            appLogMsg("\(sCurrMethodDisp) ERROR - Could not access Documents directory")
+            return
+        }
+
+        do
+        {
+            let fileURLs = try FileManager.default.contentsOfDirectory(
+                at:                        documentsURL,
+                includingPropertiesForKeys:[.contentTypeKey,
+                                           .typeIdentifierKey,
+                                           .fileSizeKey],
+                options:                   .skipsHiddenFiles
+            )
+
+            appLogMsg("\(sCurrMethodDisp) Found #(\(fileURLs.count)) file(s) in Documents:")
+
+            for fileURL in fileURLs.sorted(by:{ $0.lastPathComponent < $1.lastPathComponent })
+            {
+                let resourceValues = try fileURL.resourceValues(forKeys:[.contentTypeKey,
+                                                                          .typeIdentifierKey,
+                                                                          .fileSizeKey])
+                let sContentType   = resourceValues.contentType?.identifier ?? "nil"
+                let sTypeId        = resourceValues.typeIdentifier            ?? "nil"
+                let iFileSize      = resourceValues.fileSize                  ?? 0
+                let sExt           = fileURL.pathExtension.lowercased()
+
+                appLogMsg("\(sCurrMethodDisp)   File : [\(fileURL.lastPathComponent)]")
+                appLogMsg("\(sCurrMethodDisp)   Ext  : [\(sExt)]")
+                appLogMsg("\(sCurrMethodDisp)   Size : [\(iFileSize) bytes]")
+                appLogMsg("\(sCurrMethodDisp)   UTI  : contentType=[\(sContentType)] typeIdentifier=[\(sTypeId)]")
+                appLogMsg("\(sCurrMethodDisp)   ---")
+            }
+        }
+        catch
+        {
+            appLogMsg("\(sCurrMethodDisp) ERROR - \(error.localizedDescription)")
+        }
+
+        appLogMsg("\(sCurrMethodDisp) ========== END UTI DIAGNOSTIC DUMP ==========")
+
+    }   // End of private func dumpDocumentsDirectoryUTIs().
+
     // MARK: - Helper Methods
     
     private func showAlert(title:String, message:String)
