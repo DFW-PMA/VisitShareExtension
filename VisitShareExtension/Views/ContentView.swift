@@ -15,7 +15,7 @@ struct ContentView:View
     struct ClassInfo
     {
         static let sClsId        = "ContentView"
-        static let sClsVers      = "v1.0501"
+        static let sClsVers      = "v1.0601"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -24,10 +24,11 @@ struct ContentView:View
 
     // App Data field(s):
 
-//  @Environment(\.dismiss)              var dismiss
-    @Environment(\.presentationMode)     var presentationMode
-    @Environment(\.openURL)              var openURL
-    @Environment(\.appGlobalDeviceType)  var appGlobalDeviceType
+//  @Environment(\.dismiss)                 var dismiss
+    @Environment(\.presentationMode)        var presentationMode
+    @Environment(\.openURL)                 var openURL
+    @Environment(\.appGlobalDeviceType)     var appGlobalDeviceType
+    @Environment(\.supportsMultipleWindows) var supportsMultipleWindows
 
                             var appGlobalInfo:AppGlobalInfo   = AppGlobalInfo.ClassSingleton.appGlobalInfo
 
@@ -43,6 +44,8 @@ struct ContentView:View
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - [\(String(describing:JmXcodeBuildSettings.jmAppVersionAndBuildNumber))]...")
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'appGlobalDeviceType' is (\(String(describing:appGlobalDeviceType)))...")
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'AppGlobalInfo.bIsAppLoggingByVisitor' is [\(AppGlobalInfo.bIsAppLoggingByVisitor)] and 'AppGlobalInfo.sAppLoggingMethod' is [\(AppGlobalInfo.sAppLoggingMethod)]...")
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'supportsMultipleWindows' is (\(String(describing:supportsMultipleWindows)))...")
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'appGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac' is (\(String(describing:appGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac)))...")
 
         NavigationStack
         {

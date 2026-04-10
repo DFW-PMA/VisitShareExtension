@@ -2,7 +2,8 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.6303...
+//  AppGlobalInfo.swift - v1.6401...
+//  Updated by Daryl Cox on 04/10/2026. (Added ProcessInfo.processInfo call to set 'isiOSAppOnMac' for 'Mac (Designed for iPad)' execution).
 //  Updated by Daryl Cox on 04/07/2026. (Added ENABLE_APP_ALARM_CAPABILITY and ENABLE_APP_LEGACY_CORELOC2).
 //  Updated by Daryl Cox on 04/02/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO5).
 //  Updated by Daryl Cox on 03/16/2026. (Added INSTANTIATE_APP_PFADMINSDATAMODEL).
@@ -617,6 +618,7 @@ public class AppGlobalInfo:NSObject
            var sGlobalProcessInfoPhysicalMemory:UInt64                   = 0
            var sGlobalProcessInfoProcessIdentifier:Int32                 = 0
            var sGlobalProcessInfoProcessName:String                      = "-unknown-"
+           var bGlobalProcessInfoIsiOSAppOnMac:Bool                      = false
 
         #if os(macOS)
            var sGlobalProcessInfoMacOSUserName:String                    = "-unknown-"
@@ -734,6 +736,7 @@ public class AppGlobalInfo:NSObject
         self.sGlobalProcessInfoPhysicalMemory       = ProcessInfo.processInfo.physicalMemory
         self.sGlobalProcessInfoProcessIdentifier    = ProcessInfo.processInfo.processIdentifier
         self.sGlobalProcessInfoProcessName          = ProcessInfo.processInfo.processName         
+        self.bGlobalProcessInfoIsiOSAppOnMac        = ProcessInfo.processInfo.isiOSAppOnMac
 
     #if os(macOS)
         self.sGlobalProcessInfoSystemName           = "MacOS v\(self.sGlobalProcessInfoOSVersion.majorVersion).\(self.sGlobalProcessInfoOSVersion.minorVersion).\(self.sGlobalProcessInfoOSVersion.patchVersion)"
@@ -1261,6 +1264,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sGlobalProcessInfoPhysicalMemory' is [\(String(describing: self.sGlobalProcessInfoPhysicalMemory))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sGlobalProcessInfoProcessIdentifier' is [\(String(describing: self.sGlobalProcessInfoProcessIdentifier))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sGlobalProcessInfoProcessName' is [\(String(describing: self.sGlobalProcessInfoProcessName))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac' is [\(String(describing: self.bGlobalProcessInfoIsiOSAppOnMac))]...")
 
     #if os(macOS)
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sGlobalProcessInfoMacOSUserName' is [\(String(describing: self.sGlobalProcessInfoMacOSUserName))]...")
