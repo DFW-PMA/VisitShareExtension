@@ -28,7 +28,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.7405"
+        static let sClsVers      = "v1.7701"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = false
@@ -379,6 +379,26 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     var sAppDelegateVisitorCrashMarkerFilepath:String!             = nil
     var urlAppDelegateVisitorLogToSaveFilespec:URL?                = nil
     var sAppDelegateVisitorLogToSaveFilespec:String!               = nil
+
+    // App <global> 'state' control(s) - Memory Pressure companion marker file(s):
+    //
+    // These companion markers are written by the GCD memory pressure source handler
+    // (via AppGlobalInfo.setupMemoryPressureMonitoring()) and are interpreted at the
+    // NEXT launch alongside the crash marker to distinguish true crashes from jetsam kills:
+    //
+    //   crash.flag only                 -> true crash    -> report it
+    //   crash.flag + warning marker     -> probable jetsam kill  -> soften/suppress report
+    //   crash.flag + critical marker    -> near-certain jetsam kill -> suppress report
+    //
+    // All companion markers are removed on normal termination and at next-launch startup...
+
+    var bWasAppMemPressureWarningFilePresentAtStartup:Bool                  = false
+    var urlAppDelegateVisitorMemPressureWarningMarkerFilespec:URL?          = nil
+    var sAppDelegateVisitorMemPressureWarningMarkerFilespec:String!         = nil
+
+    var bWasAppMemPressureCriticalFilePresentAtStartup:Bool                 = false
+    var urlAppDelegateVisitorMemPressureCriticalMarkerFilespec:URL?         = nil
+    var sAppDelegateVisitorMemPressureCriticalMarkerFilespec:String!        = nil
 
     // NOTE: <Critical>
     //     This MUST be here as AppGlobalInfo uses this until XCGLogger is available...
@@ -845,6 +865,12 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         asToString.append("sAppDelegateVisitorCrashMarkerFilepath': [\(String(describing: self.sAppDelegateVisitorCrashMarkerFilepath))],")
         asToString.append("urlAppDelegateVisitorLogToSaveFilespec': [\(String(describing: self.urlAppDelegateVisitorLogToSaveFilespec))],")
         asToString.append("sAppDelegateVisitorLogToSaveFilespec': [\(String(describing: self.sAppDelegateVisitorLogToSaveFilespec))],")
+        asToString.append("bWasAppMemPressureWarningFilePresentAtStartup': [\(self.bWasAppMemPressureWarningFilePresentAtStartup)],")
+        asToString.append("urlAppDelegateVisitorMemPressureWarningMarkerFilespec': [\(String(describing: self.urlAppDelegateVisitorMemPressureWarningMarkerFilespec))],")
+        asToString.append("sAppDelegateVisitorMemPressureWarningMarkerFilespec': [\(String(describing: self.sAppDelegateVisitorMemPressureWarningMarkerFilespec))],")
+        asToString.append("bWasAppMemPressureCriticalFilePresentAtStartup': [\(self.bWasAppMemPressureCriticalFilePresentAtStartup)],")
+        asToString.append("urlAppDelegateVisitorMemPressureCriticalMarkerFilespec': [\(String(describing: self.urlAppDelegateVisitorMemPressureCriticalMarkerFilespec))],")
+        asToString.append("sAppDelegateVisitorMemPressureCriticalMarkerFilespec': [\(String(describing: self.sAppDelegateVisitorMemPressureCriticalMarkerFilespec))],")
         asToString.append("],")
         asToString.append("]")
 
@@ -1458,6 +1484,17 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             return
         }
 
+        // Calculate the Memory Pressure companion marker filespec(s) using the same base path:
+
+        self.urlAppDelegateVisitorMemPressureWarningMarkerFilespec  = self.urlAppDelegateVisitorCrashMarkerFilepath?.appendingPathComponent(AppGlobalInfo.sGlobalInfoAppMemPressureWarningMarkerFilespec)
+        self.sAppDelegateVisitorMemPressureWarningMarkerFilespec    = self.urlAppDelegateVisitorMemPressureWarningMarkerFilespec?.path
+
+        self.urlAppDelegateVisitorMemPressureCriticalMarkerFilespec = self.urlAppDelegateVisitorCrashMarkerFilepath?.appendingPathComponent(AppGlobalInfo.sGlobalInfoAppMemPressureCriticalMarkerFilespec)
+        self.sAppDelegateVisitorMemPressureCriticalMarkerFilespec   = self.urlAppDelegateVisitorMemPressureCriticalMarkerFilespec?.path
+
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> 'self.sAppDelegateVisitorMemPressureWarningMarkerFilespec'  is [\(String(describing: self.sAppDelegateVisitorMemPressureWarningMarkerFilespec))]...")
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> 'self.sAppDelegateVisitorMemPressureCriticalMarkerFilespec' is [\(String(describing: self.sAppDelegateVisitorMemPressureCriticalMarkerFilespec))]...")
+
         // If this is the actual 1st 'start' call, then determine if the AppDelegateVisitor (physical) CRASH 'marker' file is present...
 
         if (bAppFirstStartCall == true)
@@ -1471,6 +1508,65 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             else
             {
                 appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <<< PREVIOUS App execution appears to have CRASHED!!! >>>")
+            }
+
+            // Check for the Memory Pressure companion markers to qualify the crash interpretation...
+
+            self.bWasAppMemPressureWarningFilePresentAtStartup  = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorMemPressureWarningMarkerFilespec)
+            self.bWasAppMemPressureCriticalFilePresentAtStartup = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorMemPressureCriticalMarkerFilespec)
+
+            if (self.bWasAppCrashFilePresentAtStartup == true)
+            {
+                if (self.bWasAppMemPressureCriticalFilePresentAtStartup == true)
+                {
+                    appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> <<< PREVIOUS App execution: CRASH marker + CRITICAL pressure marker present - near-certain JETSAM kill (NO-warning removal by OS) >>>")
+                }
+                else if (self.bWasAppMemPressureWarningFilePresentAtStartup == true)
+                {
+                    appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> <<< PREVIOUS App execution: CRASH marker + WARNING pressure marker present - probable JETSAM kill >>>")
+                }
+                else
+                {
+                    appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> <<< PREVIOUS App execution: CRASH marker present with NO memory pressure markers - probable TRUE CRASH >>>")
+                }
+            }
+            else
+            {
+                // No crash marker - clean any stale companion markers that might exist...
+
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> No crash marker present - cleaning any stale companion markers...")
+            }
+
+            // Always clean up the companion markers at startup so each session starts fresh.
+            // If the crash marker was also present, the bWasApp...PresentAtStartup flags above
+            // carry the interpretation forward for the rest of this launch session...
+
+            if (self.bWasAppMemPressureWarningFilePresentAtStartup == true)
+            {
+                do
+                {
+                    try FileManager.default.removeItem(at:self.urlAppDelegateVisitorMemPressureWarningMarkerFilespec!)
+
+                    appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Successfully removed the MemPressure WARNING companion marker...")
+                }
+                catch
+                {
+                    appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Failed to remove the MemPressure WARNING companion marker - Detail(s):[\(error)] - Warning!")
+                }
+            }
+
+            if (self.bWasAppMemPressureCriticalFilePresentAtStartup == true)
+            {
+                do
+                {
+                    try FileManager.default.removeItem(at:self.urlAppDelegateVisitorMemPressureCriticalMarkerFilespec!)
+
+                    appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Successfully removed the MemPressure CRITICAL companion marker...")
+                }
+                catch
+                {
+                    appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Failed to remove the MemPressure CRITICAL companion marker - Detail(s):[\(error)] - Warning!")
+                }
             }
         }
 
@@ -1605,6 +1701,40 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             }
         }
 
+        // Also remove the Memory Pressure companion markers on any normal/graceful termination
+        // (background entry, will-terminate, scene disconnect).  If jetsam kills us before we
+        // get here the markers will survive to be read on the next launch...
+
+        if (self.urlAppDelegateVisitorMemPressureWarningMarkerFilespec != nil &&
+            JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorMemPressureWarningMarkerFilespec) == true)
+        {
+            do
+            {
+                try FileManager.default.removeItem(at:self.urlAppDelegateVisitorMemPressureWarningMarkerFilespec!)
+
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Successfully removed the MemPressure WARNING companion marker on termination...")
+            }
+            catch
+            {
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Failed to remove the MemPressure WARNING companion marker on termination - Detail(s):[\(error)] - Warning!")
+            }
+        }
+
+        if (self.urlAppDelegateVisitorMemPressureCriticalMarkerFilespec != nil &&
+            JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorMemPressureCriticalMarkerFilespec) == true)
+        {
+            do
+            {
+                try FileManager.default.removeItem(at:self.urlAppDelegateVisitorMemPressureCriticalMarkerFilespec!)
+
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Successfully removed the MemPressure CRITICAL companion marker on termination...")
+            }
+            catch
+            {
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Failed to remove the MemPressure CRITICAL companion marker on termination - Detail(s):[\(error)] - Warning!")
+            }
+        }
+
         // Exit:
 
         appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> 'self.bAppDelegateVisitorCrashMarkerFilespecIsCreated' is [\(self.bAppDelegateVisitorCrashMarkerFilespecIsCreated)]...")
@@ -1615,6 +1745,136 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         return
 
     }   // End of @objc public func performAppDelegateVisitorTerminatingCrashLogic().
+
+    @objc public func performAppDelegateVisitorMemoryPressureWarningLogic()
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        // NOTE: This method is called from the GCD memory pressure source handler on .main queue.
+        //       It MUST remain fast — one atomic file write maximum.  NO network, NO SwiftData...
+
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Invoked - writing WARNING companion marker...")
+
+        // If the companion filespec is not yet computed (called before startup crash logic ran),
+        // bail out safely.  This should not happen in normal operation...
+
+        guard let urlWarningMarker = self.urlAppDelegateVisitorMemPressureWarningMarkerFilespec 
+        else 
+        {
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> WARNING: companion marker filespec URL is nil - skipping write (called too early?) - Warning!")
+
+            return
+        }
+
+        // Write the warning marker.  We never upgrade a CRITICAL back down to WARNING,
+        // so skip the write if the critical marker is already in place...
+
+        let bCriticalAlreadyPresent:Bool = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorMemPressureCriticalMarkerFilespec)
+
+        if (bCriticalAlreadyPresent == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> CRITICAL companion marker already present - WARNING write suppressed (no downgrade)...")
+
+            return
+        }
+
+        do
+        {
+            let dtFormatterDateStamp        = DateFormatter()
+            dtFormatterDateStamp.locale     = Locale(identifier: "en_US")
+            dtFormatterDateStamp.timeZone   = TimeZone.current
+            dtFormatterDateStamp.dateFormat = "yyyy-MM-dd hh:mm:ss.SSS"
+
+            let sDateStamp                  = "\(dtFormatterDateStamp.string(from: Date.now)) >> "
+            let sContents                   = "\(sCurrMethodDisp) <MemPressure> WARNING marker - 'sApplicationName' is [\(self.sApplicationName)] - 'sDateStamp' is [\(sDateStamp)]...\n"
+
+            try sContents.write(to:urlWarningMarker, atomically:true, encoding:.utf8)
+
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Successfully wrote WARNING companion marker...")
+        }
+        catch
+        {
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Failed to write WARNING companion marker - Detail(s):[\(error)] - Warning!")
+        }
+
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Exiting...")
+
+        return
+
+    }   // End of @objc public func performAppDelegateVisitorMemoryPressureWarningLogic().
+
+    @objc public func performAppDelegateVisitorMemoryPressureCriticalLogic()
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        // NOTE: This method is called from the GCD memory pressure source handler on .main queue.
+        //       Jetsam kill is IMMINENT — this method MUST be as fast as possible.
+        //       One atomic file write + remove of the warning marker.  Absolutely NO blocking I/O,
+        //       NO network, NO SwiftData...
+
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Invoked - writing CRITICAL companion marker (jetsam IMMINENT)...")
+
+        guard let urlCriticalMarker = self.urlAppDelegateVisitorMemPressureCriticalMarkerFilespec 
+        else 
+        {
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> WARNING: companion marker filespec URL is nil - skipping write (called too early?) - Warning!")
+
+            return
+        }
+
+        // Write the CRITICAL marker (upgrades the session from 'warning' to 'critical')...
+
+        do
+        {
+            let dtFormatterDateStamp        = DateFormatter()
+            dtFormatterDateStamp.locale     = Locale(identifier: "en_US")
+            dtFormatterDateStamp.timeZone   = TimeZone.current
+            dtFormatterDateStamp.dateFormat = "yyyy-MM-dd hh:mm:ss.SSS"
+
+            let sDateStamp                  = "\(dtFormatterDateStamp.string(from: Date.now)) >> "
+            let sContents                   = "\(sCurrMethodDisp) <MemPressure> CRITICAL marker - 'sApplicationName' is [\(self.sApplicationName)] - 'sDateStamp' is [\(sDateStamp)]...\n"
+
+            try sContents.write(to:urlCriticalMarker, atomically:true, encoding:.utf8)
+
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Successfully wrote CRITICAL companion marker...")
+        }
+        catch
+        {
+            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Failed to write CRITICAL companion marker - Detail(s):[\(error)] - Warning!")
+        }
+
+        // Remove the WARNING marker now that we have escalated to CRITICAL.
+        // If the remove fails (unlikely), it is harmless — at next launch the CRITICAL marker
+        // takes precedence over the WARNING marker in the interpretation logic...
+
+        if (self.urlAppDelegateVisitorMemPressureWarningMarkerFilespec != nil &&
+            JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorMemPressureWarningMarkerFilespec) == true)
+        {
+            do
+            {
+                try FileManager.default.removeItem(at:self.urlAppDelegateVisitorMemPressureWarningMarkerFilespec!)
+
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Successfully removed WARNING companion marker after CRITICAL upgrade...")
+            }
+            catch
+            {
+                appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Failed to remove WARNING companion marker after CRITICAL upgrade - Detail(s):[\(error)] - Warning!")
+            }
+        }
+
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <MemPressure> Exiting...")
+
+        return
+
+    }   // End of @objc public func performAppDelegateVisitorMemoryPressureCriticalLogic().
 
 // ============================================================================
 // SECTION 2: DETECTION METHOD
@@ -5360,6 +5620,32 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Tell the 'shared' instance of the AppGlobalInfo struct that we're in the Background...
 
         self.appGlobalInfo.setAppInBackground()
+        
+    #if INSTANTIATE_APP_VMA
+        // <<CHICKEN-TRACKS>> Belt-and-suspenders session cleanup (04/15/2026):
+        // If the user has NOT successfully authenticated, destroy the "vma-window-2" scene
+        // session now so that it cannot be restored as the foreground scene on the next cold
+        // launch — which would bypass AppAuthenticateView and present ContentView with no
+        // auth data.  The primary defence is AppWindow2GateView; this is a secondary measure
+        // that prevents the stale session from persisting across app runs when auth never
+        // completed.  If the user IS logged in, we leave the session intact so that window 2
+        // is restored normally on the next launch and passes cleanly through the gate view.
+
+        let bIsUserLoggedIn:Bool = AppDevDetailsModelObservable.ClassSingleton.appDevDetailsModelObservable.bIsUserLoggedIn
+
+        appLogMsg("\(sCurrMethodDisp) <Window2> 'bIsUserLoggedIn' is [\(bIsUserLoggedIn)]...")
+
+        if (bIsUserLoggedIn == false)
+        {
+            appLogMsg("\(sCurrMethodDisp) <Window2> User NOT authenticated - requesting 'vma-window-2' scene session destruction to prevent unauthenticated cold-launch restore...")
+
+            self.requestSceneSessionDestructionForWindow2(uiApplication)
+        }
+        else
+        {
+            appLogMsg("\(sCurrMethodDisp) <Window2> User IS authenticated - preserving 'vma-window-2' scene session for normal restore...")
+        }
+    #endif
 
         // Exit:
 
@@ -5402,6 +5688,102 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         return
 
     }   // End of @objc public func appDelegateVisitorWillTerminate(uiApplication:).
+
+    // -------------------------------------------------------------------------
+    // appDelegateVisitorDidDiscardSceneSessions(_:didDiscardSceneSessions:)
+    //
+    // Reactive counterpart to requestSceneSessionDestructionForWindow2().
+    // iOS calls this (via JmUIAppDelegate) when the user explicitly discards a
+    // scene session — e.g., by swiping away a window in the iPad multitasking
+    // UI.  Currently used for diagnostic logging; extend as needed.
+    // -------------------------------------------------------------------------
+
+    public func appDelegateVisitorDidDiscardSceneSessions(_ uiApplication:UIApplication,
+                                                          didDiscardSceneSessions sceneSessions:Set<UISceneSession>)
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication' is [\(String(describing: uiApplication))] - 'sceneSessions' has [\(sceneSessions.count)] session(s) - 'sApplicationName' is [\(self.sApplicationName)]...")
+
+        for (iIdx, session) in sceneSessions.enumerated()
+        {
+            appLogMsg("\(sCurrMethodDisp) Discarded session #(\(iIdx)): 'persistentIdentifier' is [\(session.persistentIdentifier)] - 'configuration.name' is [\(session.configuration.name)] - 'role' is [\(session.role.rawValue)]...")
+        }
+
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of public func appDelegateVisitorDidDiscardSceneSessions(_:didDiscardSceneSessions:).
+
+    // -------------------------------------------------------------------------
+    // requestSceneSessionDestructionForWindow2(_:)
+    //
+    // Proactively destroys the "vma-window-2" UISceneSession so that it is NOT
+    // restored as the foreground scene on the next cold launch.
+    //
+    // Call sites:
+    //   - applicationDidEnterBackground() when bIsUserLoggedIn == false (primary)
+    //   - Any future logout path that needs to clean up window 2 explicitly
+    //
+    // Identification strategy:
+    //   session.configuration.name is checked against "vma-window-2".  All open
+    //   sessions are logged before the search so that the actual configuration.name
+    //   values are visible in the trace log; if Apple's SwiftUI infrastructure uses
+    //   a different naming convention the filter predicate can be adjusted there.
+    // -------------------------------------------------------------------------
+
+    public func requestSceneSessionDestructionForWindow2(_ uiApplication:UIApplication = UIApplication.shared)
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication.openSessions' has [\(uiApplication.openSessions.count)] session(s)...")
+
+        // Log all open sessions for diagnostics — verify configuration.name values here...
+
+        for (iIdx, session) in uiApplication.openSessions.enumerated()
+        {
+            appLogMsg("\(sCurrMethodDisp) openSession #(\(iIdx)): 'persistentIdentifier' is [\(session.persistentIdentifier)] - 'configuration.name' is [\(session.configuration.name)] - 'role' is [\(session.role.rawValue)]...")
+        }
+
+        // Locate the 'vma-window-2' session by configuration name...
+
+        let targetSession:UISceneSession? = uiApplication.openSessions.first
+        { session in
+            session.configuration.name == "vma-window-2"
+        }
+
+        if let targetSession
+        {
+            appLogMsg("\(sCurrMethodDisp) <Window2> Found 'vma-window-2' session [\(targetSession.persistentIdentifier)] - requesting destruction...")
+
+            uiApplication.requestSceneSessionDestruction(targetSession,
+                                                         options:nil,
+                                                         errorHandler:
+            { error in
+                appLogMsg("\(sCurrMethodDisp) <Window2> Scene session destruction error: [\(error.localizedDescription)] - Warning!")
+            })
+
+            appLogMsg("\(sCurrMethodDisp) <Window2> Requested destruction of 'vma-window-2' session [\(targetSession.persistentIdentifier)]...")
+        }
+        else
+        {
+            appLogMsg("\(sCurrMethodDisp) <Window2> 'vma-window-2' session NOT found in openSessions - no action needed...")
+        }
+
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of public func requestSceneSessionDestructionForWindow2(_:).
 
     @objc public func appDelegateVisitorApplication(_ application:UIApplication, open urls:[URL])
     {

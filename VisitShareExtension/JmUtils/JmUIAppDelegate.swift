@@ -18,7 +18,7 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmUIAppDelegate"
-        static let sClsVers      = "v1.2301"
+        static let sClsVers      = "v1.2401"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -247,6 +247,36 @@ class JmUIAppDelegate:NSObject, UIApplicationDelegate, ObservableObject
         return
 
     }   // End of func application(_ application:UIApplication, open urls:[URL]).
+
+    // Called by iOS when the user discards scene sessions (e.g., swipes away a window
+    // in the iPad multitasking switcher).  Passed through to JmAppDelegateVisitor for
+    // centralised handling consistent with the delegate visitor pattern.
+
+    func application(_ application:UIApplication, didDiscardSceneSessions sceneSessions:Set<UISceneSession>)
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'sceneSessions' has [\(sceneSessions.count)] session(s)...")
+
+        for (iIdx, session) in sceneSessions.enumerated()
+        {
+            appLogMsg("\(sCurrMethodDisp) Discarded session #(\(iIdx)): 'persistentIdentifier' is [\(session.persistentIdentifier)] - 'configuration.name' is [\(session.configuration.name)]...")
+        }
+
+    #if USE_APP_LOGGING_BY_VISITOR
+        self.jmAppDelegateVisitor.appDelegateVisitorDidDiscardSceneSessions(application,
+                                                                            didDiscardSceneSessions:sceneSessions)
+    #endif
+
+        // Exit:
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of func application(_ application:UIApplication, didDiscardSceneSessions:Set<UISceneSession>).
 
 }   // End of class JmUIAppDelegate:NSObject, UIApplicationDelegate, ObservableObject.
 #endif

@@ -18,7 +18,7 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmNSAppDelegate"
-        static let sClsVers      = "v1.2201"
+        static let sClsVers      = "v1.2301"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -205,6 +205,15 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
         return
 
     }   // End of func application(_ application:NSApplication, open urls:[URL]).
+
+    // <<CHICKEN-TRACKS>> Note: UISceneSession and requestSceneSessionDestruction(_:options:errorHandler:)
+    // are iOS-only APIs and have no macOS equivalent.  The second VMA WindowGroup
+    // ("VMA Reference", id:"vma-window-2") is guarded by #if os(iOS) in
+    // VisitManagementAppApp.swift, so macOS never creates that window and no scene
+    // session destruction hook is needed here.  See JmUIAppDelegate.swift for the
+    // iOS implementation of application(_:didDiscardSceneSessions:) and
+    // JmAppDelegateVisitor.swift for appDelegateVisitorDidDiscardSceneSessions()
+    // and requestSceneSessionDestructionForWindow2().
 
 }   // End of class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject.
 #endif

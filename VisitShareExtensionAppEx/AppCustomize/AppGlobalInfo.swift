@@ -2,7 +2,8 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.6401...
+//  AppGlobalInfo.swift - v1.6501...
+//  Updated by Daryl Cox on 04/14/2026. (Added GCD DispatchSource memory pressure monitoring and 'setupMemoryPressureMonitoring()'; added 'sGlobalInfoAppMemPressureWarning/CriticalMarkerFilespec' constants).
 //  Updated by Daryl Cox on 04/10/2026. (Added ProcessInfo.processInfo call to set 'isiOSAppOnMac' for 'Mac (Designed for iPad)' execution).
 //  Updated by Daryl Cox on 04/07/2026. (Added ENABLE_APP_ALARM_CAPABILITY and ENABLE_APP_LEGACY_CORELOC2).
 //  Updated by Daryl Cox on 04/02/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO5).
@@ -217,6 +218,15 @@ public class AppGlobalInfo:NSObject
     static let sGlobalInfoAppLastGoodLogFilespec:String                  = AppGlobalInfoConfig.sGlobalInfoAppLastGoodLogFilespec  
     static let sGlobalInfoAppLastCrashLogFilespec:String                 = AppGlobalInfoConfig.sGlobalInfoAppLastCrashLogFilespec 
     static let sGlobalInfoAppCrashMarkerFilespec:String                  = AppGlobalInfoConfig.sGlobalInfoAppCrashMarkerFilespec  
+    static let sGlobalInfoAppMemPressureWarningMarkerFilespec:String     = "AppMemPressureWarningMarker.txt"
+                                                                           // Companion marker written when the GCD memory pressure
+                                                                           // source fires a '.warning' event.  Presence at next launch
+                                                                           // qualifies a crash-marker hit as a probable jetsam kill...
+    static let sGlobalInfoAppMemPressureCriticalMarkerFilespec:String    = "AppMemPressureCriticalMarker.txt"
+                                                                           // Companion marker written (upgrading the warning marker)
+                                                                           // when the GCD memory pressure source fires a '.critical'
+                                                                           // event.  Presence at next launch qualifies a crash-marker
+                                                                           // hit as a near-certain jetsam kill (no-warning removal)...
                                                                                                                                          
     static let bUseApplicationShortTitle:Bool                            = AppGlobalInfoConfig.bUseApplicationShortTitle            
     static let sApplicationTitle:String                                  = AppGlobalInfoConfig.sApplicationTitle                  
@@ -696,6 +706,14 @@ public class AppGlobalInfo:NSObject
                                                                            // false: App is NOT in the Background...
                                                                            // true:  App is NOW in the Background...
 
+    #if os(iOS)
+           var dispatchSourceMemoryPressure:DispatchSourceMemoryPressure? = nil
+                                                                           // GCD memory pressure source retained here to prevent
+                                                                           // ARC release.  Set up in runPostInitializationTasks().
+                                                                           // Fires '.warning' before jetsam is possible and
+                                                                           // '.critical' when jetsam is imminent...
+    #endif
+
 #if USE_APP_LOGGING_BY_VISITOR
     // App 'delegate' Visitor:
 
@@ -1062,18 +1080,19 @@ public class AppGlobalInfo:NSObject
         // For iOS, add Foreground/Background 'notification(s)' observer(s)...
 
         appLogMsg("\(sCurrMethodDisp) Intermediate - Adding Foreground/Background 'notification(s)' observer(s)...")
-
         NotificationCenter.default.addObserver(self,
                                                selector:#selector(appMovedToForeground),
                                                name:    UIApplication.willEnterForegroundNotification,
                                                object:  nil)
-
         NotificationCenter.default.addObserver(self,
                                                selector:#selector(appMovedToBackground),
                                                name:    UIApplication.didEnterBackgroundNotification,
                                                object:  nil)
-
         appLogMsg("\(sCurrMethodDisp) Intermediate - Added  Foreground/Background 'notification(s)' observer(s)...")
+
+        appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Calling 'self.setupMemoryPressureMonitoring()'...")
+        self.setupMemoryPressureMonitoring()
+        appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Called  'self.setupMemoryPressureMonitoring()'...")
     #endif
 
         // Exit:
@@ -1477,6 +1496,82 @@ public class AppGlobalInfo:NSObject
         return
         
     }   // End of func appMovedToBackground().
+
+    private func setupMemoryPressureMonitoring()
+    {
+
+        let sCurrMethod:String     = #function;
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) <MemPressure> Invoked...")
+
+        // Build a GCD memory pressure source that monitors both '.warning' and '.critical'
+        // pressure levels.  We hold a strong reference in 'self.dispatchSourceMemoryPressure'
+        // so ARC does not release the source after this method returns.
+        //
+        // '.warning'  - early signal; jetsam kill is *possible*.
+        //               We write 'AppMemPressureWarningMarker.txt' alongside the existing
+        //               crash marker so the next launch can qualify a crash-marker hit as a
+        //               probable jetsam kill rather than a real crash.
+        //
+        // '.critical' - jetsam kill is *imminent* (milliseconds away).
+        //               We upgrade to 'AppMemPressureCriticalMarker.txt'.  Handler MUST be
+        //               extremely fast — NO network, NO SwiftData, NO blocking I/O.
+        //
+        // Both companion markers are cleaned up on normal termination
+        // (performAppDelegateVisitorTerminatingCrashLogic) and on the next foreground
+        // restore (performAppDelegateVisitorStartupCrashLogic)...
+
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical],
+                                                             queue:      .main)
+
+        source.setEventHandler
+        { [weak self] in
+
+            guard let self = self 
+            else 
+            {
+                return
+            }
+
+            let event:DispatchSource.MemoryPressureEvent = source.mask
+
+            if (event.contains(.critical))
+            {
+                appLogMsg("\(sCurrMethodDisp) <MemPressure> <<< CRITICAL Memory Pressure event - jetsam kill is IMMINENT >>>")
+
+            #if USE_APP_LOGGING_BY_VISITOR
+                if (self.jmAppDelegateVisitor != nil)
+                {
+                    appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Calling 'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureCriticalLogic()'...")
+                    self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureCriticalLogic()
+                    appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Called  'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureCriticalLogic()'...")
+                }
+            #endif
+            }
+            else if (event.contains(.warning))
+            {
+                appLogMsg("\(sCurrMethodDisp) <MemPressure> <<< WARNING Memory Pressure event - jetsam kill is possible >>>")
+
+            #if USE_APP_LOGGING_BY_VISITOR
+                if (self.jmAppDelegateVisitor != nil)
+                {
+                    appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Calling 'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureWarningLogic()'...")
+                    self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureWarningLogic()
+                    appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Called  'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureWarningLogic()'...")
+                }
+            #endif
+            }
+
+        }
+
+        source.resume()
+        self.dispatchSourceMemoryPressure = source
+
+        appLogMsg("\(sCurrMethodDisp) <MemPressure> Exiting - GCD Memory Pressure source is active and retained...")
+        return
+
+    }   // End of private func setupMemoryPressureMonitoring().
 #endif
 
     func setAppInForeground()
