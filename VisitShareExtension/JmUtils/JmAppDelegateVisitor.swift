@@ -28,7 +28,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.7701"
+        static let sClsVers      = "v1.7801"
         static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = false
@@ -197,6 +197,12 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     // App <possible> ParseCore (Client) Background Data Repo #5 instance:
 
     var jmAppParseCoreBkgdDataRepo5:JmAppParseCoreBkgdDataRepo5?   = nil
+#endif
+
+#if INSTANTIATE_APP_PARSECOREBKGDDATAREPO6
+    // App <possible> ParseCore (Client) Background Data Repo #6 instance:
+
+    var jmAppParseCoreBkgdDataRepo6:JmAppParseCoreBkgdDataRepo6?   = nil
 #endif
 
 #if INSTANTIATE_APP_CORELOCATIONSUPPORT
@@ -610,6 +616,15 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreBkgdDataRepo5' instance...")
     #endif
 
+    #if INSTANTIATE_APP_PARSECOREBKGDDATAREPO6
+        // Instantiate the JmAppParseCoreBkgdDataRepo6...
+
+        appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppParseCoreBkgdDataRepo6' instance...")
+        self.jmAppParseCoreBkgdDataRepo6 = JmAppParseCoreBkgdDataRepo6.appParseCodeBkgdDataRepo6
+        self.jmAppParseCoreBkgdDataRepo6?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
+        appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreBkgdDataRepo6' instance...")
+    #endif
+
     #if INSTANTIATE_APP_CORELOCATIONSUPPORT
         // Instantiate the CoreLocationModelObservable()...
 
@@ -795,6 +810,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     #endif
     #if INSTANTIATE_APP_PARSECOREBKGDDATAREPO5
         asToString.append("jmAppParseCoreBkgdDataRepo5': [\(String(describing: self.jmAppParseCoreBkgdDataRepo5))],")
+    #endif
+    #if INSTANTIATE_APP_PARSECOREBKGDDATAREPO6
+        asToString.append("jmAppParseCoreBkgdDataRepo6': [\(String(describing: self.jmAppParseCoreBkgdDataRepo6))],")
     #endif
     #if INSTANTIATE_APP_CORELOCATIONSUPPORT
         asToString.append("jmAppCLModelObservable2': [\(String(describing: self.jmAppCLModelObservable2))],")

@@ -2,7 +2,9 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.6501...
+//  AppGlobalInfo.swift - v1.6701...
+//  Updated by Daryl Cox on 05/11/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO6).
+//  Updated by Daryl Cox on 04/27/2026. (Added UIScene.willDeactivateNotification message capture).
 //  Updated by Daryl Cox on 04/14/2026. (Added GCD DispatchSource memory pressure monitoring and 'setupMemoryPressureMonitoring()'; added 'sGlobalInfoAppMemPressureWarning/CriticalMarkerFilespec' constants).
 //  Updated by Daryl Cox on 04/10/2026. (Added ProcessInfo.processInfo call to set 'isiOSAppOnMac' for 'Mac (Designed for iPad)' execution).
 //  Updated by Daryl Cox on 04/07/2026. (Added ENABLE_APP_ALARM_CAPABILITY and ENABLE_APP_LEGACY_CORELOC2).
@@ -263,6 +265,7 @@ public class AppGlobalInfo:NSObject
     //                              INSTANTIATE_APP_PARSECOREBKGDDATAREPO3
     //                              INSTANTIATE_APP_PARSECOREBKGDDATAREPO4
     //                              INSTANTIATE_APP_PARSECOREBKGDDATAREPO5
+    //                              INSTANTIATE_APP_PARSECOREBKGDDATAREPO6
     //                              INSTANTIATE_APP_CORELOCATIONSUPPORT
     //                              INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
     //                              INSTANTIATE_APP_NWSWEATHERMODELOBSERVABLE
@@ -477,6 +480,15 @@ public class AppGlobalInfo:NSObject
     static let bInstantiateAppParseCoreBkgdDataRepo5:Bool                =
     {
     #if INSTANTIATE_APP_PARSECOREBKGDDATAREPO5
+        return true
+    #else
+        return false
+    #endif
+    }()
+
+    static let bInstantiateAppParseCoreBkgdDataRepo6:Bool                =
+    {
+    #if INSTANTIATE_APP_PARSECOREBKGDDATAREPO6
         return true
     #else
         return false
@@ -1079,7 +1091,7 @@ public class AppGlobalInfo:NSObject
     #if os(iOS)
         // For iOS, add Foreground/Background 'notification(s)' observer(s)...
 
-        appLogMsg("\(sCurrMethodDisp) Intermediate - Adding Foreground/Background 'notification(s)' observer(s)...")
+        appLogMsg("\(sCurrMethodDisp) <MemPressure> <AppForegroundBackgroundDeactivate> Intermediate - Adding Foreground/Background/Deactivate 'notification(s)' observer(s)...")
         NotificationCenter.default.addObserver(self,
                                                selector:#selector(appMovedToForeground),
                                                name:    UIApplication.willEnterForegroundNotification,
@@ -1088,11 +1100,15 @@ public class AppGlobalInfo:NSObject
                                                selector:#selector(appMovedToBackground),
                                                name:    UIApplication.didEnterBackgroundNotification,
                                                object:  nil)
-        appLogMsg("\(sCurrMethodDisp) Intermediate - Added  Foreground/Background 'notification(s)' observer(s)...")
+        NotificationCenter.default.addObserver(self,
+                                               selector:#selector(appMovedToDeactivate),
+                                               name:    UIScene.willDeactivateNotification,
+                                               object:  nil)
+        appLogMsg("\(sCurrMethodDisp) <MemPressure> <AppForegroundBackgroundDeactivate> Intermediate - Added  Foreground/Background/Deactivate 'notification(s)' observer(s)...")
 
-        appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Calling 'self.setupMemoryPressureMonitoring()'...")
+        appLogMsg("\(sCurrMethodDisp) <MemPressure> <AppForegroundBackgroundDeactivate> Intermediate - Calling 'self.setupMemoryPressureMonitoring()'...")
         self.setupMemoryPressureMonitoring()
-        appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Called  'self.setupMemoryPressureMonitoring()'...")
+        appLogMsg("\(sCurrMethodDisp) <MemPressure> <AppForegroundBackgroundDeactivate> Intermediate - Called  'self.setupMemoryPressureMonitoring()'...")
     #endif
 
         // Exit:
@@ -1228,6 +1244,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo3' is [\(String(describing: AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo3))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo4' is [\(String(describing: AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo4))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo5' is [\(String(describing: AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo5))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo6' is [\(String(describing: AppGlobalInfo.bInstantiateAppParseCoreBkgdDataRepo6))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppCoreLocationSupport' is [\(String(describing: AppGlobalInfo.bInstantiateAppCoreLocationSupport))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppCoreLocationAutoSyncSupport' is [\(String(describing: AppGlobalInfo.bInstantiateAppCoreLocationAutoSyncSupport))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppNWSWeatherModelObservable' is [\(String(describing: AppGlobalInfo.bInstantiateAppNWSWeatherModelObservable))]...")
@@ -1436,7 +1453,7 @@ public class AppGlobalInfo:NSObject
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
 
-        appLogMsg("\(sCurrMethodDisp) Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> Invoked...")
 
         self.setAppInForeground()
 
@@ -1445,7 +1462,7 @@ public class AppGlobalInfo:NSObject
         // any items upserted during the background sync step.
         // This is a read-only fetch+sort on the observable - no network, no writes.
 
-        appLogMsg("\(sCurrMethodDisp) <AppBGTasks> <AutoSyncCLLocs> Intermediate - Dispatching 'CLRequestGoodModelObservable.clRequestGoodModelObservable.generateCLRequestGoodItemsList()' onto MainActor...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Dispatching 'CLRequestGoodModelObservable.clRequestGoodModelObservable.generateCLRequestGoodItemsList()' onto MainActor...")
 
         // 'generateCLRequestGoodItemsList()' is @MainActor-isolated so dispatch via Task...
 
@@ -1454,7 +1471,7 @@ public class AppGlobalInfo:NSObject
 
             CLRequestGoodModelObservable.clRequestGoodModelObservable.generateCLRequestGoodItemsList()
 
-            appLogMsg("\(sCurrMethodDisp) <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'CLRequestGoodModelObservable.clRequestGoodModelObservable.generateCLRequestGoodItemsList()' on MainActor...")
+            appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'CLRequestGoodModelObservable.clRequestGoodModelObservable.generateCLRequestGoodItemsList()' on MainActor...")
 
         }
 
@@ -1462,7 +1479,7 @@ public class AppGlobalInfo:NSObject
 
         // Exit...
         
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Exiting...")
         
         return
         
@@ -1474,7 +1491,7 @@ public class AppGlobalInfo:NSObject
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
 
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Invoked...")
 
         self.setAppInBackground()
 
@@ -1484,14 +1501,32 @@ public class AppGlobalInfo:NSObject
         // after backgrounding.  currentAutoSyncStep is persisted in @AppStorage
         // so an interrupted cycle resumes on the next background entry.
 
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()'...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()'...")
         JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()'...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()'...")
     #endif
 
         // Exit...
         
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Exiting...")
+        
+        return
+        
+    }   // End of func appMovedToBackground().
+
+    @objc func appMovedToDeactivate()
+    {
+
+        let sCurrMethod:String     = #function;
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Invoked...")
+
+        self.setAppWillDeactivate()
+
+        // Exit...
+        
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Exiting...")
         
         return
         
@@ -1503,7 +1538,7 @@ public class AppGlobalInfo:NSObject
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
 
-        appLogMsg("\(sCurrMethodDisp) <MemPressure> Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <MemPressure> Invoked...")
 
         // Build a GCD memory pressure source that monitors both '.warning' and '.critical'
         // pressure levels.  We hold a strong reference in 'self.dispatchSourceMemoryPressure'
@@ -1522,8 +1557,8 @@ public class AppGlobalInfo:NSObject
         // (performAppDelegateVisitorTerminatingCrashLogic) and on the next foreground
         // restore (performAppDelegateVisitorStartupCrashLogic)...
 
-        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical],
-                                                             queue:      .main)
+        let source = DispatchSource.makeMemoryPressureSource(eventMask:[.warning, .critical],
+                                                             queue:    .main)
 
         source.setEventHandler
         { [weak self] in
@@ -1538,27 +1573,27 @@ public class AppGlobalInfo:NSObject
 
             if (event.contains(.critical))
             {
-                appLogMsg("\(sCurrMethodDisp) <MemPressure> <<< CRITICAL Memory Pressure event - jetsam kill is IMMINENT >>>")
+                appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <MemPressure> <<< CRITICAL Memory Pressure event - jetsam kill is IMMINENT >>>")
 
             #if USE_APP_LOGGING_BY_VISITOR
                 if (self.jmAppDelegateVisitor != nil)
                 {
-                    appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Calling 'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureCriticalLogic()'...")
+                    appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <MemPressure> Intermediate - Calling 'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureCriticalLogic()'...")
                     self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureCriticalLogic()
-                    appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Called  'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureCriticalLogic()'...")
+                    appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <MemPressure> Intermediate - Called  'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureCriticalLogic()'...")
                 }
             #endif
             }
             else if (event.contains(.warning))
             {
-                appLogMsg("\(sCurrMethodDisp) <MemPressure> <<< WARNING Memory Pressure event - jetsam kill is possible >>>")
+                appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <MemPressure> <<< WARNING Memory Pressure event - jetsam kill is possible >>>")
 
             #if USE_APP_LOGGING_BY_VISITOR
                 if (self.jmAppDelegateVisitor != nil)
                 {
-                    appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Calling 'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureWarningLogic()'...")
+                    appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <MemPressure> Intermediate - Calling 'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureWarningLogic()'...")
                     self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureWarningLogic()
-                    appLogMsg("\(sCurrMethodDisp) <MemPressure> Intermediate - Called  'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureWarningLogic()'...")
+                    appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <MemPressure> Intermediate - Called  'self.jmAppDelegateVisitor?.performAppDelegateVisitorMemoryPressureWarningLogic()'...")
                 }
             #endif
             }
@@ -1568,7 +1603,7 @@ public class AppGlobalInfo:NSObject
         source.resume()
         self.dispatchSourceMemoryPressure = source
 
-        appLogMsg("\(sCurrMethodDisp) <MemPressure> Exiting - GCD Memory Pressure source is active and retained...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <MemPressure> Exiting - GCD Memory Pressure source is active and retained...")
         return
 
     }   // End of private func setupMemoryPressureMonitoring().
@@ -1580,7 +1615,7 @@ public class AppGlobalInfo:NSObject
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
         
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Invoked...")
         
         // Finish setting the App in the Foreground 'state'...
 
@@ -1591,15 +1626,15 @@ public class AppGlobalInfo:NSObject
         {
             // When we go into the Foreground, we make sure the CRASH Marker File is in place...
 
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
+            appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
             jmAppGlobalInfoDelegateVisitor?.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
+            appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'self.performAppDelegateVisitorStartupCrashLogic(false, bForegroundRestore:true)'...")
         }
     #endif
 
         // Exit...
         
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Exiting...")
         
         return
         
@@ -1611,7 +1646,7 @@ public class AppGlobalInfo:NSObject
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
         
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Invoked...")
         
         // Finish setting the App in the Background 'state'...
 
@@ -1622,15 +1657,47 @@ public class AppGlobalInfo:NSObject
         {
             // When we go into the Background, we make sure the CRASH Marker File is NOT in place (we can be removed without warning)...
 
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
+            appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
             jmAppGlobalInfoDelegateVisitor?.performAppDelegateVisitorTerminatingCrashLogic()
-            appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
+            appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
         }
     #endif
 
         // Exit...
         
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Exiting...")
+        
+        return
+        
+    }   // End of func setAppInBackground().
+
+    func setAppWillDeactivate()
+    {
+
+        let sCurrMethod:String     = #function;
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+        
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Invoked...")
+        
+        // Finish setting the App in the Background 'state'...
+
+        self.bAppIsInTheBackground = true
+
+    #if USE_APP_LOGGING_BY_VISITOR
+        if (jmAppGlobalInfoDelegateVisitor != nil)
+        {
+            // When we go into Deacrtivate, we make sure the CRASH Marker File is NOT in place (we can be removed without warning)...
+  
+            appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - (We should be)   Calling 'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
+        // NOTE: --- Blocked until we know if we're getting this Notification or not... 
+        //  jmAppGlobalInfoDelegateVisitor?.performAppDelegateVisitorTerminatingCrashLogic()
+            appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - (We should have) Called  'self.performAppDelegateVisitorTerminatingCrashLogic()'...")
+        }
+    #endif
+
+        // Exit...
+        
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Exiting...")
         
         return
         
@@ -1642,7 +1709,7 @@ public class AppGlobalInfo:NSObject
         let sCurrMethod:String     = #function;
         let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
         
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Invoked...")
         
         // Set the App in the Foreground/Background 'state'...
         
@@ -1679,7 +1746,7 @@ public class AppGlobalInfo:NSObject
 
         // Exit...
         
-        appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Exiting - 'self.bAppIsInTheBackground' is [\(self.bAppIsInTheBackground)]...")
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Exiting - 'self.bAppIsInTheBackground' is [\(self.bAppIsInTheBackground)]...")
         
         return self.bAppIsInTheBackground
         

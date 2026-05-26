@@ -8,27 +8,31 @@
 
 import Foundation
 import SwiftUI
+#if INSTANTIATE_APP_SWIFTDATAMANAGER || INSTANTIATE_APP_JMSWIFTDATAMANAGER
+import SwiftData
+#endif
 
-@available(iOS 15.0, *)
+@available(iOS 17.0, *)
 struct AppAboutView:View
 {
     
     struct ClassInfo
     {
         static let sClsId        = "AppAboutView"
-        static let sClsVers      = "v1.2501"
+        static let sClsVers      = "v1.2403"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
+        static let bClsTrace     = false
         static let bClsFileLog   = true
     }
 
     // App Data field(s):
 
-//  @Environment(\.dismiss)              var dismiss
-    @Environment(\.presentationMode)     var presentationMode
-    @Environment(\.openURL)              var openURL
-    @Environment(\.appGlobalDeviceType)  var appGlobalDeviceType
+//  @Environment(\.dismiss)                 var dismiss
+    @Environment(\.presentationMode)        var presentationMode
+    @Environment(\.openURL)                 var openURL
+    @Environment(\.appGlobalDeviceType)     var appGlobalDeviceType
+    @Environment(\.supportsMultipleWindows) var supportsMultipleWindows
 
                     var appGlobalInfo:AppGlobalInfo               = AppGlobalInfo.ClassSingleton.appGlobalInfo
 #if INSTANTIATE_APP_SWIFTDATAMANAGER
@@ -63,9 +67,11 @@ struct AppAboutView:View
     var body:some View 
     {
         
-        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) \(JmXcodeBuildSettings.jmAppVersionAndBuildNumber)...")
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - [\(String(describing:JmXcodeBuildSettings.jmAppVersionAndBuildNumber))]...")
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'appGlobalDeviceType' is (\(String(describing:appGlobalDeviceType)))...")
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'AppGlobalInfo.bIsAppLoggingByVisitor' is [\(AppGlobalInfo.bIsAppLoggingByVisitor)] and 'AppGlobalInfo.sAppLoggingMethod' is [\(AppGlobalInfo.sAppLoggingMethod)]...")
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'supportsMultipleWindows' is (\(String(describing:supportsMultipleWindows)))...")
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'appGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac' is (\(String(describing:appGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac)))...")
 
         VStack
         {
@@ -77,7 +83,6 @@ struct AppAboutView:View
                 Button
                 {
                     let _ = appLogMsg("\(ClassInfo.sClsDisp):AppAboutView.Button(Xcode).'Dismiss' pressed...")
-
                     self.presentationMode.wrappedValue.dismiss()
                 }
                 label:
@@ -155,7 +160,6 @@ struct AppAboutView:View
                                 Button
                                 {
                                     let _ = appLogMsg("...\(ClassInfo.sClsDisp):AppAboutView in Text.contextMenu.'copy' button #1...")
-
                                     self.copyLogFilespecToClipboard()
                                 }
                                 label:
@@ -177,7 +181,6 @@ struct AppAboutView:View
                                 Button
                                 {
                                     let _ = appLogMsg("...\(ClassInfo.sClsDisp):AppAboutView in Text.contextMenu.'copy' button #2...")
-
                                     self.copyUserDefaultsFilespecToClipboard()
                                 }
                                 label:
@@ -197,7 +200,6 @@ struct AppAboutView:View
                                 Button
                                 {
                                     let _ = appLogMsg("...\(ClassInfo.sClsDisp):AppAboutView in Text.contextMenu.'copy' button #3...")
-
                                     self.copyJmSwiftDataFilesLocationToClipboard()
                                 }
                                 label:
@@ -218,7 +220,6 @@ struct AppAboutView:View
                                 Button
                                 {
                                     let _ = appLogMsg("...\(ClassInfo.sClsDisp):AppAboutView in Text.contextMenu.'copy' button #4...")
-
                                     self.copyAppSwiftDataFilesLocationToClipboard()
                                 }
                                 label:
@@ -237,9 +238,10 @@ struct AppAboutView:View
                             .font(.caption2)
 
                 #if os(iOS) && INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
-                    if (AppGlobalInfo.bEnableAppAdsPlaceholder == true ||
-                        AppGlobalInfo.bEnableAppAdsTesting     == true ||
-                        AppGlobalInfo.bEnableAppAdsProduction  == true)
+                    if (!appGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac &&
+                        (AppGlobalInfo.bEnableAppAdsPlaceholder  == true ||
+                         AppGlobalInfo.bEnableAppAdsTesting      == true ||
+                         AppGlobalInfo.bEnableAppAdsProduction   == true))
                     {
                         Text("")            
                             .hidden()
@@ -258,9 +260,10 @@ struct AppAboutView:View
                     Divider()
 
             #if os(iOS) && INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
-                if (AppGlobalInfo.bEnableAppAdsPlaceholder == true ||
-                    AppGlobalInfo.bEnableAppAdsTesting     == true ||
-                    AppGlobalInfo.bEnableAppAdsProduction  == true)
+                if (!appGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac &&
+                    (AppGlobalInfo.bEnableAppAdsPlaceholder  == true ||
+                     AppGlobalInfo.bEnableAppAdsTesting      == true ||
+                     AppGlobalInfo.bEnableAppAdsProduction   == true))
                 {
                     VStack
                     {
@@ -268,9 +271,7 @@ struct AppAboutView:View
                         AppGlobalInfo.bEnableAppAdsProduction == true)
                     {
                         let _ = print("ContentView.View: Invoking 'BannerContentView()'...")
-          
                         BannerContentView(navigationTitle:"AdMobSwiftUIDemoApp2")
-          
                         let _ = print("ContentView.View: Invoked  'BannerContentView()'...")
                     }
                     else
@@ -283,16 +284,10 @@ struct AppAboutView:View
                             {
                                 GeometryReader 
                                 { geometry in
-          
                                     Image(ImageResource(name:"Gfx/Placeholder-for-Ads", bundle:Bundle.main))
                                         .resizable()
                                         .scaledToFit()
                                         .frame(width:geometry.size.width)
-                                    //  .frame(width:geometry.size.width, height:50)
-                                    //  .containerRelativeFrame(.horizontal)
-                                    //      { size, axis in
-                                    //          size * 1.000
-                                    //      }
                                 }
                             }
                             else
@@ -313,11 +308,7 @@ struct AppAboutView:View
 
                 Text("")            
                     .hidden()
-                    .onAppear(
-                        perform:
-                        {
-                            let _ = self.finishAppInitialization()
-                        })
+                    .onAppear(perform:{ let _ = self.finishAppInitialization() })
                     .frame(minWidth: 1, idealWidth: 2, maxWidth: 3,
                            minHeight:1, idealHeight:2, maxHeight:3)
             }
@@ -338,16 +329,13 @@ struct AppAboutView:View
   
     #if USE_APP_LOGGING_BY_VISITOR
         appLogMsg("\(ClassInfo.sClsDisp) Invoking the 'jmAppDelegateVisitor.checkAppDelegateVisitorTraceLogFileForSize()'...")
-
         self.jmAppDelegateVisitor.checkAppDelegateVisitorTraceLogFileForSize()
-
         appLogMsg("\(ClassInfo.sClsDisp) Invoked  the 'jmAppDelegateVisitor.checkAppDelegateVisitorTraceLogFileForSize()'...")
     #endif
 
         // Exit...
   
         appLogMsg("\(sCurrMethodDisp) Exiting...")
-  
         return
 
     } // End of private func finishAppInitialization().
@@ -368,7 +356,6 @@ struct AppAboutView:View
         // Exit...
     
         appLogMsg("\(sCurrMethodDisp) Exiting - 'sLogFilespecSizeInMB' is [\(sLogFilespecSizeInMB)] for 'sAppDelegateVisitorLogFilespec' of [\(jmAppDelegateVisitor.sAppDelegateVisitorLogFilespec!)]...")
-    
         return sLogFilespecSizeInMB
         
     }   // End of private func getLogFilespecFileSizeDisplayableMB()->String.
@@ -394,7 +381,6 @@ struct AppAboutView:View
                 if let urlSwiftDataLocation = self.jmAppDelegateVisitor.jmAppSwiftDataManager?.modelContext!.container.configurations.first?.url 
                 {
                     sJmSwiftDataFilesLocation = String(describing:urlSwiftDataLocation).stripOptionalStringWrapper()
-                
                     appLogMsg("\(sCurrMethodDisp) <JmSwiftData Location> 📱 The SwiftData 'location' is [\(String(describing:urlSwiftDataLocation).stripOptionalStringWrapper())]...")
                     appLogMsg("\(sCurrMethodDisp) <JmSwiftData Location> 📱 The SwiftData 'self.jmAppDelegateVisitor.jmAppSwiftDataManager?.modelContext!.container.configurations' is [\(String(describing: self.jmAppDelegateVisitor.jmAppSwiftDataManager?.modelContext!.container.configurations))]...")
                 }
@@ -404,7 +390,6 @@ struct AppAboutView:View
         // Exit...
     
         appLogMsg("\(sCurrMethodDisp) Exiting - 'sJmSwiftDataFilesLocation' is [\(sJmSwiftDataFilesLocation)]...")
-    
         return sJmSwiftDataFilesLocation
         
     }   // End of private func getJmSwiftDataFilesLocation()->String.
@@ -428,7 +413,6 @@ struct AppAboutView:View
             if let urlSwiftDataLocation = self.appSwiftDataManager.modelContext!.container.configurations.first?.url 
             {
                 sAppSwiftDataFilesLocation = String(describing:urlSwiftDataLocation).stripOptionalStringWrapper()
-      
                 appLogMsg("\(sCurrMethodDisp) <AppSwiftData Location> 📱 The SwiftData 'location' is [\(String(describing:urlSwiftDataLocation).stripOptionalStringWrapper())]...")
                 appLogMsg("\(sCurrMethodDisp) <AppSwiftData Location> 📱 The SwiftData 'self.appSwiftDataManager.modelContext.container.configurations' is [\(self.appSwiftDataManager.modelContext!.container.configurations)]...")
             }
@@ -437,7 +421,6 @@ struct AppAboutView:View
         // Exit...
     
         appLogMsg("\(sCurrMethodDisp) Exiting - 'sAppSwiftDataFilesLocation' is [\(sAppSwiftDataFilesLocation)]...")
-    
         return sAppSwiftDataFilesLocation
         
     }   // End of private func getAppSwiftDataFilesLocation()->String.
@@ -462,7 +445,6 @@ struct AppAboutView:View
         // Exit...
     
         appLogMsg("\(sCurrMethodDisp) Exiting...")
-    
         return
         
     }   // End of private func copyLogFilespecToClipboard().
@@ -486,7 +468,6 @@ struct AppAboutView:View
         // Exit...
     
         appLogMsg("\(sCurrMethodDisp) Exiting...")
-    
         return
         
     }   // End of private func copyUserDefaultsFilespecToClipboard().
@@ -512,7 +493,6 @@ struct AppAboutView:View
         // Exit...
     
         appLogMsg("\(sCurrMethodDisp) Exiting...")
-    
         return
         
     }   // End of private func copyJmSwiftDataFilesLocationToClipboard().
@@ -539,7 +519,6 @@ struct AppAboutView:View
         // Exit...
     
         appLogMsg("\(sCurrMethodDisp) Exiting...")
-    
         return
         
     }   // End of private func copyAppSwiftDataFilesLocationToClipboard().
@@ -547,7 +526,7 @@ struct AppAboutView:View
     
 }   // End of struct AppAboutView:View.
 
-@available(iOS 15.0, *)
+@available(iOS 17.0, *)
 #Preview
 {
     AppAboutView()

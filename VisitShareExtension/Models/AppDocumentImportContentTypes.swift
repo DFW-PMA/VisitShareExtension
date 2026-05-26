@@ -16,7 +16,7 @@ public struct AppDocumentImportContentTypes
     struct ClassInfo
     {
         static let sClsId          = "AppDocumentImportContentTypes"
-        static let sClsVers        = "v1.0103"
+        static let sClsVers        = "v1.0201"
         static let sClsDisp        = sClsId+"(.swift).("+sClsVers+"):"
         static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace       = false
@@ -44,8 +44,11 @@ public struct AppDocumentImportContentTypes
                                                                  .yaml,
                                                                  UTType(filenameExtension:"yaml")!,
                                                                  .json,
-                                                                 UTType(filenameExtension:"json")!
+                                                                 UTType(filenameExtension:"json")!,
+                                                                // Markdown support (.md / .markdown)...
+                                                                 UTType(filenameExtension:"md")!,
+                                                                 UTType(filenameExtension:"markdown")!,
+                                                                 UTType("net.daringfireball.markdown")!
                                                             ]
 
 }   // End of public struct AppDocumentImportContentTypes.
-

@@ -23,7 +23,7 @@ struct FullScreenImageViewer: View
     struct ClassInfo
     {
         static let sClsId        = "FullScreenImageViewer"
-        static let sClsVers      = "v1.0401"
+        static let sClsVers      = "v1.0601"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -39,6 +39,12 @@ struct FullScreenImageViewer: View
                     let imageURL:URL
     @Binding        var isPresented:Bool
     @ObservedObject var cineViewItem:CineViewLocItem
+
+    // Optional dismiss handler.  When non-nil (transient viewer flow), tapping Close
+    // calls this closure instead of dismissing directly.  The closure is responsible
+    // for showing the save prompt and ultimately dismissing the parent view.
+
+    var onDismissRequested:(() -> Void)? = nil
 
     // State for zoom and pan...
 
@@ -231,9 +237,19 @@ struct FullScreenImageViewer: View
 
                             Button
                             {
-                                let _ = appLogMsg("\(ClassInfo.sClsDisp):Button.'Dismiss' pressed...")
+                                let _ = appLogMsg("\(ClassInfo.sClsDisp):Button.'Close' pressed...")
 
-                                self.presentationMode.wrappedValue.dismiss()
+                                // If a custom handler was supplied (transient viewer flow),
+                                // delegate to it instead of dismissing directly.
+
+                                if let handler = onDismissRequested
+                                {
+                                    handler()
+                                }
+                                else
+                                {
+                                    self.presentationMode.wrappedValue.dismiss()
+                                }
                             }
                             label:
                             {
@@ -318,7 +334,7 @@ struct FullScreenImageViewer: View
                 }
             }
         }
-    #if os(ios)
+    #if os(iOS)
         .statusBar(hidden:true)
     #endif
         .onAppear

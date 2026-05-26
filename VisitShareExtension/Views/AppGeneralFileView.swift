@@ -17,6 +17,7 @@ import UniformTypeIdentifiers
 
 // Determines which view to display based on file content
 // Three-tier system: Spreadsheet → JSON/Tree → CSV/Tree → Raw Text
+// Extended: Markdown (.md / .markdown) detected before Tier 1
 
 enum AppGeneralFileDisplayMode
 {
@@ -26,6 +27,7 @@ enum AppGeneralFileDisplayMode
     case spreadsheet
     case json
     case rawText
+    case markdown
     case error
 }
 
@@ -37,7 +39,7 @@ struct AppGeneralFileView:View
     struct ClassInfo
     {
         static let sClsId        = "AppGeneralFileView"
-        static let sClsVers      = "v1.0703"
+        static let sClsVers      = "v1.0801"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -69,7 +71,9 @@ struct AppGeneralFileView:View
     @State          private var jsonDisplayItems:[JsonDisplayItem]     = []
     
     @State          private var rawFileData:Data                       = Data()
-    
+
+    @State          private var markdownContent:String                 = ""
+
     @State          private var errorMessage:String                    = ""
     
     // Large file expansion state...
@@ -197,7 +201,7 @@ struct AppGeneralFileView:View
         }
         else
         {
-            // Tiers 1-3 / Error path: original NavigationStack layout unchanged.
+            // Tiers 1-3 / Markdown / Error path: original NavigationStack layout unchanged.
 
             NavigationStack
             {
@@ -217,6 +221,8 @@ struct AppGeneralFileView:View
                             jsonView
                         case .rawText:
                             rawTextView
+                        case .markdown:
+                            markdownView
                         case .error:
                             errorView
                         default:
@@ -488,6 +494,17 @@ struct AppGeneralFileView:View
             }
         }
     }
+
+    // MARK: - Markdown View
+
+    private var markdownView:some View
+    {
+        AppMarkdownViewerView(
+            sMarkdownContent: markdownContent,
+            sFileName:        fileURL.lastPathComponent,
+            iFileSize:        rawFileData.count
+        )
+    }
     
     // MARK: - Error View
     
@@ -727,7 +744,7 @@ struct AppGeneralFileView:View
                 return
             }
 
-            appLogMsg("\(sCurrMethodDisp) Tier 0 - not a media file, continuing to three-tier text pipeline...")
+            appLogMsg("\(sCurrMethodDisp) Tier 0 - not a media file, continuing to text pipeline...")
 
             do
             {
@@ -857,7 +874,18 @@ struct AppGeneralFileView:View
                     
                     return
                 }
-                
+
+                // Markdown early-exit: detected by extension before Tier 1 so we skip
+                // the spreadsheet / JSON parse attempts entirely for .md / .markdown files.
+
+                if await tryRenderAsMarkdown(url:url, data:fileData)
+                {
+                    appLogMsg("\(sCurrMethodDisp) Success - Using Markdown View...")
+                    appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+                    return
+                }
+
                 // Try parsing as spreadsheet first (Tier 1)...
 
                 if await tryParseAsSpreadsheet(url:url)
@@ -916,6 +944,50 @@ struct AppGeneralFileView:View
         return
 
     }   // End of private func processFile(at url:URL).
+
+    // MARK: - Markdown Rendering (pre-Tier-1 extension check)
+
+    private func tryRenderAsMarkdown(url:URL, data:Data) async -> Bool
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - checking for Markdown file extension...")
+
+        let sFileExtension = url.pathExtension.lowercased()
+
+        guard (sFileExtension == "md" || sFileExtension == "markdown")
+        else
+        {
+            appLogMsg("\(sCurrMethodDisp) Not a Markdown file (extension: [\(sFileExtension)]) - Exiting with [false]...")
+
+            return false
+        }
+
+        appLogMsg("\(sCurrMethodDisp) Detected Markdown file (extension: [\(sFileExtension)]) - decoding UTF-8 content...")
+
+        guard let sDecodedContent = String(data:data, encoding:.utf8)
+        else
+        {
+            appLogMsg("\(sCurrMethodDisp) Failed - Unable to decode Markdown file as UTF-8 - Exiting with [false]...")
+
+            return false
+        }
+
+        appLogMsg("\(sCurrMethodDisp) Success - Decoded #(\(sDecodedContent.count)) character(s) from Markdown file...")
+
+        await MainActor.run
+        {
+            markdownContent = sDecodedContent
+            displayMode     = .markdown
+        }
+
+        appLogMsg("\(sCurrMethodDisp) Exiting with [true]...")
+
+        return true
+
+    }   // End of private func tryRenderAsMarkdown(url:URL, data:Data) async -> Bool.
     
     private func tryParseAsSpreadsheet(url:URL) async -> Bool
     {
@@ -1192,4 +1264,3 @@ struct AppGeneralFileView:View
     }
 
 }   // End of struct AppGeneralFileView:View.
-

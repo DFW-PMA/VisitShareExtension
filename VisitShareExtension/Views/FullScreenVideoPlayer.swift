@@ -21,7 +21,7 @@ struct FullScreenVideoPlayer:View
     struct ClassInfo
     {
         static let sClsId        = "FullScreenVideoPlayer"
-        static let sClsVers      = "v1.0801"
+        static let sClsVers      = "v1.0601"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -49,10 +49,17 @@ struct FullScreenVideoPlayer:View
                              var cineViewItem:CineViewLocItem?
                              let bResumeFromProgress:Bool
 
+    // Optional dismiss handler.  When non-nil (transient viewer flow), tapping Dismiss
+    // calls saveProgressOnExit() + pause() first (same as normal), then invokes this
+    // closure instead of dismissing directly.
+
+                             var onDismissRequested:(() -> Void)? = nil
+
     init(videoURL:URL, 
          isPresented:Binding<Bool>,
-         cineViewItem:CineViewLocItem? = nil,
-         bResumeFromProgress:Bool = false) 
+         cineViewItem:CineViewLocItem?   = nil,
+         bResumeFromProgress:Bool        = false,
+         onDismissRequested:(() -> Void)? = nil) 
     {
 
         let sCurrMethod:String     = #function
@@ -60,10 +67,11 @@ struct FullScreenVideoPlayer:View
         
         appLogMsg("\(sCurrMethodDisp) Invoked - 'videoURL' is [\(videoURL)] - 'bResumeFromProgress' is [\(bResumeFromProgress)]...")
     
-        self.videoURL            = videoURL
-        self._isPresented        = isPresented
-        self.cineViewItem        = cineViewItem
-        self.bResumeFromProgress = bResumeFromProgress
+        self.videoURL             = videoURL
+        self._isPresented         = isPresented
+        self.cineViewItem         = cineViewItem
+        self.bResumeFromProgress  = bResumeFromProgress
+        self.onDismissRequested   = onDismissRequested
 
         // Determine starting position...
 
@@ -189,12 +197,22 @@ struct FullScreenVideoPlayer:View
                     {
                         let _ = appLogMsg("\(ClassInfo.sClsDisp):Button(Xcode).'Dismiss' pressed...")
 
-                        // Save progress before dismissing...
+                        // Save progress and pause regardless of which dismiss path we take...
 
                         playerManager.saveProgressOnExit()
                         playerManager.pause()
 
-                        self.presentationMode.wrappedValue.dismiss()
+                        // If a custom handler was supplied (transient viewer flow),
+                        // delegate to it instead of dismissing directly.
+
+                        if let handler = onDismissRequested
+                        {
+                            handler()
+                        }
+                        else
+                        {
+                            self.presentationMode.wrappedValue.dismiss()
+                        }
                     }
                     label:
                     {
@@ -252,7 +270,7 @@ class PlayerManager:ObservableObject
     struct ClassInfo
     {
         static let sClsId        = "PlayerManager"
-        static let sClsVers      = "v1.0301"
+        static let sClsVers      = "v1.0601"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
