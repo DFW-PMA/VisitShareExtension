@@ -2,7 +2,8 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.6701...
+//  AppGlobalInfo.swift - v1.6801...
+//  Updated by Daryl Cox on 05/26/2026. (Added various fields for DivorcePack (Claude) additions).
 //  Updated by Daryl Cox on 05/11/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO6).
 //  Updated by Daryl Cox on 04/27/2026. (Added UIScene.willDeactivateNotification message capture).
 //  Updated by Daryl Cox on 04/14/2026. (Added GCD DispatchSource memory pressure monitoring and 'setupMemoryPressureMonitoring()'; added 'sGlobalInfoAppMemPressureWarning/CriticalMarkerFilespec' constants).
@@ -595,6 +596,57 @@ public class AppGlobalInfo:NSObject
     static let sAppUploadNotifyFrom:String                               = AppGlobalInfoConfig.sAppUploadNotifyFrom                       
     static let iAlertViaSwiftUITimeout:Double                            = AppGlobalInfoConfig.iAlertViaSwiftUITimeout                    
     static let iAlertViaUIKitTimeout:Double                              = AppGlobalInfoConfig.iAlertViaUIKitTimeout                      
+
+    // ----------------------------------------------------------
+    // Extra Apple App 'group' settings
+    // ----------------------------------------------------------
+
+    static let sAppGroupId:String                                        = AppGlobalInfoConfig.sAppGroupId
+//  static let sAppGroupId:String                                        = "group.net.justmacapps.sharedDivorcePack"
+
+    // ----------------------------------------------------------
+    // Extra DivorcePack config
+    // ----------------------------------------------------------
+
+    static let sAppName:String                                           = AppGlobalInfo.sGlobalInfoAppId
+    static let sAppBundleId:String                                       = "net.justmacapps.divorcepack"
+    static let sAppVersion:String                                        = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    static let sAppBuild:String                                          = Bundle.main.infoDictionary?["CFBundleVersion"]            as? String ?? "1"
+    static var sAppVersionBuild:String                                   = "\(sAppVersion) (\(sAppBuild))"
+
+    // ----------------------------------------------------------
+    // Feature flags (forwarded from AppGlobalInfoConfig)
+    // ----------------------------------------------------------
+
+//  static let bEnableAppAdsProduction                                   = AppGlobalInfoConfig.bEnableAppAdsProduction
+    static let bEnableAppAdsDevelopment                                  = AppGlobalInfoConfig.bEnableAppAdsDevelopment
+    static let bEnableProTier                                            = AppGlobalInfoConfig.bEnableProTier
+    static let bEnableFamilyTier                                         = AppGlobalInfoConfig.bEnableFamilyTier
+    static let bUseFirebaseAuth                                          = AppGlobalInfoConfig.bUseFirebaseAuth
+    static let sVaporBaseURL                                             = AppGlobalInfoConfig.sVaporBaseURL
+    static let bLoadSampleDataOnFirstLaunch                              = AppGlobalInfoConfig.bLoadSampleDataOnFirstLaunch
+
+    // ----------------------------------------------------------
+    // Environment
+    // ----------------------------------------------------------
+
+    static var bIsSimulator:Bool
+    {
+    #if targetEnvironment(simulator)
+        return true
+    #else
+        return false
+    #endif
+    }
+
+    static var bIsDebugBuild:Bool
+    {
+    #if DEBUG
+        return true
+    #else
+        return false
+    #endif
+    }
 
     // Various 'App' (tracking) information:
 

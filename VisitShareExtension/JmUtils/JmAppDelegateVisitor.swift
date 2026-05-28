@@ -221,7 +221,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 #if INSTANTIATE_APP_MENUBARSTATUSBAR
     // App <possible> MenuBar NSStatusBar instance:
 
-    var appStatusBar:JustAMenuBarApp2NSStatusBar                   = JustAMenuBarApp2NSStatusBar.ClassSingleton.appStatusBar
+    var appStatusBar:JustDevTools3NSStatusBar                   = JustDevTools3NSStatusBar.ClassSingleton.appStatusBar
 #endif
 #endif
 

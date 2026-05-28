@@ -1,6 +1,6 @@
 //
 //  AutoDismissAlertCustomizableModifier.swift
-//  JustAMenuBarApp2
+//  JustDevTools3
 //
 //  Created by Daryl Cox on 07/23/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.

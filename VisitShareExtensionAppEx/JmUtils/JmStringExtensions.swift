@@ -25,7 +25,7 @@ enum StringCleaning
     case removeWhitespacesAndNewlines
 }
 
-// Extension class to add extra method(s) to String - v8.0901.
+// Extension class to add extra method(s) to String - v8.1001.
 
 extension String
 {
@@ -558,6 +558,20 @@ extension String
         return result
 
     }   // End of func normalizeQuotes()->String.
+
+    func leftPadding(toLength length:Int, withPad character:Character)->String 
+    {
+
+        let currentLength = self.count
+
+        if currentLength >= length
+        { 
+            return self 
+        }
+
+        return String(repeating:character, count:length - currentLength) + self
+
+    }   // End of func leftPadding(toLength length:Int, withPad character:Character)->String.
 
 }   // End of extension String.
 

@@ -24,16 +24,16 @@ final class AppGlobalInfoConfig:NSObject
 {
     
     static let sGlobalInfoAppId:String                                   = "VisitShareExtension"
-    static let sGlobalInfoAppVers:String                                 = "v1.5801"
+    static let sGlobalInfoAppVers:String                                 = "v1.6401"
     static let sGlobalInfoAppDisp:String                                 = sGlobalInfoAppId+".("+sGlobalInfoAppVers+"): "
     static let sGlobalInfoAppCopyRight:String                            = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
     static let sGlobalInfoAppLogFilespecMaxSize:Int64                    = 10000000
     static let bGlobalInfoAppAutoSendCrashLog:Bool                       = true
     static let bGlobalInfoAppAutoSendCrashLogTesting:Bool                = true
-    static let sGlobalInfoAppLogFilespec:String                          = "VisitShareExtension.log"
-    static let sGlobalInfoAppLastGoodLogFilespec:String                  = "VisitShareExtension.last_good.log"
-    static let sGlobalInfoAppLastCrashLogFilespec:String                 = "VisitShareExtension.crashed_last.log"
-    static let sGlobalInfoAppCrashMarkerFilespec:String                  = "VisitShareExtension.crash_marker.txt"
+    static let sGlobalInfoAppLogFilespec:String                          = sGlobalInfoAppId+".log"
+    static let sGlobalInfoAppLastGoodLogFilespec:String                  = sGlobalInfoAppId+".last_good.log"
+    static let sGlobalInfoAppLastCrashLogFilespec:String                 = sGlobalInfoAppId+".crashed_last.log"
+    static let sGlobalInfoAppCrashMarkerFilespec:String                  = sGlobalInfoAppId+".crash_marker.txt"
 
     static let bUseApplicationShortTitle:Bool                            = true
     static let sApplicationTitle:String                                  = sGlobalInfoAppId
@@ -85,6 +85,42 @@ final class AppGlobalInfoConfig:NSObject
     static let vvColorVisitDatePast:Color                                = Color.yellow     // Visit Date (In) 'Past'...
     static let vvColorVisitDateError:Color                               = Color.purple     // Visit Date 'Error'...
     static let vvColorVisitUndefined:Color                               = Color.primary    // Visit 'Undefined'...
+
+#if os(iOS)
+    // UIColor equivalents for Objective-C compatibility:
+    
+    static let vvUIColorVisitScheduled:UIColor                           = UIColor.systemBlue       // Visit 'scheduled'...
+    static let vvUIColorVisitActual:UIColor                              = UIColor.systemOrange     // Visit 'actual'...
+    static let vvUIColorVisitMissed:UIColor                              = UIColor.systemRed        // Visit 'missed'...
+    static let vvUIColorVisitTeleP:UIColor                               = UIColor.systemRed        // Visit 'TelePractice'...
+    static let vvUIColorVisitGood:UIColor                                = UIColor.systemGreen      // Visit 'Good'...
+    static let vvUIColorVisitDatePast:UIColor                            = UIColor.systemYellow     // Visit Date (In) 'Past'...
+    static let vvUIColorVisitDateError:UIColor                           = UIColor.systemPurple     // Visit Date 'Error'...
+    static let vvUIColorVisitUndefined:UIColor                           = UIColor.label            // Visit 'Undefined'...
+#endif
+
+    // Apple 'Group' ID
+
+    static let sAppGroupId:String                                        = "group.com.PreferredMobileApplications.sharedVisitApps1"
+
+    // Ads
+
+//  static let bEnableAppAdsProduction:Bool                              = false
+    static let bEnableAppAdsDevelopment:Bool                             = false
+
+    // Feature tiers
+
+    static let bEnableProTier:Bool                                       = false            // Phase 2: IAP unlock
+    static let bEnableFamilyTier:Bool                                    = false            // Phase 2: multi-decree
+
+    // Backend
+
+    static let bUseFirebaseAuth:Bool                                     = false
+    static let sVaporBaseURL:String                                      = "https://justmacapps.net/divorcepack/cloud-api"
+
+    // Debug / development
+
+    static let bLoadSampleDataOnFirstLaunch:Bool                         = true             // set false for production
 
     static public func displayAppGlobalInfoConfigSettings()
     {
@@ -161,5 +197,5 @@ final class AppGlobalInfoConfig:NSObject
 
     }   // End of static public func displayAppGlobalInfoConfigSettings().
 
-}   // End of final class AppGlobalInfoConfig.
+}   // End of final class AppGlobalInfoConfig:NSObject.
 

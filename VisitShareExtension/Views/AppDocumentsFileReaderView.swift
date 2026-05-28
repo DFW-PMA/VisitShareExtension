@@ -159,7 +159,7 @@ struct AppDocumentsFileReaderView:View
     struct ClassInfo
     {
         static let sClsId        = "AppDocumentsFileReaderView"
-        static let sClsVers      = "v1.1701"
+        static let sClsVers      = "v1.1801"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -212,6 +212,13 @@ struct AppDocumentsFileReaderView:View
         guard let selectedDirectoryURL = selectedDirectoryURL
         else { return "-None-" }
 
+        // When browsing the App Group root show a readable label rather than the UUID path component
+        if let groupURL = appGroupURL,
+           selectedDirectoryURL == groupURL
+        {
+            return "AppGroup"
+        }
+
         return selectedDirectoryURL.lastPathComponent
     }
 
@@ -255,6 +262,20 @@ struct AppDocumentsFileReaderView:View
             appLogMsg("\(ClassInfo.sClsDisp):containerSubdirectories - Error reading container: \(error.localizedDescription)")
             return []
         }
+    }
+
+    // App Group container URL — non-nil when AppGlobalInfo.sAppGroupId is populated.
+    // Empty string → nil → no App Group entry appears in the directory picker.
+    // Resolved fresh each time so it is never stale.
+
+    private var appGroupURL:URL?
+    {
+        guard !AppGlobalInfo.sAppGroupId.isEmpty
+        else { return nil }
+
+        return FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier:AppGlobalInfo.sAppGroupId
+        )
     }
 
     var body:some View 
@@ -515,6 +536,32 @@ struct AppDocumentsFileReaderView:View
                                         Image(systemName:"checkmark")
                                     }
                                     Text(dirURL.lastPathComponent)
+                                }
+                            }
+                        }
+
+                        // App Group entry — only shown when AppGlobalInfo.sAppGroupId is non-empty
+                        if let groupURL = appGroupURL
+                        {
+                            Divider()
+
+                            Button
+                            {
+                                selectedDirectoryURL = groupURL
+                                readDocumentsDirectory()
+
+                                appLogMsg("\(ClassInfo.sClsDisp):Menu.Button - Selected App Group: [\(AppGlobalInfo.sAppGroupId)]...")
+                            }
+                            label:
+                            {
+                                HStack
+                                {
+                                    if groupURL == selectedDirectoryURL
+                                    {
+                                        Image(systemName:"checkmark")
+                                    }
+                                    Image(systemName:"externaldrive.connected.to.line.below")
+                                    Text("AppGroup")
                                 }
                             }
                         }
@@ -1599,14 +1646,14 @@ struct AppDocumentsFileItemDetails:View
                 {
                     Group
                     {
-                        DetailRow(label:"File UUID",       value:String(describing:item.id))
-                        DetailRow(label:"Filename",        value:item.sName)
-                        DetailRow(label:"File Type",       value:item.sIcon)
-                        DetailRow(label:"File Size",       value:item.sSizeString)
-                        DetailRow(label:"Modified On",     value:formatFileDate(item.dateModified))
-                        DetailRow(label:"Created  On",     value:formatFileDate(item.dateCreated))
-                        DetailRow(label:"Is 'Directory'?", value:String(describing:item.bIsDirectory))
-                        DetailRow(label:"File URL",        value:String(describing:item.url))
+                        FileReaderDetailRow(label:"File UUID",       value:String(describing:item.id))
+                        FileReaderDetailRow(label:"Filename",        value:item.sName)
+                        FileReaderDetailRow(label:"File Type",       value:item.sIcon)
+                        FileReaderDetailRow(label:"File Size",       value:item.sSizeString)
+                        FileReaderDetailRow(label:"Modified On",     value:formatFileDate(item.dateModified))
+                        FileReaderDetailRow(label:"Created  On",     value:formatFileDate(item.dateCreated))
+                        FileReaderDetailRow(label:"Is 'Directory'?", value:String(describing:item.bIsDirectory))
+                        FileReaderDetailRow(label:"File URL",        value:String(describing:item.url))
                     }
                 }
                 .padding()
@@ -1866,14 +1913,14 @@ struct AppDocumentsFileItemDetails:View
 
 }
 
-// MARK: - DetailRow Helper View
+// MARK: - FileReaderDetailRow Helper View
 
-struct DetailRow:View
+struct FileReaderDetailRow:View
 {
 
     struct ClassInfo
     {
-        static let sClsId        = "DetailRow"
+        static let sClsId        = "FileReaderDetailRow"
         static let sClsVers      = "v1.1003"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
@@ -1901,7 +1948,7 @@ struct DetailRow:View
                     {
                         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View).VStack.Text.contextMenu(Button).'copy (label)' button #1...")
                         
-                        copyDetailRowValueToClipboard()
+                        copyFileReaderDetailRowValueToClipboard()
                     }
                     label:
                     {
@@ -1917,7 +1964,7 @@ struct DetailRow:View
                     {
                         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View).VStack.Text.contextMenu(Button).'copy (value)' button #2...")
                         
-                        copyDetailRowValueToClipboard()
+                        copyFileReaderDetailRowValueToClipboard()
                     }
                     label:
                     {
@@ -1929,7 +1976,7 @@ struct DetailRow:View
         }
     }
 
-    private func copyDetailRowValueToClipboard()
+    private func copyFileReaderDetailRowValueToClipboard()
     {
         
         let sCurrMethod:String     = #function
@@ -1950,7 +1997,7 @@ struct DetailRow:View
     
         return
         
-    }   // End of private func copyDetailRowValueToClipboard().
+    }   // End of private func copyFileReaderDetailRowValueToClipboard().
     
 }
 

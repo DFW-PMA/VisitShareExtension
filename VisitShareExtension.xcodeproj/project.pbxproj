@@ -10,6 +10,7 @@
 		F0803DB62F47736700B6BD8A /* XMLCoder in Frameworks */ = {isa = PBXBuildFile; productRef = F0803DB52F47736700B6BD8A /* XMLCoder */; };
 		F08843542F2D022F0097C911 /* ObjcExceptionBridging in Frameworks */ = {isa = PBXBuildFile; productRef = F08843532F2D022F0097C911 /* ObjcExceptionBridging */; };
 		F08843562F2D022F0097C911 /* XCGLogger in Frameworks */ = {isa = PBXBuildFile; productRef = F08843552F2D022F0097C911 /* XCGLogger */; };
+		F0C85F1D2FC8D1BF007DF269 /* SwiftOTP in Frameworks */ = {isa = PBXBuildFile; productRef = F0C85F1C2FC8D1BF007DF269 /* SwiftOTP */; };
 		F0F616092F2D17EE00D8A2BA /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = F0F616082F2D17EE00D8A2BA /* MarkdownUI */; };
 		F0FF3D942F17FAC000B5B936 /* VisitShareExtensionAppEx.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F03293832F1687B8002ACF91 /* VisitShareExtensionAppEx.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -145,6 +146,7 @@
 				F0F616092F2D17EE00D8A2BA /* MarkdownUI in Frameworks */,
 				F08843542F2D022F0097C911 /* ObjcExceptionBridging in Frameworks */,
 				F0803DB62F47736700B6BD8A /* XMLCoder in Frameworks */,
+				F0C85F1D2FC8D1BF007DF269 /* SwiftOTP in Frameworks */,
 				F08843562F2D022F0097C911 /* XCGLogger in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -232,6 +234,7 @@
 				F08843552F2D022F0097C911 /* XCGLogger */,
 				F0F616082F2D17EE00D8A2BA /* MarkdownUI */,
 				F0803DB52F47736700B6BD8A /* XMLCoder */,
+				F0C85F1C2FC8D1BF007DF269 /* SwiftOTP */,
 			);
 			productName = VisitShareExtension;
 			productReference = F03293552F1686C1002ACF91 /* VisitShareExtension.app */;
@@ -345,6 +348,7 @@
 				F08843522F2D022F0097C911 /* XCRemoteSwiftPackageReference "XCGLogger" */,
 				F0F616072F2D17EE00D8A2BA /* XCRemoteSwiftPackageReference "MarkdownUI" */,
 				F0803DB42F47736700B6BD8A /* XCRemoteSwiftPackageReference "XMLCoder" */,
+				F0C85F1B2FC8D1BF007DF269 /* XCRemoteSwiftPackageReference "SwiftOTP" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F03293562F1686C1002ACF91 /* Products */;
@@ -578,7 +582,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtension/VisitShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18.01.26C146;
+				CURRENT_PROJECT_VERSION = 19.01.26C148;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -615,7 +619,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtension/VisitShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18.01.26C146;
+				CURRENT_PROJECT_VERSION = 19.01.26C148;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -734,7 +738,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtensionAppEx/VisitShareExtensionAppEx.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18.01.26C146;
+				CURRENT_PROJECT_VERSION = 19.01.26C148;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtensionAppEx/Info.plist;
@@ -766,7 +770,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = VisitShareExtensionAppEx/VisitShareExtensionAppEx.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18.01.26C146;
+				CURRENT_PROJECT_VERSION = 19.01.26C148;
 				DEVELOPMENT_TEAM = 6CVN7U97NK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VisitShareExtensionAppEx/Info.plist;
@@ -860,6 +864,14 @@
 				minimumVersion = 7.1.5;
 			};
 		};
+		F0C85F1B2FC8D1BF007DF269 /* XCRemoteSwiftPackageReference "SwiftOTP" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lachlanbell/SwiftOTP.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.2;
+			};
+		};
 		F0F616072F2D17EE00D8A2BA /* XCRemoteSwiftPackageReference "MarkdownUI" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gonzalezreal/MarkdownUI";
@@ -885,6 +897,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F08843522F2D022F0097C911 /* XCRemoteSwiftPackageReference "XCGLogger" */;
 			productName = XCGLogger;
+		};
+		F0C85F1C2FC8D1BF007DF269 /* SwiftOTP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0C85F1B2FC8D1BF007DF269 /* XCRemoteSwiftPackageReference "SwiftOTP" */;
+			productName = SwiftOTP;
 		};
 		F0F616082F2D17EE00D8A2BA /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -15,7 +15,7 @@ struct SettingsSingleViewCore:View
     struct ClassInfo
     {
         static let sClsId        = "SettingsSingleViewCore"
-        static let sClsVers      = "v1.2703"
+        static let sClsVers      = "v1.2801"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
@@ -76,6 +76,25 @@ struct SettingsSingleViewCore:View
     @State private var isAppDownloadReleaseUpdateShowing:Bool    = false
     @State private var isAppDownloadPreReleaseUpdateShowing:Bool = false
 #endif
+
+    // Developer Unlock gesture state...
+    //
+    // <<CHICKEN-TRACKS>> The unlock sequence is intentionally invisible:
+    //   Step 1 - Triple-tap the App icon  → arms a 4-second window (haptic: medium pulse)
+    //   Step 2 - Long-press (2.0s) within the window → presents DeveloperUnlockView
+    //            (haptic: heavy pulse on fire)
+    // Neither gesture is labeled, described, or hinted at anywhere in the UI.
+    // UIImpactFeedbackGenerator is iOS-only - wrapped in #if os(iOS) below.
+
+    // Observed so the developer section reacts instantly when isDevModeActive changes
+    // (e.g. field tech unlocks via DeveloperUnlockView and dismisses back here)...
+
+    @ObservedObject private var devUnlockMgr:JmDeveloperUnlockManager 
+                                                                 = JmDeveloperUnlockManager.shared
+
+    @State private var bAppIconLongPressArmed:Bool               = false
+    @State private var cAppIconArmCount:Int                      = 0
+    @State private var isDevUnlockViewModal:Bool                 = false
     
     init()
     {
@@ -370,7 +389,7 @@ struct SettingsSingleViewCore:View
         }
 
             Spacer()
-                .frame(height:10)
+                .frame(height:6)
       
             VStack(alignment:.center)
             {
@@ -408,6 +427,99 @@ struct SettingsSingleViewCore:View
                     Spacer()
                 }
             }
+      
+            Spacer()
+
+            // App icon - hidden developer unlock gate.
+            //
+            // <<CHICKEN-TRACKS>> Gesture sequence (invisible - no labels, no hints):
+            //   Step 1: Triple-tap the App icon
+            //           → Arms the long-press window for 4 seconds
+            //           → Confirmed by a MEDIUM haptic pulse (iOS only)
+            //   Step 2: Long-press the App icon for 2.0 seconds WHILE ARMED
+            //           → Presents DeveloperUnlockView
+            //           → Confirmed by a HEAVY haptic pulse (iOS only)
+            //
+            // simultaneousGesture is required: onTapGesture(count:3) would otherwise
+            // suppress onLongPressGesture recognition on the same view.
+            //
+            // The arm window auto-expires after 4 seconds so an accidental triple-tap
+            // does not leave the device permanently primed for a long-press.
+
+            HStack(alignment:.center)
+            {
+                Spacer()
+
+                if #available(iOS 17.0, *)
+                {
+                    Image(ImageResource(name:"Gfx/AppIcon", bundle:Bundle.main))
+                        .resizable()
+                        .scaledToFit()
+                        .containerRelativeFrame(.horizontal)
+                        { size, axis in
+                            size * 0.06
+                        }
+                }
+                else
+                {
+                    Image(ImageResource(name:"Gfx/AppIcon", bundle:Bundle.main))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width:30, height:30, alignment:.center)
+                }
+
+                Spacer()
+            }
+            // Triple-tap: arm the long-press window...
+            .onTapGesture(count:3)
+            {
+                self.cAppIconArmCount += 1
+                let _ = appLogMsg("\(ClassInfo.sClsDisp) App icon triple-tapped #(\(self.cAppIconArmCount)) - arming developer long-press window...")
+                self.bAppIconLongPressArmed = true
+
+            #if os(iOS)
+                // Medium haptic confirms the arm - silent confirmation only, no UI change...
+                let armFeedback = UIImpactFeedbackGenerator(style:.medium)
+                armFeedback.impactOccurred()
+            #endif
+
+                // Auto-disarm after 4 seconds if no long-press follows...
+                DispatchQueue.main.asyncAfter(deadline:.now() + 4.0)
+                {
+                    if (self.bAppIconLongPressArmed == true)
+                    {
+                        self.bAppIconLongPressArmed = false
+                        let _ = appLogMsg("\(ClassInfo.sClsDisp) App icon arm window expired - auto-disarmed...")
+                    }
+                }
+            }
+            // 2-second long-press: fire the unlock screen (only when armed)...
+            // simultaneousGesture prevents the tap recognizer from blocking the long-press...
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration:2.0)
+                    .onEnded
+                    { _ in
+
+                        let _ = appLogMsg("\(ClassInfo.sClsDisp) App icon 2s long-press detected - 'bAppIconLongPressArmed' is [\(self.bAppIconLongPressArmed)]...")
+
+                        guard (self.bAppIconLongPressArmed == true) else
+                        {
+                            let _ = appLogMsg("\(ClassInfo.sClsDisp) Long-press IGNORED - not armed (triple-tap first)...")
+                            return
+                        }
+
+                        let _ = appLogMsg("\(ClassInfo.sClsDisp) ARMED long-press confirmed - presenting DeveloperUnlockView...")
+
+                        self.bAppIconLongPressArmed = false
+                        self.isDevUnlockViewModal   = true
+
+                    #if os(iOS)
+                        // Heavy haptic confirms the fire...
+                        let fireFeedback = UIImpactFeedbackGenerator(style:.heavy)
+                        fireFeedback.impactOccurred()
+                    #endif
+                    }
+            )
 
             Spacer()
 
@@ -455,7 +567,8 @@ struct SettingsSingleViewCore:View
 
             Spacer()
       
-        if (AppGlobalInfo.bPerformAppDevTesting == true)
+    //  if (AppGlobalInfo.bPerformAppDevTesting == true)
+        if (devUnlockMgr.isDevModeActive == true)
         {
             HStack(alignment:.center)
             {
@@ -747,6 +860,15 @@ struct SettingsSingleViewCore:View
                 .onAppear(perform:{ let _ = self.finishAppInitialization() })
                 .frame(minWidth: 1, idealWidth: 2, maxWidth: 3,
                        minHeight:1, idealHeight:2, maxHeight:3)
+                // <<CHICKEN-TRACKS>> DeveloperUnlockView fullScreenCover attached here
+                // (on the terminal hidden Text) so it does not interfere with any other
+                // fullScreenCover in this view's hierarchy.
+            #if os(iOS)
+                .fullScreenCover(isPresented:$isDevUnlockViewModal)
+                {
+                    DeveloperUnlockView()
+                }
+            #endif
         }
         .padding()
 
