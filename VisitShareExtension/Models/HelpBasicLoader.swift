@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
@@ -15,19 +16,20 @@ import Cocoa
 import UIKit
 #endif
 
+@JmEntityInfo(vers:"v1.1001")
 @available(iOS 14.0, *)
 class HelpBasicLoader: NSObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "HelpBasicLoader"
-        static let sClsVers      = "v1.1001"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "HelpBasicLoader"
+        //  static let sClsVers      = "v1.1001"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -70,8 +72,9 @@ class HelpBasicLoader: NSObject
     public func loadHelpBasicContents(helpbasicfileext:String = "html", helpbasicloadertag:String = "-unknown-") -> String
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) - Invoked...")
 

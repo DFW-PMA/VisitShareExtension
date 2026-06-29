@@ -6,33 +6,44 @@
 //  Copyright © 2023-2026 JustMacApps. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import UIKit
 
+@JmEntityInfo(vers:"v1.0402")
 @available(iOS 14.0, *)
 @objc(JmAppScreenCapture)
 class JmAppScreenCapture:NSObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "JmAppScreenCapture"
-        static let sClsVers      = "v1.0301"
-        static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JmAppScreenCapture"
+        //  static let sClsVers      = "v1.0301"
+        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // Singleton - NSObject subclass, so accessible from ObjC via @objc:
 
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged SENDABLE
+    // ("nonisolated global shared mutable state"). Confirmed via grep this singleton has zero real
+    // call sites anywhere in the app and is never reassigned. Changed 'var' -> 'let', plus
+    // nonisolated(unsafe) since JmAppScreenCapture:NSObject itself isn't Sendable (the compiler
+    // flags that separately once 'let' alone resolves the mutable-storage complaint — same two-step
+    // pattern seen on AppGlobalInfo's and MultipartRequestDriver's singletons earlier this session).
     @objc(jmAppScreenCapture)
-    static var jmAppScreenCapture:JmAppScreenCapture           = JmAppScreenCapture()
+    nonisolated(unsafe) static let jmAppScreenCapture:JmAppScreenCapture           = JmAppScreenCapture()
 
     // App Data field(s):
 
-                 var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — same fix as
+    // MultipartRequestDriver's identical 'jmAppDelegateVisitor' property: confirmed never reassigned,
+    // changed 'var' -> 'let' + nonisolated(unsafe) (JmAppDelegateVisitor itself is non-Sendable).
+                 nonisolated(unsafe) let jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.appDelegateVisitor
 
     // Compile-time retry tuning constants:
 
@@ -46,8 +57,9 @@ class JmAppScreenCapture:NSObject
     private override init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         super.init()
 
@@ -68,8 +80,9 @@ class JmAppScreenCapture:NSObject
                                                  notifyCc:  String  = "")
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <CaptureScreenshot> Invoked - tag[\(tag)]...")
         
@@ -92,10 +105,18 @@ class JmAppScreenCapture:NSObject
             sNotifyCc = "tony@dfwpts.net;dcox@justmacapps.net"
         }
         
-        Task 
+        // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged "sending
+        // 'self' risks causing data races" (self, a non-Sendable JmAppScreenCapture, captured into
+        // this Task's @MainActor closure from a nonisolated context). Rebound self to a
+        // nonisolated(unsafe) local — same idiom used for AppGlobalInfo's init()/updateUIDeviceOrientation()
+        // earlier this session. Safe here too: this is the trusted singleton instance, and the
+        // closure only reads/calls through it, never escapes it elsewhere.
+        nonisolated(unsafe) let unsafeSelf = self
+
+        Task
         { @MainActor in
 
-            await self.captureAndUpload(tag:       tag,
+            await unsafeSelf.captureAndUpload(tag:       tag,
                                         uploadURL: "",            // "" takes the default URL in MultipartRequestDriver
                                         notifyFrom:sNotifyFrom,
                                         notifyTo:  sNotifyTo,
@@ -123,8 +144,9 @@ class JmAppScreenCapture:NSObject
                                  bSilent:   Bool    = true) async
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <CaptureScreenshot> Invoked - tag[\(tag)] bZip[\(bZip)] bSilent[\(bSilent)]...")
 
@@ -248,8 +270,9 @@ class JmAppScreenCapture:NSObject
     private func captureKeyWindow() async ->UIImage?
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <CaptureScreenshot> Invoked - max retries[\(iMaxRetries)] interval[\(iRetryIntervalNs)ns]...")
 
@@ -299,8 +322,9 @@ class JmAppScreenCapture:NSObject
     private func saveToDocuments(data:Data, filename:String)->String
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <CaptureScreenshot> Invoked - filename[\(filename)]...")
 
@@ -337,8 +361,9 @@ class JmAppScreenCapture:NSObject
     @objc public func returnScreenshotDirectory()->[String]
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <CaptureScreenshot> Invoked...")
 
@@ -359,8 +384,9 @@ class JmAppScreenCapture:NSObject
     @objc public func returnScreenshotDirectoryContents(_ directoryPath:String)->[String]
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <CaptureScreenshot> Invoked - 'directoryPath' is [\(directoryPath)]...")
 

@@ -6,42 +6,51 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import Combine
 import XCGLogger
 
 #if os(macOS)
+@JmEntityInfo(vers:"v1.2401")
 class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "JmNSAppDelegate"
-        static let sClsVers      = "v1.2301"
-        static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JmNSAppDelegate"
+        //  static let sClsVers      = "v1.2302"
+        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
+    // <<CHICKEN-TRACKS>> Swift 6 conversion - flagged SENDABLE ("nonisolated global shared
+    // mutable state"). Genuinely reassigned twice - set in init(), cleared to nil in
+    // applicationWillTerminate(_:) - so 'let' isn't an option. Both writes happen from
+    // NSApplicationDelegate lifecycle callbacks, which AppKit guarantees run on the main thread
+    // (same reasoning and fix as JmUIAppDelegate.swift's identical singleton). Confirmed via
+    // grep this has zero readers anywhere in the codebase today. nonisolated(unsafe).
     struct ClassSingleton
     {
-        static var appDelegate:JmNSAppDelegate?              = nil
+        nonisolated(unsafe) static var appDelegate:JmNSAppDelegate?              = nil
     }
 
     // Various App field(s):
 
-               var appGlobalInfo:AppGlobalInfo               = AppGlobalInfo.ClassSingleton.appGlobalInfo
-               var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
+               var appGlobalInfo:AppGlobalInfo               = AppGlobalInfo.appGlobalInfo
+               var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.appDelegateVisitor
 
                var cAppDelegateInitCalls:Int                 = 0
 
     override init()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         super.init()
         
@@ -93,8 +102,9 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
     func applicationWillFinishLaunching(_ aNotification:Notification) 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
 
@@ -113,8 +123,9 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
     func applicationDidFinishLaunching(_ aNotification:Notification) 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
 
@@ -131,8 +142,9 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
     func applicationDidBecomeActive(_ aNotification:Notification) 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
 
@@ -149,8 +161,9 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
     func applicationDidResignActive(_ aNotification:Notification) 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
 
@@ -167,8 +180,9 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
     func applicationWillTerminate(_ aNotification:Notification) 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'aNotification' is [\(aNotification)] - 'sApplicationName' is [\(self.jmAppDelegateVisitor.sApplicationName)] - 'self' is [\(self)]...")
         appLogMsg("\(sCurrMethodDisp) Current '\(ClassInfo.sClsId)' is [\(self.toString())]...")
@@ -189,8 +203,9 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
     func application(_ application:NSApplication, open urls:[URL])
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'application' is [\(application)] - 'urls' are [\(urls)]...")
         appLogMsg("\(sCurrMethodDisp) Current '\(ClassInfo.sClsId)' is [\(self.toString())]...")
@@ -206,14 +221,18 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
 
     }   // End of func application(_ application:NSApplication, open urls:[URL]).
 
-    // <<CHICKEN-TRACKS>> Note: UISceneSession and requestSceneSessionDestruction(_:options:errorHandler:)
-    // are iOS-only APIs and have no macOS equivalent.  The second VMA WindowGroup
-    // ("VMA Reference", id:"vma-window-2") is guarded by #if os(iOS) in
-    // VisitManagementAppApp.swift, so macOS never creates that window and no scene
-    // session destruction hook is needed here.  See JmUIAppDelegate.swift for the
-    // iOS implementation of application(_:didDiscardSceneSessions:) and
-    // JmAppDelegateVisitor.swift for appDelegateVisitorDidDiscardSceneSessions()
-    // and requestSceneSessionDestructionForWindow2().
+    // <<CHICKEN-TRACKS>> Note: UISceneSession, requestSceneSessionDestruction(_:options:errorHandler:),
+    // and application(_:configurationForConnecting:options:) are iOS-only APIs and have no
+    // macOS equivalent.  NSApplicationDelegate has no scene session concept at all.
+    // The second VMA WindowGroup ("VMA Reference", id:"vma-window-2") is guarded by
+    // #if os(iOS) in VisitManagementAppApp.swift, so macOS never creates that window
+    // and neither the session destruction hook nor the configurationForConnecting
+    // pre-construction guard are needed here.  See JmUIAppDelegate.swift for the
+    // iOS implementation of application(_:configurationForConnecting:options:) and
+    // application(_:didDiscardSceneSessions:), and JmAppDelegateVisitor.swift for
+    // appDelegateVisitorConfigurationForConnecting(_:connectingSceneSession:options:),
+    // appDelegateVisitorDidDiscardSceneSessions(), and
+    // requestSceneSessionDestructionForWindow2().
 
 }   // End of class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject.
 #endif

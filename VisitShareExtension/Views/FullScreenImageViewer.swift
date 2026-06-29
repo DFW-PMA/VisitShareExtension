@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
@@ -17,18 +18,19 @@ import AppKit
 
 // MARK: - FullScreenImageViewer
 
+@JmEntityInfo(vers:"v1.0601")
 struct FullScreenImageViewer: View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "FullScreenImageViewer"
-        static let sClsVers      = "v1.0601"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "FullScreenImageViewer"
+        //  static let sClsVers      = "v1.0601"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App 'environmental' field(s):
 
@@ -353,8 +355,9 @@ struct FullScreenImageViewer: View
     private func loadImage()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Loading image from: [\(imageURL)]...")
 
@@ -390,8 +393,9 @@ struct FullScreenImageViewer: View
     private func markAsViewed()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Marking image as viewed: [\(imageURL.lastPathComponent)]...")
 

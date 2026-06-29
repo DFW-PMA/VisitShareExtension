@@ -6,24 +6,26 @@
 //  v1.0300 - Fallback view for generic XML content
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
 // View for displaying JSON data with expandable sections
 // Used when XML file is not a valid spreadsheet
 
+@JmEntityInfo(vers:"v1.0501")
 struct AppJsonDisplayView:View
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "AppJsonDisplayView"
-        static let sClsVers      = "v1.0501"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppJsonDisplayView"
+        //  static let sClsVers      = "v1.0501"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // MARK: - Properties
     
@@ -523,18 +525,19 @@ struct AppJsonDisplayView:View
 
 // Displays raw XML/JSON text content...
 
+@JmEntityInfo(vers:"v1.0301")
 struct RawDataView:View
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "RawDataView"
-        static let sClsVers      = "v1.0301"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "RawDataView"
+        //  static let sClsVers      = "v1.0301"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // MARK: - Properties
 
@@ -683,8 +686,9 @@ struct RawDataView:View
     private func loadTextAsync() async
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Loading text from data of #(\(data.count)) byte(s)...")
         

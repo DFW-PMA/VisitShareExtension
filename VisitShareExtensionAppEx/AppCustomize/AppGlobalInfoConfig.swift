@@ -24,7 +24,7 @@ final class AppGlobalInfoConfig:NSObject
 {
     
     static let sGlobalInfoAppId:String                                   = "VisitShareExtensionAppEx"
-    static let sGlobalInfoAppVers:String                                 = "v1.6401"
+    static let sGlobalInfoAppVers:String                                 = "v1.6501"
     static let sGlobalInfoAppDisp:String                                 = sGlobalInfoAppId+".("+sGlobalInfoAppVers+"): "
     static let sGlobalInfoAppCopyRight:String                            = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
     static let sGlobalInfoAppLogFilespecMaxSize:Int64                    = 10000000
@@ -116,7 +116,7 @@ final class AppGlobalInfoConfig:NSObject
     // Backend
 
     static let bUseFirebaseAuth:Bool                                     = false
-    static let sVaporBaseURL:String                                      = "https://justmacapps.net/divorcepack/cloud-api"
+    static let sVaporBaseURL:String                                      = ""
 
     // Debug / development
 

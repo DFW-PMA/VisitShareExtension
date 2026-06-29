@@ -6,20 +6,22 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 
+@JmEntityInfo(vers:"v1.0205")
 class SpreadsheetXMLParser:NSObject 
 {
 
-    struct ClassInfo 
-    {
-        static let sClsId        = "SpreadsheetXMLParser"
-        static let sClsVers      = "v1.0205"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SpreadsheetXMLParser"
+        //  static let sClsVers      = "v1.0205"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // MARK: - Parser State...
 
@@ -49,8 +51,9 @@ class SpreadsheetXMLParser:NSObject
     func parse(url:URL)->Result<SpreadsheetXMLWorkbook, Error> 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parsing file at URL: [\(url.path)]...")
 
@@ -155,8 +158,9 @@ class SpreadsheetXMLParser:NSObject
     private func preprocessXMLData(_ data:Data)->Data
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Pre-processing XML data...")
 
@@ -275,8 +279,9 @@ class SpreadsheetXMLParser:NSObject
     private func resetParserState() 
     {
 
-        let sCurrMethod: String = #function
-        let sCurrMethodDisp = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod: String = #function
+        //  let sCurrMethodDisp = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Resetting parser state")
 

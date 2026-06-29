@@ -6,23 +6,25 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
 // MARK: - VideoMetadata (Codable struct for .cineview sidecar files)
 
+@JmEntityInfo(vers:"v1.0301")
 struct VideoMetadata: Codable
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "VideoMetadata"
-        static let sClsVers      = "v1.0301"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "VideoMetadata"
+        //  static let sClsVers      = "v1.0301"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // File extension for sidecar metadata files...
 

@@ -6,21 +6,23 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
+@JmEntityInfo(vers:"v1.0601")
 struct SpreadsheetTableView:View
 {
     
-    struct ClassInfo 
-    {
-        static let sClsId        = "SpreadsheetTableView"
-        static let sClsVers      = "v1.0601"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SpreadsheetTableView"
+        //  static let sClsVers      = "v1.0601"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // MARK: - Properties...
 
@@ -409,18 +411,19 @@ struct SpreadsheetTableView:View
 
 // MARK: - Cell Detail View
 
+@JmEntityInfo(vers:"v1.0601")
 struct CellDetailView:View
 {
     
-    struct ClassInfo 
-    {
-        static let sClsId        = "CellDetailView"
-        static let sClsVers      = "v1.0501"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "CellDetailView"
+        //  static let sClsVers      = "v1.0501"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // MARK: - Properties...
 
@@ -500,6 +503,11 @@ struct CellDetailView:View
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
+        // <<CHICKEN-TRACKS>> (2026-06-24) — 'ToolbarItem(placement:.primaryAction)' is a title-bar
+        // placement; macOS '.sheet()' panels have no title bar, so this was the only way to dismiss
+        // this view and it never rendered there. Restricted to iOS; macOS gets a plain in-body
+        // overlay Dismiss button instead (same fix as SettingsDataGridView.swift / AppGeneralFileView.swift).
+        #if os(iOS)
             .toolbar
             {
             //  ToolbarItem(placement:.navigationBarTrailing)
@@ -522,23 +530,34 @@ struct CellDetailView:View
                                 .font(.caption2)
                         }
                     }
-                #if os(macOS)
-                    .buttonStyle(.borderedProminent)
-                //  .background(???.isPressed ? .blue : .gray)
-                    .cornerRadius(10)
-                    .foregroundColor(Color.primary)
-                #endif
                     .padding()
                 }
 
-            //  ToolbarItem(placement:.confirmationAction) 
+            //  ToolbarItem(placement:.confirmationAction)
             //  {
-            //      Button("Done") 
+            //      Button("Done")
             //      {
             //          dismiss()
             //      }
             //  }
             }
+        #endif
+        #if os(macOS)
+            .overlay(alignment:.topTrailing)
+            {
+                Button { self.presentationMode.wrappedValue.dismiss() }
+                label:
+                {
+                    VStack(alignment:.center)
+                    {
+                        Label("", systemImage:"xmark.circle").imageScale(.medium)
+                        Text("Dismiss").font(.caption2)
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding()
+            }
+        #endif
         }
 
     }   // End of var body:some View.

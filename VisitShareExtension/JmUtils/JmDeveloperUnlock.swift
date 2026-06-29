@@ -36,6 +36,7 @@
 //  compiles standalone.  Override via the per-app extension shown above.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import SwiftOTP
@@ -96,18 +97,20 @@ struct JmDeveloperUnlockSecret
 //   5. Session expires automatically after 60 minutes (timer fires checkAndRefreshExpiry).
 //   6. A used code can never be replayed - the counter only moves forward.
 
+@MainActor
+@JmEntityInfo(vers:"v1.0302")
 class JmDeveloperUnlockManager:ObservableObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "JmDeveloperUnlockManager"
-        static let sClsVers      = "v1.0103"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JmDeveloperUnlockManager"
+        //  static let sClsVers      = "v1.0103"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // Singleton...
 
@@ -134,7 +137,12 @@ class JmDeveloperUnlockManager:ObservableObject
 
     // Countdown timer for expiry display...
 
-    private var expiryTimer:Timer?
+    // <<CHICKEN-TRACKS>> (2026-06-24) — 'nonisolated(unsafe)': Swift 6 disallows accessing a
+    // stored property of a non-Sendable type (Timer isn't Sendable) from 'deinit', even though
+    // 'deinit' has exclusive/non-concurrent access to self. This is the standard escape hatch for
+    // exactly this case (timer cleanup in deinit) - matches the §12d rebind pattern used elsewhere
+    // in this file/codebase for crossing actor-isolation boundaries.
+    private nonisolated(unsafe) var expiryTimer:Timer?
 
     // -----------------------------------------------------------------------
 
@@ -173,8 +181,9 @@ class JmDeveloperUnlockManager:ObservableObject
     private init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -192,8 +201,9 @@ class JmDeveloperUnlockManager:ObservableObject
     private func setupHOTP()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -222,8 +232,9 @@ class JmDeveloperUnlockManager:ObservableObject
     private func restoreExpiryState()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -259,8 +270,9 @@ class JmDeveloperUnlockManager:ObservableObject
     func validateCode(_ sCode:String)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - sCode.count is [\(sCode.count)]...")
 
@@ -330,8 +342,9 @@ class JmDeveloperUnlockManager:ObservableObject
     func deactivate()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -444,9 +457,14 @@ class JmDeveloperUnlockManager:ObservableObject
         return data
     }
 
+    // <<CHICKEN-TRACKS>> (2026-06-24) — 'deinit' is always 'nonisolated', even on an '@MainActor'
+    // class (deallocation can happen from any thread), so it cannot call the @MainActor-isolated
+    // 'stopExpiryTimer()'. Direct stored-property access from 'deinit' is still permitted (no
+    // concurrent access is possible once deinit has started), so inline the cleanup instead.
     deinit
     {
-        stopExpiryTimer()
+        expiryTimer?.invalidate()
+        expiryTimer = nil
     }
 
 }   // End of class JmDeveloperUnlockManager:ObservableObject.

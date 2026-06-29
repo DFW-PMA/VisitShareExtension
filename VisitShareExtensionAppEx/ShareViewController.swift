@@ -6,23 +6,25 @@
 //  Integrates beautiful SwiftUI AppPickerView with robust URL opening fallbacks
 //
 
+import JmEntityInfo
 import Foundation
 import UIKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+@JmEntityInfo(vers:"v1.0701")
 class ShareViewController:UIViewController
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "ShareViewController"
-        static let sClsVers      = "v1.0701"
-        static let sClsDisp      = sClsId+".("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "ShareViewController"
+        //  static let sClsVers      = "v1.0701"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // MARK:- Properties...
     
@@ -36,8 +38,9 @@ class ShareViewController:UIViewController
     override func viewDidLoad()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -58,8 +61,9 @@ class ShareViewController:UIViewController
     private func extractSharedContent() 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -121,8 +125,9 @@ class ShareViewController:UIViewController
     private func loadPlainText(from provider:NSItemProvider)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -161,8 +166,9 @@ class ShareViewController:UIViewController
     private func loadURL(from provider:NSItemProvider)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -203,8 +209,9 @@ class ShareViewController:UIViewController
     private func showPickerUI()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -257,8 +264,9 @@ class ShareViewController:UIViewController
     private func showError(_ message:String)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Showing error: [\(message)]...")
         
@@ -284,8 +292,9 @@ class ShareViewController:UIViewController
     private func sendToApp(_ targetApp:VVSharedTargetApps, text:String)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Invoked - targetApp: [\(targetApp.displayName)]...")
         
@@ -383,8 +392,9 @@ class ShareViewController:UIViewController
     private func completeShare()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Completing share request...")
 
@@ -395,8 +405,9 @@ class ShareViewController:UIViewController
     private func cancelShare()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Canceling share request...")
 

@@ -9,6 +9,7 @@
 //        Always initialized with a file URL - no import/loading modes
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
@@ -33,18 +34,19 @@ enum AppGeneralFileDisplayMode
 
 // MARK: - AppGeneralFileView
 
+@JmEntityInfo(vers:"v1.0901")
 struct AppGeneralFileView:View
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "AppGeneralFileView"
-        static let sClsVers      = "v1.0801"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppGeneralFileView"
+        //  static let sClsVers      = "v1.0801"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -53,7 +55,7 @@ struct AppGeneralFileView:View
 
                             let iShowMaxLinesForLargeFile:Int          = 650    // # of 'max' lines to show for Large files...
 
-                            var appGlobalInfo:AppGlobalInfo            = AppGlobalInfo.ClassSingleton.appGlobalInfo
+                            var appGlobalInfo:AppGlobalInfo            = AppGlobalInfo.appGlobalInfo
 
     // File to display (passed in on init):
     
@@ -106,8 +108,9 @@ struct AppGeneralFileView:View
     
     init(fileURL:URL)
     {
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         self.fileURL = fileURL
         
@@ -238,6 +241,12 @@ struct AppGeneralFileView:View
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
             #endif
+            // <<CHICKEN-TRACKS>> (2026-06-24) — 'ToolbarItem(placement:.primaryAction)' is a
+            // title-bar placement; macOS '.sheet()' panels have no title bar, so this was the only
+            // way to dismiss this view and it never rendered there. Restricted to iOS; macOS gets a
+            // plain in-body overlay Dismiss button instead (same fix as SettingsDataGridView.swift /
+            // AppDocumentsFileReaderView.swift / DeveloperUnlockView.swift).
+            #if os(iOS)
                 .toolbar
                 {
                 //  ToolbarItem(placement:.navigationBarTrailing)
@@ -260,14 +269,26 @@ struct AppGeneralFileView:View
                                     .font(.caption2)
                             }
                         }
-                    #if os(macOS)
-                        .buttonStyle(.borderedProminent)
-                        .cornerRadius(10)
-                        .foregroundColor(Color.primary)
-                    #endif
                         .padding()
                     }
                 }
+            #endif
+            #if os(macOS)
+                .overlay(alignment:.topTrailing)
+                {
+                    Button { self.presentationMode.wrappedValue.dismiss() }
+                    label:
+                    {
+                        VStack(alignment:.center)
+                        {
+                            Label("", systemImage:"xmark.circle").imageScale(.medium)
+                            Text("Dismiss").font(.caption2)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding()
+                }
+            #endif
                 .onAppear
                 {
                     let _ = appLogMsg("\(ClassInfo.sClsDisp):AppGeneralFileView.onAppear() - Starting file processing...")
@@ -590,8 +611,9 @@ struct AppGeneralFileView:View
     
     private func processFile(at url:URL)
     {
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - 'url' is [\(url)] - processing file: [\(url.lastPathComponent)]...")
         appLogMsg("\(sCurrMethodDisp) Full URL path: [\(url.path)]...")
@@ -950,8 +972,9 @@ struct AppGeneralFileView:View
     private func tryRenderAsMarkdown(url:URL, data:Data) async -> Bool
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - checking for Markdown file extension...")
 
@@ -991,8 +1014,9 @@ struct AppGeneralFileView:View
     
     private func tryParseAsSpreadsheet(url:URL) async -> Bool
     {
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - attempting to parse as SpreadsheetXML or CSV (Tier 1)...")
         
@@ -1131,8 +1155,9 @@ struct AppGeneralFileView:View
     private func tryConvertToJSON(data:Data) async -> Bool
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - attempting XML to Tree View conversion (Tier 2a - xmlToJSONConverter)...")
         
@@ -1163,8 +1188,9 @@ struct AppGeneralFileView:View
     private func tryParseAsDirectJSON(data:Data) async -> Bool
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - attempting direct JSON parsing (Tier 2b - JSONSerialization)...")
         

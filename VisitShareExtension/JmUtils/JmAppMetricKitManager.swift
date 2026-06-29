@@ -6,25 +6,27 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import MetricKit
 
 // Implementation class to handle access to the Apple MetricKit.
 
+@JmEntityInfo(vers:"v1.0701")
 public class JmAppMetricKitManager: NSObject, MXMetricManagerSubscriber
 {
 
-    struct ClassInfo
-    {
-
-        static let sClsId        = "JmAppMetricKitManager"
-        static let sClsVers      = "v1.0701"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = false
-
-    }   // End of struct ClassInfo.
+    //  struct ClassInfo
+    //  {
+//
+        //  static let sClsId        = "JmAppMetricKitManager"
+        //  static let sClsVers      = "v1.0701"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = false
+//
+    //  }   // End of struct ClassInfo.
 
     // App Data field(s):
 
@@ -43,8 +45,9 @@ public class JmAppMetricKitManager: NSObject, MXMetricManagerSubscriber
     override init()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         super.init()
 
@@ -94,8 +97,9 @@ public class JmAppMetricKitManager: NSObject, MXMetricManagerSubscriber
     public func setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:JmAppDelegateVisitor)
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - supplied parameter 'jmAppDelegateVisitor' is [\(jmAppDelegateVisitor)]...")
 
@@ -133,8 +137,9 @@ public class JmAppMetricKitManager: NSObject, MXMetricManagerSubscriber
     public func receiveReports()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -155,8 +160,9 @@ public class JmAppMetricKitManager: NSObject, MXMetricManagerSubscriber
     public func pauseReports()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -240,8 +246,9 @@ public class JmAppMetricKitManager: NSObject, MXMetricManagerSubscriber
     public func didReceive(_ payloads: [MXDiagnosticPayload])
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"<MXDiagnosticPayload>':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"<MXDiagnosticPayload>':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -295,8 +302,9 @@ public class JmAppMetricKitManager: NSObject, MXMetricManagerSubscriber
     private func sendMXPayloadViaEmail(listPayloadAttachments:[String], sPayloadTag:String)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'listPayloadAttachments' has (\(listPayloadAttachments.count)) element(s) with 'sPayloadTag' of [\(sPayloadTag)]...")
 

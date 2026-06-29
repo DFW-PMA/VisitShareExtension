@@ -7,6 +7,7 @@
 //                       DeveloperUnlockView, DeveloperFeaturesView.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import SwiftData
@@ -20,18 +21,19 @@ import CoreImage.CIFilterBuiltins
 // In production: move to its own DeveloperUnlockView.swift file in a shared module.
 // DeveloperFeaturesView stays per-app (different options per app).
 
+@JmEntityInfo(vers:"v1.0701")
 struct DeveloperUnlockView:View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "DeveloperUnlockView"
-        static let sClsVers      = "v1.0501"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "DeveloperUnlockView"
+        //  static let sClsVers      = "v1.0601"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -119,9 +121,18 @@ struct DeveloperUnlockView:View
                         TextField("000000", text:$sEnteredCode)
                             .font(.system(size:42, weight:.bold, design:.monospaced))
                             .multilineTextAlignment(.center)
+                        #if os(iOS)
                             .keyboardType(.numberPad)
+                            .padding(.horizontal)
+                        #endif
                             .frame(height:70)
-                            .background(Color(.systemGray6))
+                        //  .background(Color.appSystemGray6)
+                        #if os(macOS)
+                            .background(Color(nsColor:.systemGray))
+                        #endif
+                        #if os(iOS)
+                            .background(Color(UIColor.systemGray6))
+                        #endif
                             .cornerRadius(12)
                             .padding(.horizontal)
                             .onChange(of:sEnteredCode) { _, sNew in
@@ -195,24 +206,70 @@ struct DeveloperUnlockView:View
                                 .foregroundColor(.red)
                         }
                     }
+                #if os(macOS)
+                    .sheet(isPresented:$bShowDevFeatures)
+                    {
+                        DeveloperFeaturesView()
+                    }
+                #endif
+                #if os(iOS)
                     .fullScreenCover(isPresented:$bShowDevFeatures)
                     {
                         DeveloperFeaturesView()
                     }
+                #endif
                 }
 
                 Spacer()
             }
             .padding()
             .navigationTitle("Developer Unlock")
+        #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar
             {
-                ToolbarItem(placement:.navigationBarTrailing)
+                ToolbarItem(placement:.primaryAction)
                 {
                     Button("Dismiss") { presentationMode.wrappedValue.dismiss() }
+                    #if os(macOS)
+                        .buttonStyle(.borderedProminent)
+                        .padding()
+                    //  .background(???.isPressed ? .blue : .gray)
+                        .cornerRadius(10)
+                        .foregroundColor(Color.primary)
+                    #endif
                 }
             }
+        #endif
+        #if os(macOS)
+            // <<CHICKEN-TRACKS>> (2026-06-24) — 'ToolbarItem(placement:.primaryAction)' is a
+            // title-bar placement; macOS '.sheet()' panels have no title bar, so that toolbar item
+            // silently never renders here, leaving no way to dismiss this view (it works fine on
+            // iOS because '.fullScreenCover' there is a full window, not a sheet). Use a plain
+            // in-body Dismiss button instead, matching the xmark.circle/"Dismiss" style used
+            // elsewhere in this app (see NWSNexRadRadarViews.swift).
+            .overlay(alignment:.topTrailing)
+            {
+                Button { presentationMode.wrappedValue.dismiss() }
+                label:
+                {
+                    VStack(alignment:.center)
+                    {
+                        Label("", systemImage:"xmark.circle").imageScale(.medium)
+                        Text("Dismiss").font(.caption2)
+                    }
+                }
+                .buttonStyle(.plain)
+            #if os(macOS)
+                .buttonStyle(.borderedProminent)
+                .padding()
+            //  .background(???.isPressed ? .blue : .gray)
+                .cornerRadius(10)
+                .foregroundColor(Color.primary)
+            #endif
+                .padding()
+            }
+        #endif
             .onChange(of:devUnlockMgr.isDevModeActive) { _, bNewVal in
                 if bNewVal { sEnteredCode = "" }      // Clear the field on success
             }
@@ -229,18 +286,19 @@ struct DeveloperUnlockView:View
 // redirect note, and the Lock button.  Dismiss here to return to Settings where
 // the developer sections are now visible.
 
+@JmEntityInfo(vers:"v1.0601")
 struct DeveloperFeaturesView:View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "DeveloperFeaturesView"
-        static let sClsVers      = "v1.0501"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "DeveloperFeaturesView"
+        //  static let sClsVers      = "v1.0501"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -320,14 +378,43 @@ struct DeveloperFeaturesView:View
                 }
             }
             .navigationTitle("Developer Features")
+        #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar
             {
-                ToolbarItem(placement:.navigationBarTrailing)
+                ToolbarItem(placement:.primaryAction)
                 {
                     Button("Dismiss") { presentationMode.wrappedValue.dismiss() }
                 }
             }
+        #endif
+        #if os(macOS)
+            // <<CHICKEN-TRACKS>> (2026-06-24) — same macOS '.sheet()' title-bar-toolbar issue as
+            // DeveloperUnlockView above - see that view's comment for the full explanation.
+            .overlay(alignment:.topTrailing)
+            {
+                Button { presentationMode.wrappedValue.dismiss() }
+                label:
+                {
+                    VStack(alignment:.center)
+                    {
+                        Label("", systemImage:"xmark.circle").imageScale(.medium)
+                        Text("Dismiss").font(.caption2)
+                    }
+                }
+            #if os(iOS)
+                .buttonStyle(.plain)
+            #endif
+            #if os(macOS)
+                .buttonStyle(.borderedProminent)
+                .padding()
+            //  .background(???.isPressed ? .blue : .gray)
+                .cornerRadius(10)
+                .foregroundColor(Color.primary)
+            #endif
+                .padding()
+            }
+        #endif
         }
     }
 

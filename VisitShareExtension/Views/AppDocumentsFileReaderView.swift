@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import Combine
@@ -153,18 +154,19 @@ final class FileItem:Identifiable, Hashable, ObservableObject
 
 // MARK: - AppDocumentsFileReaderView (Main View with Navigation)
 
-struct AppDocumentsFileReaderView:View 
+@JmEntityInfo(vers:"v1.2001")
+struct AppDocumentsFileReaderView:View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AppDocumentsFileReaderView"
-        static let sClsVers      = "v1.1801"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppDocumentsFileReaderView"
+        //  static let sClsVers      = "v1.1801"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -174,7 +176,7 @@ struct AppDocumentsFileReaderView:View
     @Environment(\.openURL)              var openURL
     @Environment(\.appGlobalDeviceType)  var appGlobalDeviceType
 
-                   var appGlobalInfo:AppGlobalInfo    = AppGlobalInfo.ClassSingleton.appGlobalInfo
+                   var appGlobalInfo:AppGlobalInfo    = AppGlobalInfo.appGlobalInfo
 
 #if os(macOS)
            private let pasteboard                     = NSPasteboard.general
@@ -488,6 +490,23 @@ struct AppDocumentsFileReaderView:View
                                         Label("Copy Path", systemImage:"doc.on.doc")
                                     }
 
+                                    // <<CHICKEN-TRACKS>> Added (2026-06-25) — macOS .contextMenu was
+                                    //                    missing 'Item Details', which the iOS
+                                    //                    .swipeActions block already has. macOS has
+                                    //                    no swipe gesture in native SwiftUI Lists, so
+                                    //                    .contextMenu (right-click) is the Mac
+                                    //                    equivalent of the full swipe-action set, not
+                                    //                    just Copy Path/Delete.
+                                    Button
+                                    {
+                                        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View).List.ForEach.FileItemRow.contextMenu(Button).'Item Details'...")
+                                        item.isShowingItemDetails.toggle()
+                                    }
+                                    label:
+                                    {
+                                        Label("Item Details", systemImage:"info.circle")
+                                    }
+
                                     Divider()
 
                                     Button(role:.destructive)
@@ -659,6 +678,29 @@ struct AppDocumentsFileReaderView:View
                     }
                 }
             }
+            // <<CHICKEN-TRACKS>> (2026-06-24) — every 'ToolbarItem' above uses a title-bar
+            // placement ('.principal' / '.primaryAction'); macOS '.sheet()' panels have no title
+            // bar, so this entire toolbar (Directory picker, LogData, Dismiss) never renders there.
+            // Adding a macOS-only overlay Dismiss button so the sheet can at least be closed (same
+            // fix already applied to DeveloperUnlockView.swift / SettingsDataGridView.swift). The
+            // Directory-picker-menu/LogData functionality stays iOS-only for now - out of scope for
+            // this fix; revisit if macOS users need those too.
+        #if os(macOS)
+            .overlay(alignment:.topTrailing)
+            {
+                Button { self.presentationMode.wrappedValue.dismiss() }
+                label:
+                {
+                    VStack(alignment:.center)
+                    {
+                        Label("", systemImage:"xmark.circle").imageScale(.medium)
+                        Text("Dismiss").font(.caption2)
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding()
+            }
+        #endif
             .refreshable
             {
                 readDocumentsDirectory()
@@ -722,8 +764,9 @@ struct AppDocumentsFileReaderView:View
     private func readDocumentsDirectory()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         files.removeAll()
         errorMessage = ""
@@ -869,8 +912,9 @@ struct AppDocumentsFileReaderView:View
     private func deleteItem(_ item:FileItem)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         do
         {
@@ -894,8 +938,9 @@ struct AppDocumentsFileReaderView:View
     private func clearDocumentsDirectory()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         guard let directoryURL = documentsURL
         else
@@ -1015,18 +1060,19 @@ struct AppDocumentsFileReaderView:View
 
 // MARK: - SubdirectoryView (For navigated subdirectories)
 
+@JmEntityInfo(vers:"v1.0901")
 struct SubdirectoryView:View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "SubdirectoryView"
-        static let sClsVers      = "v1.0701"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SubdirectoryView"
+        //  static let sClsVers      = "v1.0701"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
              let urlDirectory:URL
 
@@ -1146,6 +1192,23 @@ struct SubdirectoryView:View
                                     Label("Copy Path", systemImage:"doc.on.doc")
                                 }
 
+                                // <<CHICKEN-TRACKS>> Added (2026-06-25) — macOS .contextMenu was
+                                //                    missing 'Item Details', which the iOS
+                                //                    .swipeActions block already has. macOS has no
+                                //                    swipe gesture in native SwiftUI Lists, so
+                                //                    .contextMenu (right-click) is the Mac equivalent
+                                //                    of the full swipe-action set, not just Copy
+                                //                    Path/Delete.
+                                Button
+                                {
+                                    let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View).List.ForEach.FileItemRow.contextMenu(Button).'Item Details'...")
+                                    item.isShowingItemDetails.toggle()
+                                }
+                                label:
+                                {
+                                    Label("Item Details", systemImage:"info.circle")
+                                }
+
                                 Divider()
 
                                 Button(role:.destructive)
@@ -1251,6 +1314,35 @@ struct SubdirectoryView:View
                     }
             }
         }
+        // <<CHICKEN-TRACKS>> (2026-06-24) — this view is pushed via '.navigationDestination'
+        // *inside* the same macOS '.sheet()' as the parent AppDocumentsFileReaderView/Subdirectory
+        // chain. On macOS, NavigationStack's automatic back-chrome (back chevron) is rendered
+        // through the window's toolbar, same as every other title-bar placement - which doesn't
+        // exist inside a sheet. Without this, there was no way back to the parent list once you
+        // navigated into a subdirectory on macOS. Pops one level via the shared 'navigationPath'
+        // binding (mirrors what a native back button would do).
+    #if os(macOS)
+        .overlay(alignment:.topLeading)
+        {
+            Button
+            {
+                if !navigationPath.isEmpty
+                {
+                    navigationPath.removeLast()
+                }
+            }
+            label:
+            {
+                VStack(alignment:.center)
+                {
+                    Label("", systemImage:"chevron.backward.circle").imageScale(.medium)
+                    Text("Back").font(.caption2)
+                }
+            }
+            .buttonStyle(.plain)
+            .padding()
+        }
+    #endif
         .onAppear
         {
             readDirectory()
@@ -1306,8 +1398,9 @@ struct SubdirectoryView:View
     private func readDirectory()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         files.removeAll()
         errorMessage = ""
@@ -1439,8 +1532,9 @@ struct SubdirectoryView:View
     private func deleteItem(_ item:FileItem)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         do
         {
@@ -1463,18 +1557,19 @@ struct SubdirectoryView:View
 
 // MARK: - FileItemRow
 
+@JmEntityInfo(vers:"v1.1201")
 struct FileItemRow:View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "FileItemRow"
-        static let sClsVers      = "v1.1101"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "FileItemRow"
+        //  static let sClsVers      = "v1.1101"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
 //  let item:FileItem
     @ObservedObject var item:FileItem
@@ -1534,10 +1629,18 @@ struct FileItemRow:View
                 HStack 
                 {
                     Spacer()
+                #if os(iOS)
                     Text("...swipe to your left for file 'actions'...")
                         .font(.caption2)
                         .fontWeight(.medium)
                         .foregroundColor(.red)
+                #endif
+                #if os(macOS)
+                    Text("...right-click for file 'actions'...")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.red)
+                #endif
                 }
             }
 
@@ -1611,23 +1714,24 @@ struct FileItemRow:View
 
 // MARK: - AppDocumentsFileItemDetails
 
-struct AppDocumentsFileItemDetails:View 
+@JmEntityInfo(vers:"v1.1301")
+struct AppDocumentsFileItemDetails:View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AppDocumentsFileItemDetails"
-        static let sClsVers      = "v1.1201"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppDocumentsFileItemDetails"
+        //  static let sClsVers      = "v1.1201"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     @Environment(\.presentationMode) var presentationMode
 
-                            var appGlobalInfo:AppGlobalInfo                        = AppGlobalInfo.ClassSingleton.appGlobalInfo
-                            var jmAppDelegateVisitor:JmAppDelegateVisitor          = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
+                            var appGlobalInfo:AppGlobalInfo                        = AppGlobalInfo.appGlobalInfo
+                            var jmAppDelegateVisitor:JmAppDelegateVisitor          = JmAppDelegateVisitor.appDelegateVisitor
 
     @ObservedObject         var item:FileItem
     @State          private var isAppUploadFileShowing:Bool                        = false
@@ -1741,6 +1845,28 @@ struct AppDocumentsFileItemDetails:View
                     }
                 }
             }
+            // <<CHICKEN-TRACKS>> (2026-06-24) — this whole toolbar (Preview File, Upload File,
+            // Dismiss) uses title-bar placements ('.principal' / '.primaryAction'); macOS '.sheet()'
+            // panels have no title bar, so none of it ever rendered there - this view (presented
+            // via its own '.sheet(item:)' from AppDocumentsFileReaderView/SubdirectoryView) was
+            // stuck with no way out on macOS. Adding a macOS-only overlay Dismiss button; Preview
+            // File/Upload File stay iOS-only for now, same scope decision as the parent view.
+        #if os(macOS)
+            .overlay(alignment:.topTrailing)
+            {
+                Button { self.presentationMode.wrappedValue.dismiss() }
+                label:
+                {
+                    VStack(alignment:.center)
+                    {
+                        Label("", systemImage:"xmark.circle").imageScale(.medium)
+                        Text("Dismiss").font(.caption2)
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding()
+            }
+        #endif
         }
     #if os(macOS)
         .sheet(item:$fileViewPresentationItem)
@@ -1795,8 +1921,9 @@ struct AppDocumentsFileItemDetails:View
     private func uploadCurrentAppFileToDevs()
     {
   
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -1915,18 +2042,19 @@ struct AppDocumentsFileItemDetails:View
 
 // MARK: - FileReaderDetailRow Helper View
 
+@JmEntityInfo(vers:"v1.1003")
 struct FileReaderDetailRow:View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "FileReaderDetailRow"
-        static let sClsVers      = "v1.1003"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "FileReaderDetailRow"
+        //  static let sClsVers      = "v1.1003"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     let label:String
     let value:String
@@ -1979,8 +2107,9 @@ struct FileReaderDetailRow:View
     private func copyFileReaderDetailRowValueToClipboard()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked - for a label of [\(label)] and value of [\(value)]...")
         
@@ -2003,18 +2132,19 @@ struct FileReaderDetailRow:View
 
 // MARK: - AppBasicFileView
 
+@JmEntityInfo(vers:"v1.0901")
 struct AppBasicFileView:View 
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "AppBasicFileView"
-        static let sClsVers      = "v1.0901"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppBasicFileView"
+        //  static let sClsVers      = "v1.0901"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -2034,8 +2164,9 @@ struct AppBasicFileView:View
     init(item:ItemDetailsPresentationItem)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         self.item = item
         
@@ -2225,8 +2356,9 @@ struct AppBasicFileView:View
     private func copyFilePathToClipboard()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked - for text of [\(item.item.url.path)]...")
         

@@ -1,6 +1,15 @@
 {
-  "originHash" : "42f9b5fa8e7baae3360ab8a7fbc122530763f18a1ba2bc1b0fcb8976bf5e6b41",
+  "originHash" : "ad0dc821270d302916445e5d7abbbb5cf24ac51d9edec5700f22a5947f5a1e4e",
   "pins" : [
+    {
+      "identity" : "jmentityinfo",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/drc-development/JmEntityInfo",
+      "state" : {
+        "branch" : "main",
+        "revision" : "3096aeafea7b95c3aa96de69647378156991c264"
+      }
+    },
     {
       "identity" : "markdownui",
       "kind" : "remoteSourceControl",
@@ -44,6 +53,15 @@
       "state" : {
         "revision" : "95ba0316a9b733e92bb6b071255ff46263bbe7dc",
         "version" : "3.15.1"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax.git",
+      "state" : {
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     },
     {

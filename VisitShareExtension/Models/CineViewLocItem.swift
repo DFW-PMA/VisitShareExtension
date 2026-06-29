@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import SwiftData
@@ -79,18 +80,19 @@ enum MediaType: String, Codable, CaseIterable
 
 // CineView 'location' (file) Item - supports both videos and images...
 
+@JmEntityInfo(vers:"v1.0704")
 class CineViewLocItem:Identifiable, ObservableObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "CineViewLocItem"
-        static let sClsVers      = "v1.0702"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "CineViewLocItem"
+        //  static let sClsVers      = "v1.0702"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // 'Global' field(s):
 
@@ -135,8 +137,9 @@ class CineViewLocItem:Identifiable, ObservableObject
     init()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -158,8 +161,9 @@ class CineViewLocItem:Identifiable, ObservableObject
                      videoMetadata:VideoMetadata?      = nil)
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
   
         self.init()
         
@@ -194,8 +198,9 @@ class CineViewLocItem:Identifiable, ObservableObject
     convenience init(cineViewLocItem:CineViewLocItem)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         self.init()
 
@@ -341,8 +346,9 @@ class CineViewLocItem:Identifiable, ObservableObject
     func loadThumbnail()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         // Don't reload if already loading or loaded...
 
@@ -362,6 +368,12 @@ class CineViewLocItem:Identifiable, ObservableObject
 
                 guard let self = self else { return }
 
+                // <<CHICKEN-TRACKS>> (2026-06-24) — 'CineViewLocItem' isn't Sendable, so rebind
+                // before capture into the nested @Sendable 'DispatchQueue.main.async' closures
+                // below (§12d pattern). The outer 'DispatchQueue.global' closure already has its
+                // own weak->strong unwrap above; this only covers the inner main-thread hop.
+                nonisolated(unsafe) let unsafeSelf = self
+
                 if let uiImage = PlatformImage(contentsOfFile:self.urlCineViewLocFile.path)
                 {
                     // Scale down for thumbnail...
@@ -371,15 +383,15 @@ class CineViewLocItem:Identifiable, ObservableObject
 
                     DispatchQueue.main.async
                     {
-                        self.thumbnailImage      = scaledImage
-                        self.bIsThumbnailLoading = false
+                        unsafeSelf.thumbnailImage      = scaledImage
+                        unsafeSelf.bIsThumbnailLoading = false
                     }
                 }
                 else
                 {
                     DispatchQueue.main.async
                     {
-                        self.bIsThumbnailLoading = false
+                        unsafeSelf.bIsThumbnailLoading = false
                     }
                 }
             }
@@ -388,15 +400,22 @@ class CineViewLocItem:Identifiable, ObservableObject
         {
             // For videos, use VideoMetadataManager...
 
-            VideoMetadataManager.shared.getThumbnail(for:urlCineViewLocFile)
-            { [weak self] image in
+            // <<CHICKEN-TRACKS>> (2026-06-24) — 'getThumbnail's 'completion' param is now '@Sendable'
+            // (see VideoMetadataManager.swift), so even a '[weak self]' capture of the non-Sendable
+            // 'CineViewLocItem?' is rejected at the closure literal itself - not just at a nested
+            // closure boundary like the image-thumbnail branch above. Rebind to a strong
+            // 'nonisolated(unsafe)' reference before constructing the closure instead; this trades
+            // away the weak-self retain-cycle guard for this one short-lived completion callback,
+            // consistent with the rest of this codebase's §12d pattern (which is strong, not weak).
+            nonisolated(unsafe) let unsafeSelf = self
 
-                guard let self = self else { return }
+            VideoMetadataManager.shared.getThumbnail(for:urlCineViewLocFile)
+            { image in
 
                 DispatchQueue.main.async
                 {
-                    self.thumbnailImage      = image
-                    self.bIsThumbnailLoading = false
+                    unsafeSelf.thumbnailImage      = image
+                    unsafeSelf.bIsThumbnailLoading = false
                 }
             }
         }
@@ -469,8 +488,9 @@ class CineViewLocItem:Identifiable, ObservableObject
     func reloadMetadata()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Reloading metadata for: [\(sCineViewLocFilenameExt)]...")
 
@@ -517,8 +537,9 @@ class CineViewLocItem:Identifiable, ObservableObject
 
         guard bIsVideo else { return false }
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Toggling loop state for: [\(sCineViewLocFilenameExt)]...")
 
@@ -539,8 +560,9 @@ class CineViewLocItem:Identifiable, ObservableObject
 
         guard bIsVideo else { return }
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Setting loop state to \(isLooping) for: [\(sCineViewLocFilenameExt)]...")
 
@@ -564,8 +586,9 @@ class CineViewLocItem:Identifiable, ObservableObject
     public func displayCineViewLocItemToLog()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 

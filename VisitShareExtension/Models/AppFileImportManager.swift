@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import Combine
@@ -15,18 +16,24 @@ import Combine
 // This class manages file imports from external sources like Mail, Files app, etc.
 // This singleton bridges the App's .onOpenURL() with the SpreadsheetXMLViewer's import logic.
 
+// <<CHICKEN-TRACKS>> (2026-06-24) — added '@MainActor': 'static let shared' singleton on a mutable,
+// non-Sendable ObservableObject is flagged under Swift 6 strict concurrency as not concurrency-safe.
+// Matches the established pattern for other ObservableObject singletons in this codebase
+// (AlarmDataModelObservable, JmDeveloperUnlockManager) - this manager only drives UI state anyway.
+@JmEntityInfo(vers:"v1.0601")
+@MainActor
 class AppFileImportManager:ObservableObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AppFileImportManager"
-        static let sClsVers      = "v1.0501"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppFileImportManager"
+        //  static let sClsVers      = "v1.0601"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // MARK: - Singleton Instance...
 
@@ -61,8 +68,9 @@ class AppFileImportManager:ObservableObject
     private init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - Initializing AppFileImportManager singleton...")
 
@@ -83,8 +91,9 @@ class AppFileImportManager:ObservableObject
     public func startProgressTimer()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - Starting progress timer...")
 
@@ -115,8 +124,9 @@ class AppFileImportManager:ObservableObject
     public func updateClockDateTimeCounter(newValue:Date? = nil, oldValue:Date? = nil)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - Updating progress timer...")
 
@@ -140,8 +150,9 @@ class AppFileImportManager:ObservableObject
     public func stopProgressTimer()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - Stopping progress timer...")
 
@@ -165,8 +176,9 @@ class AppFileImportManager:ObservableObject
 
         // Request import of a file URL (called from App's .onOpenURL())...
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - requesting import for URL: [\(url)]...")
 
@@ -242,8 +254,9 @@ class AppFileImportManager:ObservableObject
 
         // Mark import as completed successfully...
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - import completed for file: [\(fileName)]...")
 
@@ -270,8 +283,9 @@ class AppFileImportManager:ObservableObject
 
         // Mark import as failed with error...
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - import failed for file: [\(fileName)] - error: [\(error.localizedDescription)]...")
 
@@ -297,8 +311,9 @@ class AppFileImportManager:ObservableObject
 
         // Reset import state (for cleanup or testing)...
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - resetting import state...")
 

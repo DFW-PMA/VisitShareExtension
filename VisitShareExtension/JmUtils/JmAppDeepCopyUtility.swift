@@ -20,6 +20,7 @@
 //    allocation and do NOT need autoreleasepool wrapping.
 //
 
+import JmEntityInfo
 import Foundation
 
 // MARK: - Deep Copy Protocol:
@@ -50,18 +51,28 @@ protocol JmAppDeepCopyProtocol
 
 // MARK: 'Deep' Copy Class:
 
+// <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — deepCopy<T>(...) and
+// deepCopyForSwiftUI<T>(...) flagged "sending risks causing data races" when assigning the
+// generic inout 'targetObject' from inside a DispatchQueue.main.sync / jmAppSyncUpdateUIOnMainThread
+// closure (T is unconstrained, so the compiler can't prove Sendable safety crossing the main-actor
+// hop). Fixed via withUnsafeMutablePointer(to:&targetObject) (UnsafeMutablePointer capture sidesteps
+// the inout-capture restriction) plus nonisolated(unsafe) on the captured pointer and copied value —
+// no behavioral change, still synchronous/blocking exactly as before. This utility is shared across
+// roughly a dozen+ files/Apps, so no API signature changes were made (no Sendable constraint added
+// to T) — only the internal closure-crossing implementation changed.
+@JmEntityInfo(vers:"v1.2001")
 class JmAppDeepCopyUtility
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "JmAppDeepCopyUtility"
-        static let sClsVers      = "v1.1901"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = false
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JmAppDeepCopyUtility"
+        //  static let sClsVers      = "v1.1901"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = false
+    //  }
 
     // App static 'global' field(s):
 
@@ -72,8 +83,9 @@ class JmAppDeepCopyUtility
     private static func getMetaTypeStringForObject(object:Any)->String
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
         {
@@ -127,8 +139,9 @@ class JmAppDeepCopyUtility
     static func deepCopy<T>(_ object:T, targetObject:inout T?, onMainThread:Bool = false)->T?
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
         {
@@ -145,13 +158,21 @@ class JmAppDeepCopyUtility
         {
             if (onMainThread == true)
             {
-                DispatchQueue.main.sync
-                {
-                    targetObject = localCopy
-                    
-                    if (bInternalTraceFlag == true)
+                nonisolated(unsafe) let capturedLocalCopy = localCopy
+
+                withUnsafeMutablePointer(to:&targetObject)
+                { targetObjectPtr in
+
+                    nonisolated(unsafe) let safeTargetObjectPtr = targetObjectPtr
+
+                    DispatchQueue.main.sync
                     {
-                        appLogMsg("\(sCurrMethodDisp) Intermediate - 'localCopy' of [\(String(describing: localCopy))] copied to 'targetObject' of [\(String(describing: targetObject))] on the 'main' Thread...")
+                        safeTargetObjectPtr.pointee = capturedLocalCopy
+
+                        if (bInternalTraceFlag == true)
+                        {
+                            appLogMsg("\(sCurrMethodDisp) Intermediate - 'localCopy' of [\(String(describing: capturedLocalCopy))] copied to 'targetObject' of [\(String(describing: safeTargetObjectPtr.pointee))] on the 'main' Thread...")
+                        }
                     }
                 }
             }
@@ -182,8 +203,9 @@ class JmAppDeepCopyUtility
     private static func performDeepCopy<T>(_ object:T)->T?
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
         {
@@ -215,8 +237,9 @@ class JmAppDeepCopyUtility
     private static func deepCopyAny(_ object:Any)->Any
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
         {
@@ -274,8 +297,9 @@ class JmAppDeepCopyUtility
     private static func deepCopyArray(_ object:Any)->Any
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
         {
@@ -346,8 +370,9 @@ class JmAppDeepCopyUtility
     private static func deepCopyDictionary(_ object:Any)->Any
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
         {
@@ -515,9 +540,17 @@ extension JmAppDeepCopyUtility
         
         if let unwrapped = optionalTarget
         {
-            jmAppSyncUpdateUIOnMainThread
-            {
-                targetObject = unwrapped
+            nonisolated(unsafe) let capturedUnwrapped = unwrapped
+
+            withUnsafeMutablePointer(to:&targetObject)
+            { targetObjectPtr in
+
+                nonisolated(unsafe) let safeTargetObjectPtr = targetObjectPtr
+
+                jmAppSyncUpdateUIOnMainThread
+                {
+                    safeTargetObjectPtr.pointee = capturedUnwrapped
+                }
             }
         }
 

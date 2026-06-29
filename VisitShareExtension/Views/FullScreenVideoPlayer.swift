@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import SwiftData
@@ -15,18 +16,19 @@ import Combine
 
 // Mark: 'Full' Screen Video Player...
 
+@JmEntityInfo(vers:"v1.0601")
 struct FullScreenVideoPlayer:View
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "FullScreenVideoPlayer"
-        static let sClsVers      = "v1.0601"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "FullScreenVideoPlayer"
+        //  static let sClsVers      = "v1.0601"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App 'environmental' field(s):
 
@@ -36,7 +38,7 @@ struct FullScreenVideoPlayer:View
 
     // App 'global' field(s):
 
-                             var appGlobalInfo:AppGlobalInfo = AppGlobalInfo.ClassSingleton.appGlobalInfo
+                             var appGlobalInfo:AppGlobalInfo = AppGlobalInfo.appGlobalInfo
 
     // App Data field(s):
 
@@ -62,8 +64,9 @@ struct FullScreenVideoPlayer:View
          onDismissRequested:(() -> Void)? = nil) 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - 'videoURL' is [\(videoURL)] - 'bResumeFromProgress' is [\(bResumeFromProgress)]...")
     
@@ -264,18 +267,19 @@ struct FullScreenVideoPlayer:View
 
 // MARK: - PlayerManager (Observable wrapper for AVPlayer with progress saving and loop support)
 
+@JmEntityInfo(vers:"v1.0701")
 class PlayerManager:ObservableObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "PlayerManager"
-        static let sClsVers      = "v1.0601"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "PlayerManager"
+        //  static let sClsVers      = "v1.0601"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
             let player:AVPlayer
             let videoURL:URL
@@ -310,8 +314,9 @@ class PlayerManager:ObservableObject
     init(url:URL, startingPosition:Double = 0.0, cineViewItem:CineViewLocItem? = nil, initialLoopState:Bool = false)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - Creating player for URL: [\(url)] with startingPosition: [\(startingPosition)] - initialLoopState: [\(initialLoopState)]...")
         
@@ -368,8 +373,9 @@ class PlayerManager:ObservableObject
     func toggleLoop()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         bIsLooping = !bIsLooping
 
@@ -388,8 +394,9 @@ class PlayerManager:ObservableObject
     func setLoop(_ enabled:Bool)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         guard bIsLooping != enabled else { return }
 
@@ -412,8 +419,9 @@ class PlayerManager:ObservableObject
     private func setupObservers()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Setting up player observer(s)...")
         
@@ -550,10 +558,14 @@ class PlayerManager:ObservableObject
                 self?.isLoading = true
 
                 // Attempt to resume after a brief delay...
+                // <<CHICKEN-TRACKS>> (2026-06-24) — 'PlayerManager' isn't Sendable, so rebind before
+                // capture into the @Sendable DispatchQueue.asyncAfter closure (§12d pattern).
+
+                nonisolated(unsafe) let unsafeSelf = self
 
                 DispatchQueue.main.asyncAfter(deadline:.now() + 0.5)
                 {
-                    self?.player.play()
+                    unsafeSelf?.player.play()
                 }
 
             }
@@ -598,8 +610,9 @@ class PlayerManager:ObservableObject
     private func handleStatusChange(_ status:AVPlayerItem.Status?)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         guard let status = status 
         else
@@ -689,8 +702,9 @@ class PlayerManager:ObservableObject
     private func handleTimeControlStatusChange(_ status:AVPlayer.TimeControlStatus)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         switch status
         {
@@ -724,8 +738,9 @@ class PlayerManager:ObservableObject
     private func saveProgress(isComplete:Bool)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         guard duration > 0 else { return }
 
@@ -746,8 +761,9 @@ class PlayerManager:ObservableObject
     func saveProgressOnExit()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Saving progress on exit - currentTime: \(currentTime), duration: \(duration), bIsLooping: \(bIsLooping)...")
         
@@ -782,8 +798,9 @@ class PlayerManager:ObservableObject
     func startPlaybackWhenReady()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if player.currentItem?.status == .readyToPlay
         {
@@ -829,8 +846,9 @@ class PlayerManager:ObservableObject
     func pause()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Pausing playback...")
 
@@ -844,8 +862,9 @@ class PlayerManager:ObservableObject
     func play()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Requesting play...")
 

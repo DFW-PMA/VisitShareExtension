@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import AVFoundation
@@ -18,18 +19,25 @@ import AppKit
 
 // MARK: - VideoMetadataManager
 
-class VideoMetadataManager
+// <<CHICKEN-TRACKS>> (2026-06-24) — '@unchecked Sendable' (not '@MainActor'): this class
+// deliberately generates thumbnails on a background 'DispatchQueue.global(qos:.utility)' queue
+// (see 'getThumbnailAsync(for:)' below) - forcing '@MainActor' would push that CPU-heavy
+// AVAssetImageGenerator work onto the main thread, defeating the point. The only mutable stored
+// state is 'thumbnailCache:NSCache', which Apple documents as thread-safe, so it's safe to assert
+// Sendable here rather than actor-isolate the whole class.
+@JmEntityInfo(vers:"v1.0402")
+class VideoMetadataManager: @unchecked Sendable
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "VideoMetadataManager"
-        static let sClsVers      = "v1.0302"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "VideoMetadataManager"
+        //  static let sClsVers      = "v1.0302"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // Singleton for shared access...
 
@@ -48,8 +56,9 @@ class VideoMetadataManager
     init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - Initializing VideoMetadataManager...")
 
@@ -71,8 +80,9 @@ class VideoMetadataManager
     func loadMetadata(for videoURL:URL)->VideoMetadata?
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let metadataURL = VideoMetadata.getMetadataURL(for:videoURL)
 
@@ -107,8 +117,9 @@ class VideoMetadataManager
     func saveMetadata(_ metadata:VideoMetadata, for videoURL:URL)->Bool
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let metadataURL = VideoMetadata.getMetadataURL(for:videoURL)
 
@@ -140,8 +151,9 @@ class VideoMetadataManager
     func deleteMetadata(for videoURL:URL)->Bool
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let metadataURL = VideoMetadata.getMetadataURL(for:videoURL)
 
@@ -182,8 +194,9 @@ class VideoMetadataManager
     func updatePlaybackProgress(for videoURL:URL, currentTime:Double, duration:Double)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Updating progress for [\(videoURL.lastPathComponent)]: \(VideoMetadata.formatTimeInterval(currentTime)) / \(VideoMetadata.formatTimeInterval(duration))...")
 
@@ -216,8 +229,9 @@ class VideoMetadataManager
     func resetPlaybackProgress(for videoURL:URL)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Resetting progress for: [\(videoURL.lastPathComponent)]...")
 
@@ -236,8 +250,9 @@ class VideoMetadataManager
     func getLoopState(for videoURL:URL)->Bool
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let metadata = loadMetadata(for:videoURL)
         let isLooping = metadata?.bIsLooping ?? false
@@ -253,8 +268,9 @@ class VideoMetadataManager
     func setLoopState(for videoURL:URL, isLooping:Bool)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Setting loop state for [\(videoURL.lastPathComponent)] to: \(isLooping)...")
 
@@ -277,8 +293,9 @@ class VideoMetadataManager
     func toggleLoopState(for videoURL:URL)->Bool
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let currentState = getLoopState(for:videoURL)
         let newState     = !currentState
@@ -295,11 +312,16 @@ class VideoMetadataManager
 
     // Get thumbnail for video (from cache, disk, or generate)...
 
-    func getThumbnail(for videoURL:URL, completion:@escaping(PlatformImage?)->Void)
+    // <<CHICKEN-TRACKS>> (2026-06-24) — 'completion' is captured into a '@Sendable'
+    // 'DispatchQueue.global(...).async' closure (and the nested 'DispatchQueue.main.async' one)
+    // below; a plain closure type isn't Sendable by default under Swift 6, so mark it '@Sendable'
+    // explicitly here rather than rebinding it at every call site.
+    func getThumbnail(for videoURL:URL, completion:@escaping @Sendable(PlatformImage?)->Void)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let cacheKey = videoURL.path as NSString
 
@@ -371,8 +393,9 @@ class VideoMetadataManager
     func getThumbnailSync(for videoURL:URL)->PlatformImage?
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let cacheKey = videoURL.path as NSString
 
@@ -415,8 +438,9 @@ class VideoMetadataManager
     private func generateThumbnail(for videoURL:URL)->PlatformImage?
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let asset     = AVAsset(url:videoURL)
         let generator = AVAssetImageGenerator(asset:asset)
@@ -465,8 +489,9 @@ class VideoMetadataManager
     private func saveThumbnailToMetadata(_ image:PlatformImage, for videoURL:URL)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         guard let jpegData = image.jpegData(compressionQuality:thumbnailJPEGQuality) else
         {
@@ -492,8 +517,9 @@ class VideoMetadataManager
     func clearThumbnailCache()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Clearing thumbnail cache...")
 
@@ -506,8 +532,9 @@ class VideoMetadataManager
     func preGenerateThumbnails(for videoURLs:[URL], progressCallback:((Int, Int)->Void)? = nil)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Pre-generating thumbnails for \(videoURLs.count) videos...")
 

@@ -12,7 +12,15 @@ import SwiftData
 
 // MARK: - DataItemRepo Protocol (a repo <repository> of collections of DataItems):
 
-protocol DataItemRepo 
+// <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged extensively on
+// AppDataItemsRepo.swift ("conformance ... crosses into main-actor-isolated code", "non-Sendable
+// type cannot be sent/returned" across fetch/save/saveBatch/upsert/delete). Root cause: this
+// protocol is nonisolated, but BOTH real conformers (AppDataItemsRepo directly, AppSwiftDataManager
+// via SwiftDataManager:DataItemRepo) are @MainActor classes — confirmed via grep, no other
+// conformer exists. Marking the protocol @MainActor matches that reality and avoids needing
+// Sendable constraints on every DataItem-conforming model type, which would have cascaded broadly.
+@MainActor
+protocol DataItemRepo
 {
 
     // Generic comparison with custom comparator...

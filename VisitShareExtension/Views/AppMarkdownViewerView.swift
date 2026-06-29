@@ -11,6 +11,7 @@
 //        project that uses it.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import MarkdownUI
@@ -41,18 +42,19 @@ enum MarkdownThemeOption:String, CaseIterable, Identifiable
 
 // MARK: - AppMarkdownViewerView
 
+@JmEntityInfo(vers:"v1.0401")
 struct AppMarkdownViewerView:View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AppMarkdownViewerView"
-        static let sClsVers      = "v1.0401"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppMarkdownViewerView"
+        //  static let sClsVers      = "v1.0401"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // Caller-supplied field(s):
 

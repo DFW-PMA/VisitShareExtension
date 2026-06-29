@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import Combine
@@ -87,18 +88,19 @@ import Combine
 //
 //  ---------------------------------------------------------------------------------------------------------
 
+@JmEntityInfo(vers:"v1.0213")
 struct AppMemoryMonitorOverlay:View
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AppMemoryMonitorOverlay"
-        static let sClsVers      = "v1.0213"
-        static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppMemoryMonitorOverlay"
+        //  static let sClsVers      = "v1.0213"
+        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
     // NOTE: position, dragOffset, and DragGesture have been intentionally
@@ -171,19 +173,20 @@ struct AppMemoryMonitorOverlay:View
 //      what was tapped last, and the pan gesture fires reliably every time.
 // ─────────────────────────────────────────────────────────────────────────────
 
+@JmEntityInfo(vers:"v1.0204")
 @available(iOS 13.0, *)
 private final class AppOverlayPassthroughWindow: UIWindow
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AppOverlayPassthroughWindow"
-        static let sClsVers      = "v1.0204"
-        static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppOverlayPassthroughWindow"
+        //  static let sClsVers      = "v1.0204"
+        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = true
+    //  }
 
     // Fix 2: Never take key window status from the main app window.
     // Without this, drag stops working after the user taps elsewhere in the app.
@@ -245,18 +248,27 @@ private final class AppOverlayPassthroughWindow: UIWindow
 //      Required so handleOverlayPan(_:) can be an @objc selector target.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — every method on this class
+// manipulates UIKit (UIWindow, UIViewController, UIHostingController, gesture recognizers), all
+// @MainActor-isolated APIs in modern SDKs; flagged extensively (1 SENDABLE error on 'shared' + ~35
+// ACTOR-ISOLATION warnings). Marked the whole class @MainActor rather than patching each call site —
+// this class IS fundamentally main-thread-only UI work, and the one real call site
+// (JmAppDelegateVisitor.swift:5584) already runs inside DispatchQueue.main.async, which Swift 6
+// infers as @MainActor, so this required zero changes at the call site.
+@JmEntityInfo(vers:"v1.0206")
+@MainActor
 final class AppMemoryMonitorOverlayManager: NSObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AppMemoryMonitorOverlayManager"
-        static let sClsVers      = "v1.0205"
-        static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppMemoryMonitorOverlayManager"
+        //  static let sClsVers      = "v1.0205"
+        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = true
+    //  }
 
     // Overlay widget frame constants:
     // Width is generous enough for "Mem:#(XXX.X:XXX.X)MB" at 11pt monospaced

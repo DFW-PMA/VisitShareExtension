@@ -6,6 +6,7 @@
 //  Copyright © 2023-2026 JustMacApps. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 
 // Enum(s):
@@ -106,30 +107,32 @@ extension ZipFileDetails
 
 // Method(s) - ZIP 'service':
 
+@JmEntityInfo(vers:"v1.0401")
 class MultipartZipFileService:NSObject 
 {
 
-    struct ClassInfo
-    {
-        static let sClsId          = "MultipartZipFileService"
-        static let sClsVers        = "v1.0401"
-        static let sClsDisp        = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace       = true
-        static let bClsFileLog     = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId          = "MultipartZipFileService"
+        //  static let sClsVers        = "v1.0401"
+        //  static let sClsDisp        = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace       = true
+        //  static let bClsFileLog     = true
+    //  }
 
     // App Data field(s):
 
             var bShouldOverwriteZipIfNecessary:Bool       = true
 
-            var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
+            var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.appDelegateVisitor
 
     override init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -146,8 +149,9 @@ class MultipartZipFileService:NSObject
     public func createZip(zipFinalURL:URL, fromDirectory directoryURL:URL)throws->URL 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'zipFinalURL' is [\(zipFinalURL)] - 'directoryURL' is [\(directoryURL)]...")
 
@@ -199,8 +203,9 @@ class MultipartZipFileService:NSObject
     public func createZipAtTmp(zipFilename:String, zipExtension:String="zip", fromDirectory directoryURL:URL)throws->URL 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'zipFilename' is [\(zipFilename)] - 'zipExtension' is [\(zipExtension)] - 'directoryURL' is [\(directoryURL)]...")
 
@@ -221,8 +226,9 @@ class MultipartZipFileService:NSObject
     public func createZipAtTmp(zipFilename:String, zipExtension:String="zip", filesToZip:[ZipFileDetails])throws->URL 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'zipFilename' is [\(zipFilename)] - 'zipExtension' is [\(zipExtension)] - 'filesToZip' is [\(filesToZip)]...")
 
@@ -254,8 +260,9 @@ class MultipartZipFileService:NSObject
     public func getZipData(zipFilename:String=UUID().uuidString, fromDirectory directoryURL:URL)throws->Data 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'zipFilename' is [\(zipFilename)] - 'directoryURL' is [\(directoryURL)]...")
 
@@ -272,8 +279,9 @@ class MultipartZipFileService:NSObject
     public func getZipData(zipFilename:String=UUID().uuidString, filesToZip:[ZipFileDetails])throws->Data 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'zipFilename' is [\(zipFilename)] - 'filesToZip' is [\(filesToZip)]...")
 
@@ -290,8 +298,9 @@ class MultipartZipFileService:NSObject
     private func getZipData(zipFileURL:URL)throws->Data 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'zipFileURL' is [\(zipFileURL)]...")
 

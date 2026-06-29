@@ -6,28 +6,30 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import QuickLook
 
+@JmEntityInfo(vers:"v1.2001")
 struct LogFileView:View 
 {
     
-    struct ClassInfo
-    {
-        static let sClsId          = "LogFileView"
-        static let sClsVers        = "v1.2001"
-        static let sClsDisp        = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace       = true
-        static let bClsFileLog     = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId          = "LogFileView"
+        //  static let sClsVers        = "v1.2001"
+        //  static let sClsDisp        = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace       = true
+        //  static let bClsFileLog     = true
+    //  }
 
     // App Data field(s):
 
     @Environment(\.presentationMode) var presentationMode
 
-                   var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
+                   var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.appDelegateVisitor
     
     @State         var logFileUrl:URL?
     
@@ -44,8 +46,9 @@ struct LogFileView:View
     init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -197,8 +200,9 @@ struct LogFileView:View
     private func copyLogFilespecToClipboard()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked - for text of [\(jmAppDelegateVisitor.sAppDelegateVisitorLogFilespec!)]...")
         
@@ -220,8 +224,9 @@ struct LogFileView:View
     private func getLogFilespecFileSizeDisplayableMB()->String
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked - 'sAppDelegateVisitorLogFilespec' is [\(jmAppDelegateVisitor.sAppDelegateVisitorLogFilespec!)]...")
 

@@ -6,22 +6,24 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import MarkdownUI
 
+@JmEntityInfo(vers:"v1.1210")
 struct HelpBasicView:View 
 {
     
-    struct ClassInfo
-    {
-        static let sClsId          = "HelpBasicView"
-        static let sClsVers        = "v1.1210"
-        static let sClsDisp        = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace       = true
-        static let bClsFileLog     = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId          = "HelpBasicView"
+        //  static let sClsVers        = "v1.1210"
+        //  static let sClsDisp        = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace       = true
+        //  static let bClsFileLog     = true
+    //  }
 
     // App Data field(s):
 
@@ -38,8 +40,9 @@ struct HelpBasicView:View
     init(sHelpBasicContents:String)
     {
     
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'sHelpBasicContents' is [\(sHelpBasicContents)]...")
   
@@ -102,8 +105,9 @@ struct HelpBasicView:View
     func renderHELPContentsInTextView()->some View
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         let _ = appLogMsg("\(sCurrMethodDisp) <HelpBasic Render> Invoked...")
 

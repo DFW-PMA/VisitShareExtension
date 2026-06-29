@@ -6,21 +6,23 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
+@JmEntityInfo(vers:"v1.0601")
 struct ContentView:View
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "ContentView"
-        static let sClsVers      = "v1.0601"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "ContentView"
+        //  static let sClsVers      = "v1.0601"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -30,7 +32,7 @@ struct ContentView:View
     @Environment(\.appGlobalDeviceType)     var appGlobalDeviceType
     @Environment(\.supportsMultipleWindows) var supportsMultipleWindows
 
-                            var appGlobalInfo:AppGlobalInfo   = AppGlobalInfo.ClassSingleton.appGlobalInfo
+                            var appGlobalInfo:AppGlobalInfo   = AppGlobalInfo.appGlobalInfo
 
     @State          private var cAppAboutButtonPresses:Int    = 0
     @State          private var cAppSettingsButtonPresses:Int = 0

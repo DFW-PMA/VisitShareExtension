@@ -7,22 +7,24 @@
 //  Listens for Darwin notifications from extension to open target apps.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
+@JmEntityInfo(vers:"v1.0704")
 @main
 struct VisitShareExtensionApp:App
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "VisitShareExtensionApp"
-        static let sClsVers      = "v1.0704"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "VisitShareExtensionApp"
+        //  static let sClsVers      = "v1.0704"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // AppDelegate:
     //     (NOTE: This causes the AppDelegate class to instantiate
@@ -46,7 +48,7 @@ struct VisitShareExtensionApp:App
 
     // App 'global' field(s):
 
-                    var appGlobalInfo:AppGlobalInfo             = AppGlobalInfo.ClassSingleton.appGlobalInfo
+                    var appGlobalInfo:AppGlobalInfo             = AppGlobalInfo.appGlobalInfo
 
     // App Data field(s):
 
@@ -56,8 +58,9 @@ struct VisitShareExtensionApp:App
     init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         _appGlobalDeviceType       = State(initialValue:appGlobalInfo.iGlobalDeviceType)
 
@@ -158,8 +161,9 @@ struct VisitShareExtensionApp:App
     private func setupAppearance() 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -176,8 +180,9 @@ struct VisitShareExtensionApp:App
     private func startListeningForHandoffs()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> <DarwinNotification> Invoked...")
 
@@ -202,8 +207,9 @@ struct VisitShareExtensionApp:App
     private func processAnyPendingHandoffs(viaMethod:String="unknown")
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <PendingHandoffs> Invoked - checking for pending handoffs - 'viaMethod' is [\(viaMethod)]...")
 

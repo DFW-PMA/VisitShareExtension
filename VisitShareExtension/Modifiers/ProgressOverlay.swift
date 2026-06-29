@@ -6,24 +6,26 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import Combine
 
 // Reusable ProgressOverlay 'trigger' (Bool wrapper) class:
 
+@JmEntityInfo(vers:"v1.0501")
 class ProgressOverlayTrigger:ObservableObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "ProgressOverlayTrigger"
-        static let sClsVers      = "v1.0501"
-        static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "ProgressOverlayTrigger"
+        //  static let sClsVers      = "v1.0501"
+        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // 'Internal' Trace flag:
 
@@ -37,8 +39,9 @@ class ProgressOverlayTrigger:ObservableObject
     public func setProgressOverlay(isProgressOverlayOn:Bool = false)
     {
     
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'isProgressOverlayOn' is [\(isProgressOverlayOn)]...")
         
@@ -61,18 +64,19 @@ class ProgressOverlayTrigger:ObservableObject
 
 // Reusable ProgressOverlayModifier and View extension...
 
+@JmEntityInfo(vers:"v1.0301")
 struct ProgressOverlayModifier:ViewModifier
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "ProgressOverlay"
-        static let sClsVers      = "v1.0301"
-        static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "ProgressOverlay"
+        //  static let sClsVers      = "v1.0301"
+        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // App Data field(s):
 

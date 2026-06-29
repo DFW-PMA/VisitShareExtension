@@ -6,23 +6,25 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
 // MARK: - SpreadsheetXML Data Models
 
+@JmEntityInfo(vers:"v1.0101")
 struct SpreadsheetXMLWorkbook:Identifiable 
 {
 
-    struct ClassInfo 
-    {
-        static let sClsId        = "SpreadsheetXMLWorkbook"
-        static let sClsVers      = "v1.0101"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SpreadsheetXMLWorkbook"
+        //  static let sClsVers      = "v1.0101"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     let id:UUID                              = UUID()
     var fileName:String                      = ""
@@ -48,18 +50,19 @@ struct SpreadsheetXMLWorkbook:Identifiable
 
 }   // End of struct SpreadsheetXMLWorkbook:Identifiable.
 
+@JmEntityInfo(vers:"v1.0101")
 struct SpreadsheetXMLWorksheet:Identifiable 
 {
 
-    struct ClassInfo 
-    {
-        static let sClsId        = "SpreadsheetXMLWorksheet"
-        static let sClsVers      = "v1.0101"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SpreadsheetXMLWorksheet"
+        //  static let sClsVers      = "v1.0101"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     let id:UUID                  = UUID()
     var name:String              = "Sheet1"
@@ -85,18 +88,19 @@ struct SpreadsheetXMLWorksheet:Identifiable
 
 }   // End of struct SpreadsheetXMLWorksheet:Identifiable.
 
+@JmEntityInfo(vers:"v1.0101")
 struct SpreadsheetXMLRow:Identifiable 
 {
 
-    struct ClassInfo 
-    {
-        static let sClsId        = "SpreadsheetXMLRow"
-        static let sClsVers      = "v1.0101"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SpreadsheetXMLRow"
+        //  static let sClsVers      = "v1.0101"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     let id:UUID                    = UUID()
     var rowIndex:Int               = 0
@@ -106,18 +110,19 @@ struct SpreadsheetXMLRow:Identifiable
 
 }   // End of struct SpreadsheetXMLRow:Identifiable.
 
+@JmEntityInfo(vers:"v1.0201")
 struct SpreadsheetXMLCell:Identifiable 
 {
 
-    struct ClassInfo 
-    {
-        static let sClsId        = "SpreadsheetXMLCell"
-        static let sClsVers      = "v1.0201"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SpreadsheetXMLCell"
+        //  static let sClsVers      = "v1.0201"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     let id:UUID                     = UUID()
     var columnIndex:Int             = 0

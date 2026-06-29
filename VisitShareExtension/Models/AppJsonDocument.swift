@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import SwiftData
@@ -13,18 +14,19 @@ import UniformTypeIdentifiers
 
 // MARK: - App JSON Document for Export...
 
+@JmEntityInfo(vers:"v1.0401")
 struct AppJsonDocument:FileDocument 
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AppJsonDocument"
-        static let sClsVers      = "v1.0401"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppJsonDocument"
+        //  static let sClsVers      = "v1.0401"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -35,7 +37,7 @@ struct AppJsonDocument:FileDocument
 
     var jsonString:String
 
-    var appGlobalInfo:AppGlobalInfo = AppGlobalInfo.ClassSingleton.appGlobalInfo
+    var appGlobalInfo:AppGlobalInfo = AppGlobalInfo.appGlobalInfo
 
     public func toString()->String
     {
@@ -64,8 +66,9 @@ struct AppJsonDocument:FileDocument
     init(jsonString:String) 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         self.jsonString = jsonString
         
@@ -82,8 +85,9 @@ struct AppJsonDocument:FileDocument
     init(configuration:ReadConfiguration)throws 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         guard let data   = configuration.file.regularFileContents,
               let string = String(data:data, encoding:.utf8)
@@ -107,8 +111,9 @@ struct AppJsonDocument:FileDocument
     func fileWrapper(configuration:WriteConfiguration)throws->FileWrapper 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 

@@ -6,24 +6,26 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import Darwin
 
 // MARK:- JmAppMemoryUsageInfo (Codable struct for App 'memory' usage info)
 
+@JmEntityInfo(vers:"v1.0201")
 struct JmAppMemoryUsageInfo:Codable
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "JmAppMemoryUsageInfo"
-        static let sClsVers      = "v1.0201"
-        static let sClsDisp      = sClsId+".("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JmAppMemoryUsageInfo"
+        //  static let sClsVers      = "v1.0201"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 

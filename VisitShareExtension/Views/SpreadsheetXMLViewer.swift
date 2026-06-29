@@ -6,22 +6,24 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
+@JmEntityInfo(vers:"v1.0807")
 struct SpreadsheetXMLViewer:View
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "SpreadsheetXMLViewer"
-        static let sClsVers      = "v1.0807"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SpreadsheetXMLViewer"
+        //  static let sClsVers      = "v1.0807"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // MARK: - Import Manager
     
@@ -434,8 +436,9 @@ struct SpreadsheetXMLViewer:View
     private func handleImportResult(_ result:Result<URL, Error>)
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         switch result
         {
@@ -525,8 +528,9 @@ struct SpreadsheetXMLViewer:View
     private func exportWorksheetToCSV()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         guard let workbook = workbook 
         else 
@@ -588,8 +592,9 @@ struct SpreadsheetXMLViewer:View
     private func handleExportResult(_ result:Result<URL, Error>)
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         switch result
         {
@@ -615,8 +620,9 @@ struct SpreadsheetXMLViewer:View
     private func dumpDocumentsDirectoryUTIs()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'\(sCurrMethod)':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) ========== BEGIN UTI DIAGNOSTIC DUMP ==========")
 

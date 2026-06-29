@@ -8,28 +8,31 @@
 
 //  > Run by calling: JmAppDeepCopyExamples.runExamples()
 
+import JmEntityInfo
 import Foundation
 
 // MARK: - Usage Examples and Test Cases:
 
+@JmEntityInfo(vers:"v1.0301")
 class JmAppDeepCopyExamples
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "JmAppDeepCopyExamples"
-        static let sClsVers      = "v1.0301"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = false
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JmAppDeepCopyExamples"
+        //  static let sClsVers      = "v1.0301"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = false
+    //  }
     
     static func runExamples()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         if (ClassInfo.bClsTrace == true)
         {

@@ -6,29 +6,36 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
 #if os(macOS)
+// <<CHICKEN-TRACKS>> @preconcurrency (2026-06-25) — NSOpenPanel.begin(completionHandler:) isn't
+//                    Swift 6 concurrency-audited; without this, the closure literal itself is
+//                    flagged as "sending non-Sendable type" regardless of nonisolated(unsafe) on
+//                    its captures. Standard PRECONCURRENCY fix per CLAUDE.md §12c.
+@preconcurrency import AppKit
 #endif
 #if os(iOS)
 import UIKit
 #endif
-    
+
 #if os(iOS)
-struct AppDocumentImportPickerView:UIViewControllerRepresentable 
+@JmEntityInfo(vers:"v1.0601")
+struct AppDocumentImportPickerView:UIViewControllerRepresentable
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AppDocumentImportPickerView"
-        static let sClsVers      = "v1.0501"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppDocumentImportPickerView"
+        //  static let sClsVers      = "v1.0601"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -37,7 +44,7 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
     @Environment(\.openURL)              var openURL
     @Environment(\.appGlobalDeviceType)  var appGlobalDeviceType
 
-                    var appGlobalInfo:AppGlobalInfo             = AppGlobalInfo.ClassSingleton.appGlobalInfo
+                    var appGlobalInfo:AppGlobalInfo             = AppGlobalInfo.appGlobalInfo
                     let contentTypes:[UTType]
                     let allowsMultipleSelection:Bool
                     let completion:(Result<[URL], Error>)->Void
@@ -82,8 +89,9 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
     func makeUIViewController(context:Context)->UIDocumentPickerViewController 
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked - 'allowsMultipleSelection' is [\(allowsMultipleSelection)]...")
         
@@ -108,8 +116,9 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
     func updateUIViewController(_ uiViewController:UIDocumentPickerViewController, context:Context) 
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked/Exiting...")
         
@@ -120,8 +129,9 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
     func makeCoordinator()->Coordinator 
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked/Exiting...")
         
@@ -129,26 +139,28 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
 
     }   // End of func makeCoordinator()->Coordinator.
     
+    @JmEntityInfo(vers:"v1.0501")
     class Coordinator:NSObject, UIDocumentPickerDelegate 
     {
 
-        struct ClassInfo
-        {
-            static let sClsId        = "AppDocumentImportPickerView:Coordinator"
-            static let sClsVers      = "v1.0501"
-            static let sClsDisp      = sClsId+".("+sClsVers+"): "
-            static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-            static let bClsTrace     = true
-            static let bClsFileLog   = true
-        }
+        //  struct ClassInfo
+        //  {
+            //  static let sClsId        = "AppDocumentImportPickerView:Coordinator"
+            //  static let sClsVers      = "v1.0501"
+            //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+            //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+            //  static let bClsTrace     = true
+            //  static let bClsFileLog   = true
+        //  }
 
         let completion:(Result<[URL], Error>)->Void
         
         init(completion:@escaping(Result<[URL], Error>)->Void) 
         {
 
-            let sCurrMethod:String     = #function
-            let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+            //  let sCurrMethod:String     = #function
+            //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+            let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
             appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -163,8 +175,9 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
         func documentPicker(_ controller:UIDocumentPickerViewController, didPickDocumentsAt urls:[URL]) 
         {
 
-            let sCurrMethod:String     = #function
-            let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+            //  let sCurrMethod:String     = #function
+            //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+            let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
             appLogMsg("\(sCurrMethodDisp) Invoked - 'urls' contains #(\(urls.count)) URL(s)...")
 
@@ -194,8 +207,9 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
         func documentPickerWasCancelled(_ controller:UIDocumentPickerViewController) 
         {
 
-            let sCurrMethod:String     = #function
-            let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+            //  let sCurrMethod:String     = #function
+            //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+            let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
             appLogMsg("\(sCurrMethodDisp) Invoked/Exiting - User cancelled...")
 
@@ -206,5 +220,68 @@ struct AppDocumentImportPickerView:UIViewControllerRepresentable
     }   // End of class Coordinator:NSObject, UIDocumentPickerDelegate.
 
 }   // End of struct AppDocumentImportPickerView:UIViewControllerRepresentable.
+#endif
+
+#if os(macOS)
+// <<CHICKEN-TRACKS>> macOS equivalent added (Section 13/11 follow-on, 2026-06-25) — NSOpenPanel
+//                    presents its own native modal directly; no SwiftUI Representable wrapper
+//                    (and no .sheet() presentation) is needed the way UIDocumentPickerViewController
+//                    requires on iOS.
+@JmEntityInfo(vers:"v1.0101")
+struct AppDocumentImportPickerMac
+{
+
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppDocumentImportPickerMac"
+        //  static let sClsVers      = "v1.0101"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
+
+    // <<CHICKEN-TRACKS>> @MainActor added (2026-06-25) — NSOpenPanel.init()/begin(completionHandler:)
+    //                    are main-actor-isolated; without this, the static func runs task-isolated
+    //                    and "sending" the begin completion closure across isolation domains is
+    //                    flagged even with nonisolated(unsafe) captures and @preconcurrency.
+    @MainActor
+    static func present(contentTypes:[UTType], completion:@escaping(Result<URL, Error>)->Void)
+    {
+
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'contentTypes' is [\(contentTypes)]...")
+
+        let openPanel:NSOpenPanel          = NSOpenPanel()
+        openPanel.allowedContentTypes      = contentTypes
+        openPanel.allowsMultipleSelection  = false
+        openPanel.canChooseDirectories     = false
+        openPanel.canChooseFiles           = true
+
+        openPanel.begin
+        { response in
+
+            guard (response == .OK),
+                  let pickedURL = openPanel.url
+            else
+            {
+                appLogMsg("\(sCurrMethodDisp) Exiting - User cancelled the open panel...")
+
+                return
+            }
+
+            completion(.success(pickedURL))
+
+            appLogMsg("\(sCurrMethodDisp) Exiting - 'pickedURL' is [\(pickedURL.lastPathComponent)]...")
+
+            return
+        }
+
+        return
+
+    }   // End of static func present(contentTypes:[UTType], completion:@escaping(Result<URL,Error>)->Void).
+
+}   // End of struct AppDocumentImportPickerMac.
 #endif
 

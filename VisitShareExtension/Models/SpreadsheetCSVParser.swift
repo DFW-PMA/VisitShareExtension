@@ -6,23 +6,25 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
 // MARK: - SpreadsheetCSVParser
 
+@JmEntityInfo(vers:"v1.0301")
 class SpreadsheetCSVParser
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "SpreadsheetCSVParser"
-        static let sClsVers      = "v1.0301"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SpreadsheetCSVParser"
+        //  static let sClsVers      = "v1.0301"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // MARK: - Properties
     
@@ -49,8 +51,9 @@ class SpreadsheetCSVParser
     
     init()
     {
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
         
@@ -71,8 +74,9 @@ class SpreadsheetCSVParser
                   forceHeaderRow:Bool? = nil)->Result<SpreadsheetXMLWorkbook, Error>
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - parsing CSV from URL: [\(url.path)]...")
         appLogMsg("\(sCurrMethodDisp) Settings - delimiter: [\(delimiter)], autoDetectHeaders: [\(autoDetectHeaders)], forceHeaderRow: [\(String(describing:forceHeaderRow))]...")
@@ -163,8 +167,9 @@ class SpreadsheetCSVParser
     private func resetParserState()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Resetting parser state...")
         
@@ -185,8 +190,9 @@ class SpreadsheetCSVParser
     private func readFileData(from url:URL)->Data?
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - reading file from URL: [\(url.path)]...")
         
@@ -229,8 +235,9 @@ class SpreadsheetCSVParser
     private func parseCSVData(_ data:Data)->Result<[[String]], Error>
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - parsing [\(data.count)] bytes of CSV data...")
         
@@ -318,8 +325,9 @@ class SpreadsheetCSVParser
     private func parseCSVString(_ csvString:String) -> [[String]]
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - parsing CSV string of #(\(csvString.count)) character(s)...")
         appLogMsg("\(sCurrMethodDisp) Using delimiter: [\(self.delimiter)] (length: #(\(self.delimiter.count)) character(s))...")
@@ -475,8 +483,9 @@ class SpreadsheetCSVParser
     private func detectHeaderRow(rows:[[String]])->Bool
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - auto-detecting header row...")
         
@@ -533,8 +542,9 @@ class SpreadsheetCSVParser
     private func buildWorkbookFromRows(rows:[[String]])->Result<SpreadsheetXMLWorkbook, Error>
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked - building workbook from #(\(rows.count)) row(s)...")
         

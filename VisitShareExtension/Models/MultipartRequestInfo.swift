@@ -6,21 +6,32 @@
 //  Copyright © 2023-2026 JustMacApps. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 
+// <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged via
+// MultipartRequestDriver.swift ("capture of 'multipartRequestInfo' with non-Sendable type" and
+// "passing closure as a 'sending' parameter risks causing data races" on the Task { ... } in
+// executeMultipartRequest()). Confirmed via grep: both real call sites (JmAppScreenCapture.swift,
+// JmAppDelegateVisitor.swift) construct a fresh MultipartRequestInfo() per call and never reuse or
+// touch the instance again after handing it to executeMultipartRequest() — each instance flows
+// through exactly one upload Task end-to-end, never shared across concurrent operations. Marked
+// @unchecked Sendable on that basis (genuinely safe given the usage pattern, not just compiler
+// silencing) rather than fixing this per-call-site in the driver.
+@JmEntityInfo(vers:"v1.0401")
 @available(iOS 14.0, *)
-class MultipartRequestInfo:NSObject
+class MultipartRequestInfo:NSObject, @unchecked Sendable
 {
 
-    struct ClassInfo
-    {
-        static let sClsId          = "MultipartRequestInfo"
-        static let sClsVers        = "v1.0301"
-        static let sClsDisp        = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace       = true
-        static let bClsFileLog     = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId          = "MultipartRequestInfo"
+        //  static let sClsVers        = "v1.0301"
+        //  static let sClsDisp        = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace       = true
+        //  static let bClsFileLog     = true
+    //  }
 
     // App Data field(s):
 
@@ -42,13 +53,14 @@ class MultipartRequestInfo:NSObject
     public var urlResponse:HTTPURLResponse?       = nil       // This is the 'response' URL...
     public var urlResponseData:Data?              = nil       // This is the 'response' Data...
 
-    var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
+    var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.appDelegateVisitor
 
     override init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 

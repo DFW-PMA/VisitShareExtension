@@ -6,23 +6,25 @@
 //  Copyright © 2023-2026 JustMacApps. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
+@JmEntityInfo(vers:"v1.0301")
 class MultipartZipFileCreator:NSObject
 {
 
-    struct ClassInfo
-    {
-        
-        static let sClsId          = "MultipartZipFileCreator"
-        static let sClsVers        = "v1.0301"
-        static let sClsDisp        = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace       = true
-        static let bClsFileLog     = true
-        
-    }
+    //  struct ClassInfo
+    //  {
+//
+        //  static let sClsId          = "MultipartZipFileCreator"
+        //  static let sClsVers        = "v1.0301"
+        //  static let sClsDisp        = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace       = true
+        //  static let bClsFileLog     = true
+//
+    //  }
 
     // App Data field(s):
 
@@ -30,13 +32,14 @@ class MultipartZipFileCreator:NSObject
     private var bInternalZipTest:Bool                     = true
     private let bGenerateInternalTextFiles:Bool           = true
 
-            var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
+            var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.appDelegateVisitor
 
     override init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -53,8 +56,9 @@ class MultipartZipFileCreator:NSObject
     public func createTargetZipFileFromSource(multipartRequestInfo:MultipartRequestInfo)->URL?
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'multipartRequestInfo' is [\(multipartRequestInfo.toString())]...")
 

@@ -1,11 +1,12 @@
 //
 //  AutoDismissAlertCustomizableModifier.swift
-//  JustDevTools3
+//  JMAHotpGenerator
 //
 //  Created by Daryl Cox on 07/23/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
@@ -13,18 +14,19 @@ import SwiftUI
 
 // MARK: - Advanced Version with Customization:
 
+@JmEntityInfo(vers:"v1.0201")
 struct AutoDismissAlertCustomizableModifier:ViewModifier 
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "AutoDismissAlertCustomizableModifier"
-        static let sClsVers      = "v1.0201"
-        static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AutoDismissAlertCustomizableModifier"
+        //  static let sClsVers      = "v1.0201"
+        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // 'Internal' Trace flag:
 

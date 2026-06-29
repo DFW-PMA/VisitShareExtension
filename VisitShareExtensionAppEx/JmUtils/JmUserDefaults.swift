@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
@@ -15,20 +16,21 @@ import Cocoa
 import UIKit
 #endif
 
+@JmEntityInfo(vers:"v1.1101")
 @available(iOS 14.0, *)
 @objc(JmUserDefaults)
 class JmUserDefaults: NSObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "JmUserDefaults"
-        static let sClsVers      = "v1.1101"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JmUserDefaults"
+        //  static let sClsVers      = "v1.1101"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // Standard UserDefaults object:
 
@@ -41,8 +43,9 @@ class JmUserDefaults: NSObject
     override init()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -87,8 +90,9 @@ class JmUserDefaults: NSObject
     @objc func getObjCObjectForKey(_ forKey:NSString = "")->Any?
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked  - 'forKey' is [\(forKey)]...")
 
@@ -120,8 +124,9 @@ class JmUserDefaults: NSObject
     public func getObjectForKey(_ forKey:String = "")->Any?
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'forKey' is [\(forKey)]...")
 
@@ -153,8 +158,9 @@ class JmUserDefaults: NSObject
     @objc public func setObjCObjectForKey(_ keyValue:Any?, forKey:NSString = "")
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'forKey' is [\(forKey)]...")
 
@@ -186,8 +192,9 @@ class JmUserDefaults: NSObject
     public func setObjectForKey(_ keyValue:Any?, forKey:String = "")
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'forKey' is [\(forKey)]...")
 

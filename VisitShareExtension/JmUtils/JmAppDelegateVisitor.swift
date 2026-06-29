@@ -6,6 +6,7 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 import SwiftData
@@ -22,24 +23,33 @@ import GoogleMobileAds
 //@available(macOS 15, *)
 @available(iOS 14.0, *)
 @objc(JmAppDelegateVisitor)
+@JmEntityInfo(vers:"v1.8101")
 public class JmAppDelegateVisitor:NSObject, ObservableObject
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "JmAppDelegateVisitor"
-        static let sClsVers      = "v1.7801"
-        static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JmAppDelegateVisitor"
+        //  static let sClsVers      = "v1.7901"
+        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = true
+    //  }
 
-    struct ClassSingleton
-    {
-        static 
-        var appDelegateVisitor:JmAppDelegateVisitor                = JmAppDelegateVisitor()
-    }
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged SENDABLE
+    // ("nonisolated global shared mutable state"). Confirmed via grep this singleton is never
+    // reassigned. Changed 'var' -> 'let' + nonisolated(unsafe) — same fix as every other singleton
+    // in this app this session. Whole-class @MainActor isolation was not considered for this
+    // 5,917-line god-object — its own Section 12d inventory entry already flags it as the
+    // highest-risk file in the app; isolating it is a separate, much larger decision.
+//  struct ClassSingleton
+//  {
+//      nonisolated(unsafe) static
+//      let appDelegateVisitor:JmAppDelegateVisitor                = JmAppDelegateVisitor()
+//  }
+    nonisolated(unsafe) static let appDelegateVisitor:JmAppDelegateVisitor
+                                                                   = JmAppDelegateVisitor()
 
     // 'Internal' control struct(s):
     // - Alert Queue Management structures
@@ -93,7 +103,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     // App <global> Message(s) 'stack' cached before XCGLogger is available:
 
-    let appGlobalInfo:AppGlobalInfo                                = AppGlobalInfo.ClassSingleton.appGlobalInfo
+    let appGlobalInfo:AppGlobalInfo                                = AppGlobalInfo.appGlobalInfo
 
     // App <possible> Controls/Managers/Repos/Services:
 
@@ -221,7 +231,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 #if INSTANTIATE_APP_MENUBARSTATUSBAR
     // App <possible> MenuBar NSStatusBar instance:
 
-    var appStatusBar:JustDevTools3NSStatusBar                   = JustDevTools3NSStatusBar.ClassSingleton.appStatusBar
+    var appStatusBar:JustDevTools3NSStatusBar                      = JustDevTools3NSStatusBar.appStatusBar
 #endif
 #endif
 
@@ -432,8 +442,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     private override init()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         super.init()
         
@@ -465,8 +476,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func runPostInitializationTasks()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'self' is [\(self)]...")
 
@@ -537,7 +549,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the JmAppSwiftDataManager Data Model...
         
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppSwiftDataManager' instance...")
-        self.jmAppSwiftDataManager = JmAppSwiftDataManager.ClassSingleton.appSwiftDataManager
+        self.jmAppSwiftDataManager = JmAppSwiftDataManager.appSwiftDataManager
         self.jmAppSwiftDataManager?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppSwiftDataManager' instance...")
     #endif
@@ -556,7 +568,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppUserNotificationManager' instance...")
     //  self.jmAppUserNotificationManager = JmAppUserNotificationManager()
-        self.jmAppUserNotificationManager = JmAppUserNotificationManager.ClassSingleton.appUserNotificationManager
+        self.jmAppUserNotificationManager = JmAppUserNotificationManager.appUserNotificationManager
         self.jmAppUserNotificationManager?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppUserNotificationManager' instance...")
     #endif
@@ -566,7 +578,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppParseCoreManager' instance...")
     //  self.jmAppParseCoreManager = JmAppParseCoreManager()
-        self.jmAppParseCoreManager = JmAppParseCoreManager.ClassSingleton.appParseCoreManager
+        self.jmAppParseCoreManager = JmAppParseCoreManager.appParseCoreManager
         self.jmAppParseCoreManager?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreManager' instance...")
     #endif
@@ -575,7 +587,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the JmAppParseCoreBkgdDataRepo...
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppParseCoreBkgdDataRepo' instance...")
-        self.jmAppParseCoreBkgdDataRepo = JmAppParseCoreBkgdDataRepo.ClassSingleton.appParseCodeBkgdDataRepo
+        self.jmAppParseCoreBkgdDataRepo = JmAppParseCoreBkgdDataRepo.appParseCodeBkgdDataRepo
         self.jmAppParseCoreBkgdDataRepo?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.jmAppParseCoreBkgdDataRepo' instance...")
     #endif
@@ -630,7 +642,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.jmAppCLModelObservable2' instance...")
     #if ENABLE_APP_LEGACY_CORELOC2
-        self.jmAppCLModelObservable2 = CoreLocationModelObservable2.ClassSingleton.appCoreLocationModel
+        self.jmAppCLModelObservable2 = CoreLocationModelObservable2.appCoreLocationModel
     #else
         self.jmAppCLModelObservable2 = CoreLocationModelObservable2.appCoreLocationModel
     #endif
@@ -643,7 +655,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // Instantiate the NWSWeatherModelObservable()...
      
         appLogMsg("\(sCurrMethodDisp) Instantiating the 'self.nwsWeatherModelObservable' instance...")
-        self.nwsWeatherModelObservable = NWSWeatherModelObservable.ClassSingleton.appNWSWeatherModelObservable
+        self.nwsWeatherModelObservable = NWSWeatherModelObservable.appNWSWeatherModelObservable
         self.nwsWeatherModelObservable?.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
         appLogMsg("\(sCurrMethodDisp) Instantiated  the 'self.nwsWeatherModelObservable' instance...")
     #endif
@@ -901,8 +913,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     private func initAppDelegateVisitorTraceLog(initappdelegatetracelogtag:String = "-unknown-")
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         if (self.bAppDelegateVisitorTraceLogInitRequired == true)
         {
@@ -946,8 +959,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     private func setupAppDelegateVisitorTraceLogFile()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -1041,8 +1055,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     private func setupAppDelegateVisitorXCGLogger()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) - Invoked...")
 
@@ -1093,8 +1108,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func checkAppDelegateVisitorTraceLogFileForSize()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -1120,8 +1136,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func clearAppDelegateVisitorTraceLogFile()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -1217,14 +1234,15 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     private func displayAppGlobalInfoFields()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
         // Get the 'shared' instance of the AppGlobalInfo struct and finish it's 'setup':
 
-    //  let appGlobalInfo:AppGlobalInfo = AppGlobalInfo.ClassSingleton.appGlobalInfo
+    //  let appGlobalInfo:AppGlobalInfo = AppGlobalInfo.appGlobalInfo
 
         self.appGlobalInfo.setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:self)
 
@@ -1241,8 +1259,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func dumpAppInfoPlistToLog() -> Bool
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -1286,8 +1305,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func dumpAppCommandLineArgs()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         let cArgs                  = Int(CommandLine.argc)
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'self' is [\(self)]...")
@@ -1312,8 +1332,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func getAppDelegateVisitorApplicationTitle() -> String
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -1419,8 +1440,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func getAppDelegateVisitorHelpBasicContents() -> String
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -1470,8 +1492,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func performAppDelegateVisitorStartupCrashLogic(_ bAppFirstStartCall:Bool = false, bForegroundRestore:Bool = false)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked - parameters 'bAppFirstStartCall' is [\(bAppFirstStartCall)] - 'bForegroundRestore' is [\(bForegroundRestore)]...")
 
@@ -1659,8 +1682,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func performAppDelegateVisitorTerminatingCrashLogic()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> Invoked...")
 
@@ -1767,8 +1791,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func performAppDelegateVisitorMemoryPressureWarningLogic()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         // NOTE: This method is called from the GCD memory pressure source handler on .main queue.
         //       It MUST remain fast — one atomic file write maximum.  NO network, NO SwiftData...
@@ -1828,8 +1853,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func performAppDelegateVisitorMemoryPressureCriticalLogic()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         // NOTE: This method is called from the GCD memory pressure source handler on .main queue.
         //       Jetsam kill is IMMINENT — this method MUST be as fast as possible.
@@ -2954,8 +2980,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func setAppDelegateVisitorSignalSwiftViewsShouldRefresh()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'self' is [\(self)]...")
 
@@ -2974,8 +3001,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func resetAppDelegateVisitorSignalSwiftViewsShouldRefresh()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'self' is [\(self)]...")
 
@@ -2994,8 +3022,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func setAppDelegateVisitorSignalSwiftViewsShouldChange()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'self' is [\(self)]...")
 
@@ -3014,8 +3043,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func resetAppDelegateVisitorSignalSwiftViewsShouldChange()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'self' is [\(self)]...")
 
@@ -3752,8 +3782,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func setAppDelegateVisitorSignalGlobalAlert(_ alertMsg:String? = nil, alertButtonText:String? = nil)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Invoked - parameter(s) 'alertMsg' is [\(String(describing: alertMsg))] - 'alertButtonText' is [\(String(describing: alertButtonText))]...")
         
@@ -3854,8 +3885,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     private func processNextGlobalAlert()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         // Check if already processing...
 
@@ -3891,10 +3923,15 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Processing alert request [\(alertRequest.requestId)] after #(\(self.alertSignalDelaySeconds)) second delay...")
 
         // Delay before signaling to allow View re-rendering...
+        // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged "sending
+        // self risks causing data races" (self captured into DispatchQueue.main.asyncAfter's
+        // @MainActor closure). Rebound to nonisolated(unsafe), same idiom used throughout this app.
+
+        nonisolated(unsafe) let unsafeSelf = self
 
         DispatchQueue.main.asyncAfter(deadline:(.now() + self.alertSignalDelaySeconds))
         {
-            self.signalGlobalAlert(alertRequest)
+            unsafeSelf.signalGlobalAlert(alertRequest)
         }
 
         return
@@ -3904,8 +3941,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     private func signalGlobalAlert(_ alertRequest:GlobalAlertRequest)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Signaling alert [\(alertRequest.requestId)] - Message: [\(alertRequest.alertMessage)]...")
 
@@ -4007,8 +4045,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func resetAppDelegateVisitorSignalGlobalAlert()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Invoked...")
 
@@ -4343,8 +4382,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                                                                  withCompletion2 completionHandler2:(()->())?)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Invoked - parameter(s) 'alertMsg' is [\(String(describing: alertMsg))] - 'alertButtonText1' is [\(String(describing: alertButtonText1))] - 'alertButtonText2' is [\(String(describing: alertButtonText2))]...")
 
@@ -4468,8 +4508,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                                                                withCompletion2 completionHandler2:(()->())?)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - setting 'bAppDelegateVisitorAlertMustComplete' to 'true' - parameter(s) 'alertMsg' is [\(String(describing: alertMsg))] - 'alertButtonText1' is [\(String(describing: alertButtonText1))] - 'alertButtonText2' is [\(String(describing: alertButtonText2))]...")
 
@@ -4501,8 +4542,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     private func processNextCompletionAlert()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         // Check if already processing...
 
@@ -4538,10 +4580,19 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Processing completion alert request [\(alertRequest.requestId)] after #(\(self.alertSignalDelaySeconds)) second delay...")
 
         // Delay before signaling...
+        // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged "sending
+        // self"/"sending alertRequest risks causing data races" (self captured into
+        // DispatchQueue.main.asyncAfter's @MainActor closure; CompletionAlertRequest isn't Sendable
+        // because its completionHandler1/completionHandler2 closure properties aren't @Sendable).
+        // Both rebound to nonisolated(unsafe) locals — single-use completion handlers, not
+        // concurrently invoked, same judgment call as other closure-crossing fixes this session.
+
+        nonisolated(unsafe) let unsafeSelf         = self
+        nonisolated(unsafe) let unsafeAlertRequest = alertRequest
 
         DispatchQueue.main.asyncAfter(deadline:(.now() + self.alertSignalDelaySeconds))
         {
-            self.signalCompletionAlert(alertRequest)
+            unsafeSelf.signalCompletionAlert(unsafeAlertRequest)
         }
 
         return
@@ -4551,8 +4602,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     private func signalCompletionAlert(_ alertRequest:CompletionAlertRequest)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Signaling completion alert [\(alertRequest.requestId)] - Message: [\(alertRequest.alertMessage)]...")
 
@@ -4663,8 +4715,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func resetAppDelegateVisitorSignalCompletionAlert(_ idButtonClicked:Int)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Invoked - 'idButtonClicked' is #(\(idButtonClicked))...")
 
@@ -4986,8 +5039,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func clearAllAlertQueues()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <AlertViaSwiftUI> Invoked - clearing ALL alert queues...")
         
@@ -5106,8 +5160,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                                                           emailFileData:NSData)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'self' is [\(self)]...")
 
@@ -5141,8 +5196,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                                                            emailFileData:NSData)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'self' is [\(self)]...")
 
@@ -5177,8 +5233,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                                                   emailFileData:NSData)
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'self' is [\(self)] - 'alertIsBypassed' is [\(alertIsBypassed)]...")
 
@@ -5227,8 +5284,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     @objc public func forceResetAllAlertProcessing()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) <AlertViaBoth> FORCE RESET: Manually clearing ALL stuck processing flags...")
 
@@ -5649,7 +5707,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // completed.  If the user IS logged in, we leave the session intact so that window 2
         // is restored normally on the next launch and passes cleanly through the gate view.
 
-        let bIsUserLoggedIn:Bool = AppDevDetailsModelObservable.ClassSingleton.appDevDetailsModelObservable.bIsUserLoggedIn
+        let bIsUserLoggedIn:Bool = AppDevDetailsModelObservable.appDevDetailsModelObservable.bIsUserLoggedIn
 
         appLogMsg("\(sCurrMethodDisp) <Window2> 'bIsUserLoggedIn' is [\(bIsUserLoggedIn)]...")
 
@@ -5716,6 +5774,12 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     // UI.  Currently used for diagnostic logging; extend as needed.
     // -------------------------------------------------------------------------
 
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — UISceneSession's
+    // properties (persistentIdentifier/configuration/role) are @MainActor-isolated in modern SDKs.
+    // Marked this method @MainActor rather than rebinding self/locals — its only call site
+    // (JmUIAppDelegate.swift's application(_:didDiscardSceneSessions:), a UIApplicationDelegate
+    // callback) is already guaranteed main-thread by UIKit.
+    @MainActor
     public func appDelegateVisitorDidDiscardSceneSessions(_ uiApplication:UIApplication,
                                                           didDiscardSceneSessions sceneSessions:Set<UISceneSession>)
     {
@@ -5741,20 +5805,35 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     // -------------------------------------------------------------------------
     // requestSceneSessionDestructionForWindow2(_:)
     //
-    // Proactively destroys the "vma-window-2" UISceneSession so that it is NOT
-    // restored as the foreground scene on the next cold launch.
+    // Proactively destroys the secondary UISceneSession (vma-window-2) so that
+    // it is NOT restored as the foreground scene on the next cold launch.
     //
     // Call sites:
     //   - applicationDidEnterBackground() when bIsUserLoggedIn == false (primary)
+    //   - appDelegateVisitorConfigurationForConnecting() async dispatch
     //   - Any future logout path that needs to clean up window 2 explicitly
     //
     // Identification strategy:
-    //   session.configuration.name is checked against "vma-window-2".  All open
-    //   sessions are logged before the search so that the actual configuration.name
-    //   values are visible in the trace log; if Apple's SwiftUI infrastructure uses
-    //   a different naming convention the filter predicate can be adjusted there.
+    //   <<CHICKEN-TRACKS>> configuration.name matching replaced with session-count
+    //   identification (v1.7803).  Root cause: SwiftUI on iPadOS does NOT populate
+    //   UISceneConfiguration.name unless UISceneConfigurations are explicitly
+    //   declared in Info.plist.  Without that plist entry every session reports
+    //   configuration.name == nil, so the "vma-window-2" string predicate never
+    //   matched and requestSceneSessionDestruction was silently never called.
+    //
+    //   New strategy: the primary window (vma-window-1) is always the FIRST session
+    //   created and always present.  Any ADDITIONAL sessions beyond the first are
+    //   secondary windows.  We destroy all sessions except the one whose persistent
+    //   identifier sorts first (earliest-created), which is the primary.  If only
+    //   one session exists there is nothing to destroy.
     // -------------------------------------------------------------------------
 
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged "main
+    // actor-isolated default value in a nonisolated context" (the UIApplication.shared default
+    // parameter) plus the same UISceneSession property-isolation cluster as the method above.
+    // Marked @MainActor — its only call sites (applicationDidEnterBackground(_:), a
+    // UIApplicationDelegate callback, and its own doc-comment reference) are main-thread-guaranteed.
+    @MainActor
     public func requestSceneSessionDestructionForWindow2(_ uiApplication:UIApplication = UIApplication.shared)
     {
 
@@ -5763,36 +5842,47 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication.openSessions' has [\(uiApplication.openSessions.count)] session(s)...")
 
-        // Log all open sessions for diagnostics — verify configuration.name values here...
+        // Log all open sessions for diagnostics...
 
-        for (iIdx, session) in uiApplication.openSessions.enumerated()
+        let sortedSessions:[UISceneSession] = uiApplication.openSessions.sorted
+        { $0.persistentIdentifier < $1.persistentIdentifier }
+
+        for (iIdx, session) in sortedSessions.enumerated()
         {
-            appLogMsg("\(sCurrMethodDisp) openSession #(\(iIdx)): 'persistentIdentifier' is [\(session.persistentIdentifier)] - 'configuration.name' is [\(session.configuration.name)] - 'role' is [\(session.role.rawValue)]...")
+            appLogMsg("\(sCurrMethodDisp) sortedSession #(\(iIdx)): 'persistentIdentifier' is [\(session.persistentIdentifier)] - 'configuration.name' is [\(session.configuration.name ?? "nil")] - 'role' is [\(session.role.rawValue)]...")
         }
 
-        // Locate the 'vma-window-2' session by configuration name...
+        // Guard: if only one session exists, nothing to destroy...
 
-        let targetSession:UISceneSession? = uiApplication.openSessions.first
-        { session in
-            session.configuration.name == "vma-window-2"
+        if (sortedSessions.count <= 1)
+        {
+            appLogMsg("\(sCurrMethodDisp) <Window2> Only (\(sortedSessions.count)) session(s) present - no secondary session to destroy...")
+            appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+            return
         }
 
-        if let targetSession
-        {
-            appLogMsg("\(sCurrMethodDisp) <Window2> Found 'vma-window-2' session [\(targetSession.persistentIdentifier)] - requesting destruction...")
+        // The first (lowest persistentIdentifier) session is the primary window.
+        // Destroy all others — they are secondary windows that should not be
+        // restored without authentication.
 
-            uiApplication.requestSceneSessionDestruction(targetSession,
+        let primarySession:UISceneSession      = sortedSessions[0]
+        let secondarySessions:[UISceneSession] = Array(sortedSessions.dropFirst())
+
+        appLogMsg("\(sCurrMethodDisp) <Window2> Primary session is [\(primarySession.persistentIdentifier)] - destroying (\(secondarySessions.count)) secondary session(s)...")
+
+        for (iIdx, session) in secondarySessions.enumerated()
+        {
+            appLogMsg("\(sCurrMethodDisp) <Window2> Requesting destruction of secondary session #(\(iIdx)) [\(session.persistentIdentifier)]...")
+
+            uiApplication.requestSceneSessionDestruction(session,
                                                          options:nil,
                                                          errorHandler:
             { error in
-                appLogMsg("\(sCurrMethodDisp) <Window2> Scene session destruction error: [\(error.localizedDescription)] - Warning!")
+                appLogMsg("\(sCurrMethodDisp) <Window2> Scene session destruction error for [\(session.persistentIdentifier)]: [\(error.localizedDescription)] - Warning!")
             })
 
-            appLogMsg("\(sCurrMethodDisp) <Window2> Requested destruction of 'vma-window-2' session [\(targetSession.persistentIdentifier)]...")
-        }
-        else
-        {
-            appLogMsg("\(sCurrMethodDisp) <Window2> 'vma-window-2' session NOT found in openSessions - no action needed...")
+            appLogMsg("\(sCurrMethodDisp) <Window2> Requested destruction of secondary session #(\(iIdx)) [\(session.persistentIdentifier)]...")
         }
 
         // Exit:
@@ -5802,6 +5892,41 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         return
 
     }   // End of public func requestSceneSessionDestructionForWindow2(_:).
+
+    // -------------------------------------------------------------------------
+    // appDelegateVisitorConfigurationForConnecting — WITHDRAWN (v1.7805)
+    //
+    // <<CHICKEN-TRACKS>> This entire approach was incorrect and caused the App
+    // to terminate on every launch (v1.7803-v1.7804).
+    //
+    // Root cause of the approach failure:
+    //   The session-count guard (iOpenSessionCount >= 1) fires for the FIRST
+    //   configurationForConnecting call as well as the second, because iOS
+    //   already has a persisted session in openSessions before either window
+    //   is constructed.  This caused the PRIMARY window's session to be
+    //   scheduled for destruction, which made iOS tear down the entire app
+    //   during connection setup.  Every launch was fatal.
+    //
+    //   Additionally, requestSceneSessionDestruction called during the
+    //   configurationForConnecting call chain (even async) is inherently
+    //   unsafe — iOS is mid-construction of the scene graph and destruction
+    //   requests interfere with that process.
+    //
+    // The correct fix is in AppWindow2GateView.onAppear:
+    //   When the gate view appears with bIsUserLoggedIn == false, it IS the
+    //   secondary window by definition.  It retrieves its own UIWindowScene
+    //   from connectedScenes and calls requestSceneSessionDestruction on its
+    //   own session directly.  This is safe because the scene is fully
+    //   constructed by the time onAppear fires, and destroying your own
+    //   session from within a live scene is an iOS-supported operation.
+    //   See AppWindow2GateView.destroyOwnSceneSession().
+    //
+    // The shell method in JmUIAppDelegate.swift is also withdrawn — see the
+    // <<CHICKEN-TRACKS>> comment there.
+    // -------------------------------------------------------------------------
+
+    //  <<STUB v1>> appDelegateVisitorConfigurationForConnecting — permanently withdrawn.
+    //  Do NOT re-implement here.  See AppWindow2GateView.destroyOwnSceneSession().
 
     @objc public func appDelegateVisitorApplication(_ application:UIApplication, open urls:[URL])
     {

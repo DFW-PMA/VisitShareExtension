@@ -2,7 +2,19 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.6801...
+//  AppGlobalInfo.swift - v1.7201...
+//  Updated by Daryl Cox on 06/24/2026. (Added ENABLE_APP_CORELOCATIONCLOUDSUPPORT).
+//  Updated by Daryl Cox on 06/23/2026. Removed ALL 'ClassSingleton' references
+//  Updated by Daryl Cox on 06/19/2026. (Swift 6 migration, Section 12 — SENDABLE: ClassSingleton.appGlobalInfo
+//                                        and sAppVersionBuild changed 'var' -> 'let'; ACTOR-ISOLATION: UIDevice/
+//                                        UIScreen/UIApplication reads in init(), updateUIDeviceOrientation(),
+//                                        and checkAppInForegroundOrBackground() wrapped in
+//                                        MainActor.assumeIsolated; see <<CHICKEN-TRACKS>> notes at each site).
+//  Updated by Daryl Cox on 06/19/2026. (Swift 6 migration, Section 12 — nonisolated(unsafe) added to
+//                                        'jmAppGlobalInfoDelegateVisitor' and
+//                                        'listAppGlobalInfoPreXCGLoggerMessages'; see <<CHICKEN-TRACKS>>
+//                                        notes at each declaration).
+//  Updated by Daryl Cox on 06/09/2026. (Added INSTANTIATE_VV_SCREENCAPTURE_OVERLAY).
 //  Updated by Daryl Cox on 05/26/2026. (Added various fields for DivorcePack (Claude) additions).
 //  Updated by Daryl Cox on 05/11/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO6).
 //  Updated by Daryl Cox on 04/27/2026. (Added UIScene.willDeactivateNotification message capture).
@@ -51,15 +63,25 @@ public func appLogMsg(_ sMessage:String)
 
     // App 'delegate' Visitor:
 
-           public var jmAppGlobalInfoDelegateVisitor:JmAppDelegateVisitor? = nil
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged SENDABLE
+    // ("nonisolated global shared mutable state"). Marked nonisolated(unsafe) rather than @MainActor
+    // because @MainActor-isolating this would transitively isolate appLogMsg()/appLogMsgWithVisitor(),
+    // which is called ~1,706 times across 35 of ~45 source files, including non-main-actor contexts
+    // (delegate callbacks, completion handlers) — that cascade is the real risk, not this declaration.
+    // Set exactly once at startup via setJmAppDelegateVisitorInstance(); read-only after that.
+           public nonisolated(unsafe) var jmAppGlobalInfoDelegateVisitor:JmAppDelegateVisitor? = nil
                                                                            // 'jmAppDelegateVisitor' MUST remain declared this way
-                                                                           // as having it reference the 'shared' instance of 
+                                                                           // as having it reference the 'shared' instance of
                                                                            // JmAppDelegateVisitor causes a circular reference
                                                                            // between the 'init()' methods of the 2 classes...
 
     // App <global> Message(s) 'stack' cached before XCGLogger is available:
 
-           public var listAppGlobalInfoPreXCGLoggerMessages:[String]       = [String]()
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged SENDABLE, same
+    // reasoning as 'jmAppGlobalInfoDelegateVisitor' above. This is a boot-time-only "cart and horse"
+    // cache valve: messages append here only before the XCGLogger/Visitor route is up; once
+    // setJmAppDelegateVisitorInstance() drains it into the real log, it is never touched again.
+           public nonisolated(unsafe) var listAppGlobalInfoPreXCGLoggerMessages:[String]       = [String]()
 
 @inlinable
 public func appLogMsgViaGlobalCache(_ sMessage:String) 
@@ -196,18 +218,30 @@ extension EnvironmentValues
 public class AppGlobalInfo:NSObject
 {
     
-    struct ClassSingleton
-    {
-        static var appGlobalInfo:AppGlobalInfo                           = AppGlobalInfo()
-    }
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged SENDABLE
+    // ("nonisolated global shared mutable state"). Changed 'var' -> 'let': confirmed via grep that
+    // this is never reassigned anywhere in the codebase (classic lazy-singleton write-once pattern),
+    // so 'let' is the semantically honest fix, not a workaround. Only ~14 call sites reference this
+    // singleton directly, so this is a low-blast-radius change.
+    // <<CHICKEN-TRACKS>> Swift 6 migration follow-up — 'let' alone wasn't sufficient; the compiler
+    // separately flags AppGlobalInfo itself as non-Sendable ("may have shared mutable state"), since
+    // the class has internal 'var' properties. Added nonisolated(unsafe) rather than @MainActor to
+    // avoid isolating the whole class (and by extension every one of AppGlobalInfo's ~18 consuming
+    // files) — same reasoning as the boot-cache globals above: trusted, low-call-site singleton.
+//  struct ClassSingleton
+//  {
+//      nonisolated(unsafe) static let appGlobalInfo:AppGlobalInfo       = AppGlobalInfo()
+//  }
+        nonisolated(unsafe) static let appGlobalInfo:AppGlobalInfo       = AppGlobalInfo()
     
     // Objective-C accessor for singleton (computed property):
-    //     - Swift code continues to use: AppGlobalInfo.ClassSingleton.appGlobalInfo
+    //     - Swift code continues to use: AppGlobalInfo.appGlobalInfo
     //     - Objective-C code uses:       [AppGlobalInfo shared] or AppGlobalInfo.shared...
 
     @objc public static var shared: AppGlobalInfo
     {
-        return ClassSingleton.appGlobalInfo
+        return appGlobalInfo
+    //  return ClassSingleton.appGlobalInfo
     }
 
     static let sGlobalInfoAppId:String                                   = AppGlobalInfoConfig.sGlobalInfoAppId
@@ -251,6 +285,7 @@ public class AppGlobalInfo:NSObject
     //                              ENABLE_APP_IAP_CAPABILITY
     //                              ENABLE_APP_ALARM_CAPABILITY
     //                              ENABLE_APP_LEGACY_CORELOC2
+    //                              ENABLE_APP_CORELOCATIONCLOUDSUPPORT
     //                              INSTANTIATE_APP_VV
     //                              INSTANTIATE_APP_VV_UIKIT_ALERTS
     //                              INSTANTIATE_APP_VMA
@@ -346,6 +381,15 @@ public class AppGlobalInfo:NSObject
     static let isEnabledAppLegacyCoreLoc2:Bool                           =
     {
     #if ENABLE_APP_LEGACY_CORELOC2
+        return true
+    #else
+        return false
+    #endif
+    }()
+
+    static let isEnabledAppCoreLocCloudSupport:Bool                      =
+    {
+    #if ENABLE_APP_CORELOCATIONCLOUDSUPPORT
         return true
     #else
         return false
@@ -568,6 +612,15 @@ public class AppGlobalInfo:NSObject
     #endif
     }()
 
+    static let bInstantiateVVScreenCaptureOverlay:Bool                   =
+    {
+    #if INSTANTIATE_VV_SCREENCAPTURE_OVERLAY
+        return true
+    #else
+        return false
+    #endif
+    }()
+
     // Various 'app' component controls:
 
     static let eUseLatitudeLongitudePrecision:CLLocationPrecision        = AppGlobalInfoConfig.eUseLatitudeLongitudePrecision
@@ -612,7 +665,9 @@ public class AppGlobalInfo:NSObject
     static let sAppBundleId:String                                       = "net.justmacapps.divorcepack"
     static let sAppVersion:String                                        = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     static let sAppBuild:String                                          = Bundle.main.infoDictionary?["CFBundleVersion"]            as? String ?? "1"
-    static var sAppVersionBuild:String                                   = "\(sAppVersion) (\(sAppBuild))"
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged SENDABLE.
+    // Changed 'var' -> 'let': confirmed via grep this is never reassigned anywhere in the codebase.
+    static let sAppVersionBuild:String                                   = "\(sAppVersion) (\(sAppBuild))"
 
     // ----------------------------------------------------------
     // Feature flags (forwarded from AppGlobalInfoConfig)
@@ -906,59 +961,76 @@ public class AppGlobalInfo:NSObject
         self.iGlobalDeviceType                      = AppGlobalDeviceType.appGlobalDeviceUndefined
         self.sGlobalDeviceType                      = "-unknown-"
 
-        if UIDevice.current.localizedModel == "Mac" 
+        // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — UIDevice.current /
+        // UIScreen.main are @MainActor-isolated APIs; this init() runs nonisolated by default. Wrapped
+        // in MainActor.assumeIsolated rather than isolating the whole class, since AppGlobalInfo's
+        // singleton is constructed once during app launch on the main thread (matches the existing
+        // assumeIsolated idiom already used in JmAppSyncUpdatesOnMainThread.swift).
+        // <<CHICKEN-TRACKS>> Swift 6 migration follow-up — flagged "sending 'self' risks causing data
+        // races" (self, captured into this @MainActor closure from init()'s nonisolated context, is
+        // non-Sendable). Whole-class @MainActor isolation was considered and rejected — several other
+        // classes (CLRequestGoodItem, JmAppDelegateVisitor, AppSwiftDataManager) hold AppGlobalInfo as
+        // a stored property, so isolating AppGlobalInfo would cascade @MainActor onto those too,
+        // including a SwiftData model (CLRequestGoodItem) — exactly the kind of cascade this session
+        // has been avoiding. Rebinding self to a nonisolated(unsafe) local sidesteps the diagnostic
+        // without isolating anything: safe because init() is single-threaded by construction.
+        nonisolated(unsafe) let unsafeSelf = self
+        MainActor.assumeIsolated
         {
-            self.iGlobalDeviceType                  = AppGlobalDeviceType.appGlobalDeviceMac
-            self.sGlobalDeviceType                  = "Mac"
-            self.bGlobalDeviceIsMac                 = true
-        } 
-        else if UIDevice.current.localizedModel == "iPad" 
+        if UIDevice.current.localizedModel == "Mac"
         {
-            self.iGlobalDeviceType                  = AppGlobalDeviceType.appGlobalDeviceIPad
-            self.sGlobalDeviceType                  = "iPad"
-            self.bGlobalDeviceIsIPad                = true
+            unsafeSelf.iGlobalDeviceType                  = AppGlobalDeviceType.appGlobalDeviceMac
+            unsafeSelf.sGlobalDeviceType                  = "Mac"
+            unsafeSelf.bGlobalDeviceIsMac                 = true
         }
-        else if UIDevice.current.localizedModel == "iPhone" 
+        else if UIDevice.current.localizedModel == "iPad"
         {
-            self.iGlobalDeviceType                  = AppGlobalDeviceType.appGlobalDeviceIPhone
-            self.sGlobalDeviceType                  = "iPhone"
-            self.bGlobalDeviceIsIPhone              = true
+            unsafeSelf.iGlobalDeviceType                  = AppGlobalDeviceType.appGlobalDeviceIPad
+            unsafeSelf.sGlobalDeviceType                  = "iPad"
+            unsafeSelf.bGlobalDeviceIsIPad                = true
         }
-        else if UIDevice.current.localizedModel == "AppleWatch" 
+        else if UIDevice.current.localizedModel == "iPhone"
         {
-            self.iGlobalDeviceType                  = AppGlobalDeviceType.appGlobalDeviceAppleWatch
-            self.sGlobalDeviceType                  = "AppleWatch"
-            self.bGlobalDeviceIsAppleWatch          = true
+            unsafeSelf.iGlobalDeviceType                  = AppGlobalDeviceType.appGlobalDeviceIPhone
+            unsafeSelf.sGlobalDeviceType                  = "iPhone"
+            unsafeSelf.bGlobalDeviceIsIPhone              = true
+        }
+        else if UIDevice.current.localizedModel == "AppleWatch"
+        {
+            unsafeSelf.iGlobalDeviceType                  = AppGlobalDeviceType.appGlobalDeviceAppleWatch
+            unsafeSelf.sGlobalDeviceType                  = "AppleWatch"
+            unsafeSelf.bGlobalDeviceIsAppleWatch          = true
         }
 
-        if (self.iGlobalDeviceType == AppGlobalDeviceType.appGlobalDeviceIPhone)
+        if (unsafeSelf.iGlobalDeviceType == AppGlobalDeviceType.appGlobalDeviceIPhone)
         {
-            self.cgfGlobalDeviceImageSizeForQR      = 128
+            unsafeSelf.cgfGlobalDeviceImageSizeForQR      = 128
         }
         else
         {
-            self.cgfGlobalDeviceImageSizeForQR      = 196
+            unsafeSelf.cgfGlobalDeviceImageSizeForQR      = 196
         }
 
-        self.sGlobalProcessInfoSystemName           = "\(self.sGlobalDeviceType) v\(self.sGlobalProcessInfoOSVersion.majorVersion).\(self.sGlobalProcessInfoOSVersion.minorVersion).\(self.sGlobalProcessInfoOSVersion.patchVersion)"
+        unsafeSelf.sGlobalDeviceName                      = UIDevice.current.name
+        unsafeSelf.sGlobalDeviceSystemName                = UIDevice.current.systemName
+        unsafeSelf.sGlobalDeviceSystemVersion             = UIDevice.current.systemVersion
+        unsafeSelf.sGlobalDeviceModel                     = UIDevice.current.model
+        unsafeSelf.sGlobalDeviceLocalizedModel            = UIDevice.current.localizedModel
 
-        self.sGlobalDeviceName                      = UIDevice.current.name
-        self.sGlobalDeviceSystemName                = UIDevice.current.systemName
-        self.sGlobalDeviceSystemVersion             = UIDevice.current.systemVersion
-        self.sGlobalDeviceModel                     = UIDevice.current.model
-        self.sGlobalDeviceLocalizedModel            = UIDevice.current.localizedModel
-
-        self.idiomGlobalDeviceUserInterfaceIdiom    = UIDevice.current.userInterfaceIdiom
-        self.iGlobalDeviceUserInterfaceIdiom        = ((idiomGlobalDeviceUserInterfaceIdiom?.rawValue ?? 0) as Int)
-        self.uuidGlobalDeviceIdForVendor            = UIDevice.current.identifierForVendor
-        self.fGlobalDeviceCurrentBatteryLevel       = UIDevice.current.batteryLevel
+        unsafeSelf.idiomGlobalDeviceUserInterfaceIdiom    = UIDevice.current.userInterfaceIdiom
+        unsafeSelf.iGlobalDeviceUserInterfaceIdiom        = ((unsafeSelf.idiomGlobalDeviceUserInterfaceIdiom?.rawValue ?? 0) as Int)
+        unsafeSelf.uuidGlobalDeviceIdForVendor            = UIDevice.current.identifierForVendor
+        unsafeSelf.fGlobalDeviceCurrentBatteryLevel       = UIDevice.current.batteryLevel
 
         if let screenSize = UIScreen.main.bounds as CGRect?
         {
-            self.fGlobalDeviceScreenSizeWidth       = Float(screenSize.width)
-            self.fGlobalDeviceScreenSizeHeight      = Float(screenSize.height)
-            self.iGlobalDeviceScreenSizeScale       = Int(UIScreen.main.scale)
+            unsafeSelf.fGlobalDeviceScreenSizeWidth       = Float(screenSize.width)
+            unsafeSelf.fGlobalDeviceScreenSizeHeight      = Float(screenSize.height)
+            unsafeSelf.iGlobalDeviceScreenSizeScale       = Int(UIScreen.main.scale)
         }
+        }   // End of MainActor.assumeIsolated { ... } (UIDevice/UIScreen reads).
+
+        self.sGlobalProcessInfoSystemName           = "\(self.sGlobalDeviceType) v\(self.sGlobalProcessInfoOSVersion.majorVersion).\(self.sGlobalProcessInfoOSVersion.minorVersion).\(self.sGlobalProcessInfoOSVersion.patchVersion)"
 
         // Get detailed CPU/chip information (iOS):
         
@@ -1194,33 +1266,42 @@ public class AppGlobalInfo:NSObject
         self.bGlobalDeviceOrientationIsFlat      = false
         self.bGlobalDeviceOrientationIsInvalid   = false
 
+        // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — UIDevice.current is
+        // @MainActor-isolated; this method runs nonisolated by default. Wrapped in MainActor.assumeIsolated
+        // (same idiom as the init() fix above) rather than isolating the whole class.
+        // <<CHICKEN-TRACKS>> Swift 6 migration follow-up — same "sending self" fix as init() above:
+        // rebind self to a nonisolated(unsafe) local rather than isolating the whole class.
+        nonisolated(unsafe) let unsafeSelf = self
+        MainActor.assumeIsolated
+        {
         switch(UIDevice.current.orientation)
         {
         case UIDeviceOrientation.portrait:
-            self.sGlobalDeviceOrientation            = "portrait"
-            self.bGlobalDeviceOrientationIsPortrait  = true
+            unsafeSelf.sGlobalDeviceOrientation            = "portrait"
+            unsafeSelf.bGlobalDeviceOrientationIsPortrait  = true
         case UIDeviceOrientation.portraitUpsideDown:
-            self.sGlobalDeviceOrientation            = "portraitUpsideDown"
-            self.bGlobalDeviceOrientationIsPortrait  = true
+            unsafeSelf.sGlobalDeviceOrientation            = "portraitUpsideDown"
+            unsafeSelf.bGlobalDeviceOrientationIsPortrait  = true
         case UIDeviceOrientation.landscapeLeft:
-            self.sGlobalDeviceOrientation            = "landscapeLeft"
-            self.bGlobalDeviceOrientationIsLandscape = true
+            unsafeSelf.sGlobalDeviceOrientation            = "landscapeLeft"
+            unsafeSelf.bGlobalDeviceOrientationIsLandscape = true
         case UIDeviceOrientation.landscapeRight:
-            self.sGlobalDeviceOrientation            = "landscapeLeft"
-            self.bGlobalDeviceOrientationIsLandscape = true
+            unsafeSelf.sGlobalDeviceOrientation            = "landscapeLeft"
+            unsafeSelf.bGlobalDeviceOrientationIsLandscape = true
         case UIDeviceOrientation.faceUp:
-            self.sGlobalDeviceOrientation            = "faceUp"
-            self.bGlobalDeviceOrientationIsFlat      = true
+            unsafeSelf.sGlobalDeviceOrientation            = "faceUp"
+            unsafeSelf.bGlobalDeviceOrientationIsFlat      = true
         case UIDeviceOrientation.faceDown:
-            self.sGlobalDeviceOrientation            = "faceDown"
-            self.bGlobalDeviceOrientationIsFlat      = true
+            unsafeSelf.sGlobalDeviceOrientation            = "faceDown"
+            unsafeSelf.bGlobalDeviceOrientationIsFlat      = true
         case UIDeviceOrientation.unknown:
-            self.sGlobalDeviceOrientation            = "unknown"
-            self.bGlobalDeviceOrientationIsInvalid   = true
+            unsafeSelf.sGlobalDeviceOrientation            = "unknown"
+            unsafeSelf.bGlobalDeviceOrientationIsInvalid   = true
         default:
-            self.sGlobalDeviceOrientation            = "unknown"
-            self.bGlobalDeviceOrientationIsInvalid   = true
+            unsafeSelf.sGlobalDeviceOrientation            = "unknown"
+            unsafeSelf.bGlobalDeviceOrientationIsInvalid   = true
         }
+        }   // End of MainActor.assumeIsolated { ... } (UIDevice.current.orientation read).
     #endif
 
         // Exit:
@@ -1280,6 +1361,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppIAPCapability' is [\(String(describing: AppGlobalInfo.isEnabledAppIAPCapability))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppAlarmCapability' is [\(String(describing: AppGlobalInfo.isEnabledAppAlarmCapability))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppLegacyCoreLoc2' is [\(String(describing: AppGlobalInfo.isEnabledAppLegacyCoreLoc2))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppCoreLocCloudSupport' is [\(String(describing: AppGlobalInfo.isEnabledAppCoreLocCloudSupport))]...")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVV' is [\(String(describing: AppGlobalInfo.bInstantiateAppVV))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVVUIKitAlerts' is [\(String(describing: AppGlobalInfo.bInstantiateAppVVUIKitAlerts))]...")
@@ -1305,6 +1387,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppBigTestTracking' is [\(String(describing: AppGlobalInfo.bInstantiateAppBigTestTracking))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppGoogleAdMobMobileAds' is [\(String(describing: AppGlobalInfo.bInstantiateAppGoogleAdMobMobileAds))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppGlobalMemoryOverlay' is [\(String(describing: AppGlobalInfo.bInstantiateAppGlobalMemoryOverlay))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateVVScreenCaptureOverlay' is [\(String(describing: AppGlobalInfo.bInstantiateVVScreenCaptureOverlay))]...")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.eUseLatitudeLongitudePrecision' is [\(String(describing: AppGlobalInfo.eUseLatitudeLongitudePrecision))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bAppIsADrcBuildDistribution' is [\(String(describing: AppGlobalInfo.bAppIsADrcBuildDistribution))]...")
@@ -1430,7 +1513,7 @@ public class AppGlobalInfo:NSObject
 
         appLogMsg("\(sCurrMethodDisp) ========== AppGlobalInfoConfigIAP 'settings' ==========")
 
-        let appGlobalInfoConfigIAP:AppGlobalInfoConfigIAP = AppGlobalInfoConfigIAP.ClassSingleton.appGlobalInfoConfigIAP
+        let appGlobalInfoConfigIAP:AppGlobalInfoConfigIAP = AppGlobalInfoConfigIAP.appGlobalInfoConfigIAP
 
         appGlobalInfoConfigIAP.displayAppGlobalInfoConfigIAPSettings()
     #endif
@@ -1779,7 +1862,11 @@ public class AppGlobalInfo:NSObject
     #else
         // Main app code
 
-        let stateForegroundBackground = UIApplication.shared.applicationState
+        // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — UIApplication.shared
+        // is @MainActor-isolated; this @objc method runs nonisolated by default but is only ever called
+        // from app/scene lifecycle delegate methods, which UIKit guarantees deliver on the main thread.
+        // Wrapped in MainActor.assumeIsolated rather than isolating the whole class.
+        let stateForegroundBackground = MainActor.assumeIsolated { UIApplication.shared.applicationState }
     #endif
 
         switch stateForegroundBackground 

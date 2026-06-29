@@ -6,25 +6,27 @@
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 #if INSTANTIATE_APP_SWIFTDATAMANAGER || INSTANTIATE_APP_JMSWIFTDATAMANAGER
 import SwiftData
 #endif
 
+@JmEntityInfo(vers:"v1.2403")
 @available(iOS 17.0, *)
 struct AppAboutView:View
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "AppAboutView"
-        static let sClsVers      = "v1.2403"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppAboutView"
+        //  static let sClsVers      = "v1.2403"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = true
+    //  }
 
     // App Data field(s):
 
@@ -34,12 +36,12 @@ struct AppAboutView:View
     @Environment(\.appGlobalDeviceType)     var appGlobalDeviceType
     @Environment(\.supportsMultipleWindows) var supportsMultipleWindows
 
-                    var appGlobalInfo:AppGlobalInfo               = AppGlobalInfo.ClassSingleton.appGlobalInfo
+                    var appGlobalInfo:AppGlobalInfo               = AppGlobalInfo.appGlobalInfo
 #if INSTANTIATE_APP_SWIFTDATAMANAGER
     @ObservedObject var appSwiftDataManager:AppSwiftDataManager   = AppSwiftDataManager.appSwiftDataManager
 #endif
 #if USE_APP_LOGGING_BY_VISITOR || INSTANTIATE_APP_JMSWIFTDATAMANAGER
-                    var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.ClassSingleton.appDelegateVisitor
+                    var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.appDelegateVisitor
 #endif
 
 #if os(macOS)
@@ -51,8 +53,9 @@ struct AppAboutView:View
     init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -320,8 +323,9 @@ struct AppAboutView:View
     private func finishAppInitialization()
     {
 
-        let sCurrMethod:String     = #function;
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function;
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -453,8 +457,9 @@ struct AppAboutView:View
     private func copyUserDefaultsFilespecToClipboard()
     {
         
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked - for text of [\(self.appGlobalInfo.sAppUserDefaultsFileLocation)]...")
         

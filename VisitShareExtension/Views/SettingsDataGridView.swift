@@ -6,6 +6,7 @@
 //  v1.0201 - User-controlled column resizing preference
 //
 
+import JmEntityInfo
 import Foundation
 import SwiftUI
 
@@ -46,18 +47,19 @@ enum CSVDelimiterType:String, CaseIterable, Identifiable
     }
 }
 
+@JmEntityInfo(vers:"v1.1001")
 struct SettingsDataGridView:View
 {
     
-    struct ClassInfo 
-    {
-        static let sClsId        = "SettingsDataGridView"
-        static let sClsVers      = "v1.0901"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "SettingsDataGridView"
+        //  static let sClsVers      = "v1.0901"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // MARK: - Properties...
     
@@ -73,7 +75,7 @@ struct SettingsDataGridView:View
 
     // App Data field(s):
 
-                            var appGlobalInfo:AppGlobalInfo       = AppGlobalInfo.ClassSingleton.appGlobalInfo
+                            var appGlobalInfo:AppGlobalInfo       = AppGlobalInfo.appGlobalInfo
                             var helpBasicLoader:HelpBasicLoader   = HelpBasicLoader()
 
     @AppStorage("enableColumnResizing") 
@@ -106,8 +108,9 @@ struct SettingsDataGridView:View
     init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -262,6 +265,12 @@ struct SettingsDataGridView:View
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
+        // <<CHICKEN-TRACKS>> (2026-06-24) — 'ToolbarItem(placement:.primaryAction)' is a title-bar
+        // placement; macOS '.sheet()' panels have no title bar, so this toolbar (and its Dismiss
+        // button) never rendered there, leaving no way to dismiss the sheet. Restricted to iOS;
+        // macOS gets a plain in-body overlay Dismiss button below instead (same fix already
+        // applied to DeveloperUnlockView.swift / DeveloperFeaturesView.swift).
+        #if os(iOS)
             .toolbar
             {
             //  ToolbarItem(placement:.navigationBarLeading) 
@@ -365,8 +374,25 @@ struct SettingsDataGridView:View
                     .padding()
                 }
             }
-          
-            Text("")            
+        #endif
+        #if os(macOS)
+            .overlay(alignment:.topTrailing)
+            {
+                Button { self.presentationMode.wrappedValue.dismiss() }
+                label:
+                {
+                    VStack(alignment:.center)
+                    {
+                        Label("", systemImage:"xmark.circle").imageScale(.medium)
+                        Text("Dismiss").font(.caption2)
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding()
+            }
+        #endif
+
+            Text("")
                 .hidden()
                 .onAppear(
                     perform:
@@ -382,8 +408,9 @@ struct SettingsDataGridView:View
     private func finishAppInitialization()
     {
 
-        let sCurrMethod:String     = #function;
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function;
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 

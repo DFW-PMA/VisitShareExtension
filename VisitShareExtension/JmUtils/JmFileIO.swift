@@ -6,22 +6,24 @@
 //  Copyright (c) 2015-2026 JustMacApps. All rights reserved.
 //
 
+import JmEntityInfo
 import Foundation
 
 // Implementation class to handle File I/O (Input/Output).
 
+@JmEntityInfo(vers:"v1.0305")
 public class JmFileIO
 {
 
-    struct ClassInfo
-    {
-        static let sClsId        = "JmFileIO"
-        static let sClsVers      = "v1.0305"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2015-2026. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = false
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JmFileIO"
+        //  static let sClsVers      = "v1.0305"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2015-2026. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = false
+    //  }
 
     class public func toString()->String
     {

@@ -5,22 +5,24 @@
 //  Data model for transferring shared content between the extension and target apps.
 //
 
+import JmEntityInfo
 import Foundation
 
 // Data structure for passing shared content to target apps...
 
+@JmEntityInfo(vers:"v1.0701")
 struct VVMessageHandoff:Codable, Equatable
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "VVMessageHandoff"
-        static let sClsVers      = "v1.0701"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2025. All Rights Reserved."
-        static let bClsTrace     = false
-        static let bClsFileLog   = false
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "VVMessageHandoff"
+        //  static let sClsVers      = "v1.0701"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2025. All Rights Reserved."
+        //  static let bClsTrace     = false
+        //  static let bClsFileLog   = false
+    //  }
     
     // MARK: - Properties...
 
@@ -51,8 +53,9 @@ struct VVMessageHandoff:Codable, Equatable
          metadata:[String:String]? = nil)
     {
 
-        let sCurrMethod:String     = #function;
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function;
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked...")
         
@@ -77,8 +80,9 @@ struct VVMessageHandoff:Codable, Equatable
     func write() throws
     {
 
-        let sCurrMethod:String     = #function;
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function;
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked...")
         
@@ -109,8 +113,9 @@ struct VVMessageHandoff:Codable, Equatable
     static func read(from fileURL:URL) throws ->VVMessageHandoff
     {
 
-        let sCurrMethod:String     = #function;
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function;
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked - 'fileURL' is [\(fileURL)]...")
         
@@ -125,8 +130,9 @@ struct VVMessageHandoff:Codable, Equatable
     static func read(for targetApp:VVSharedTargetApps, requestID:UUID) throws ->VVMessageHandoff
     {
 
-        let sCurrMethod:String     = #function;
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function;
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked - 'targetApp' is [\(targetApp.displayName)] - 'requestID' is [\(requestID)]...")
         
@@ -147,8 +153,9 @@ struct VVMessageHandoff:Codable, Equatable
     func delete() 
     {
 
-        let sCurrMethod:String     = #function;
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function;
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked...")
         
@@ -169,8 +176,9 @@ struct VVMessageHandoff:Codable, Equatable
     static func delete(for targetApp:VVSharedTargetApps, requestID:UUID)
     {
 
-        let sCurrMethod:String     = #function;
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function;
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         appLogMsg("\(sCurrMethodDisp) <SceneDelegateURL> <PendingHandoffs> Invoked...")
         

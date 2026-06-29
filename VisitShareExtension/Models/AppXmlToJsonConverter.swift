@@ -6,24 +6,26 @@
 //  v1.0300 - Fallback for non-spreadsheet XML files
 //
 
+import JmEntityInfo
 import Foundation
 import XMLCoder
 
 // Converter for XML to JSON fallback display
 // Used when XML file is not a spreadsheet or parsing returns empty results
 
+@JmEntityInfo(vers:"v1.0201")
 class AppXmlToJsonConverter
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "AppXmlToJsonConverter"
-        static let sClsVers      = "v1.0201"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "AppXmlToJsonConverter"
+        //  static let sClsVers      = "v1.0201"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // MARK: - Properties...
     
@@ -35,8 +37,9 @@ class AppXmlToJsonConverter
     init() 
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
         
@@ -68,8 +71,9 @@ class AppXmlToJsonConverter
         //     - Parameter 'xmlData': The raw XML data
         //     - Returns:             Dictionary representation if successful, nil otherwise
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'xmlData' is [\(xmlData)]...")
         appLogMsg("\(sCurrMethodDisp) Intermediate - Attempting to convert XML (Data) to dictionary...")
@@ -115,8 +119,9 @@ class AppXmlToJsonConverter
         //     - Parameter 'xmlData': The raw XML data
         //     - Returns:             Formatted JSON string if successful, nil otherwise
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'xmlData' is [\(xmlData)]...")
         appLogMsg("\(sCurrMethodDisp) Intermediate - Converting XML (Data) to JSON string...")
@@ -161,8 +166,9 @@ class AppXmlToJsonConverter
         //     - Parameter 'xmlData': The raw XML data
         //     - Returns:             Array of JsonDisplayItem for UI presentation
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'xmlData' is [\(xmlData)]...")
         appLogMsg("\(sCurrMethodDisp) Intermediate - Getting display items from XML (Data)...")
@@ -190,18 +196,19 @@ class AppXmlToJsonConverter
 // Generic structure to decode any XML element
 // Uses dynamic member lookup to handle arbitrary XML structures
 
+@JmEntityInfo(vers:"v1.0101")
 private struct GenericXMLElement:Codable
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "GenericXMLElement"
-        static let sClsVers      = "v1.0101"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "GenericXMLElement"
+        //  static let sClsVers      = "v1.0101"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
 
     // MARK: - Properties...
     
@@ -217,8 +224,9 @@ private struct GenericXMLElement:Codable
     init()
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -239,8 +247,9 @@ private struct GenericXMLElement:Codable
     init(from decoder:Decoder) throws
     {
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'decoder' is [\(decoder)]...")
 
@@ -316,8 +325,9 @@ private struct GenericXMLElement:Codable
 
         // Converts the generic XML element to a dictionary...
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -407,18 +417,19 @@ private struct DynamicCodingKey:CodingKey
 
 // Item for displaying JSON data in SwiftUI lists...
 
+@JmEntityInfo(vers:"v1.0201")
 struct JsonDisplayItem:Identifiable, Hashable
 {
     
-    struct ClassInfo
-    {
-        static let sClsId        = "JsonDisplayItem"
-        static let sClsVers      = "v1.0201"
-        static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        static let bClsTrace     = true
-        static let bClsFileLog   = true
-    }
+    //  struct ClassInfo
+    //  {
+        //  static let sClsId        = "JsonDisplayItem"
+        //  static let sClsVers      = "v1.0201"
+        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
+        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
+        //  static let bClsTrace     = true
+        //  static let bClsFileLog   = true
+    //  }
     
     // MARK: - Properties...
     
@@ -437,8 +448,9 @@ struct JsonDisplayItem:Identifiable, Hashable
 
         // Creates display items from a dictionary...
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'dict' is [\(dict)] - 'prefix' is [\(prefix)]...")
 
@@ -467,8 +479,9 @@ struct JsonDisplayItem:Identifiable, Hashable
 
         // Creates a display item from a value (handles nested structures)
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'key' is [\(key)] - 'value' is [\(value)] - 'fullKey' is [\(fullKey)]...")
 
@@ -504,8 +517,9 @@ struct JsonDisplayItem:Identifiable, Hashable
 
         // Creates display items from an array...
 
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        //  let sCurrMethod:String     = #function
+        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked - parameter 'array' is [\(array)] - 'prefix' is [\(prefix)]...")
 
