@@ -12,7 +12,7 @@ import UIKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-@JmEntityInfo(vers:"v1.0701")
+@JmEntityInfo(vers:"v1.0801")
 class ShareViewController:UIViewController
 {
     
@@ -131,25 +131,31 @@ class ShareViewController:UIViewController
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
-        provider.loadItem(forTypeIdentifier:UTType.plainText.identifier, options:nil) 
+        provider.loadItem(forTypeIdentifier:UTType.plainText.identifier, options:nil)
         { [weak self] (item, error) in
+
+            // <<CHICKEN-TRACKS>> Swift 6: cast 'item' (NSSecureCoding?, not Sendable) to a Sendable
+            // String here, before crossing the DispatchQueue.main.async boundary - fixes "sending 'item'
+            // risks causing data races"
+            let sErrorDesc:String? = error?.localizedDescription
+            let sText:String?      = item as? String
 
             DispatchQueue.main.async
             {
-                if let error = error
+                if let sErrorDesc = sErrorDesc
                 {
-                    appLogMsg("\(sCurrMethodDisp) Failed to load text: [\(error.localizedDescription)] - Error!")
-                    self?.showError("Failed to load text: [\(error.localizedDescription)]...")
+                    appLogMsg("\(sCurrMethodDisp) Failed to load text: [\(sErrorDesc)] - Error!")
+                    self?.showError("Failed to load text: [\(sErrorDesc)]...")
 
                     return
                 }
-                
-                if let text = item as? String
+
+                if let text = sText
                 {
                     appLogMsg("\(sCurrMethodDisp) Extracted text: [\(text.prefix(50))]...")
                     self?.sharedText = text
                     self?.showPickerUI()
-                } 
+                }
                 else
                 {
                     appLogMsg("\(sCurrMethodDisp) Invalid text format - Error!")
@@ -172,25 +178,31 @@ class ShareViewController:UIViewController
         
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
-        provider.loadItem(forTypeIdentifier:UTType.url.identifier, options:nil) 
+        provider.loadItem(forTypeIdentifier:UTType.url.identifier, options:nil)
         { [weak self] (item, error) in
 
-            DispatchQueue.main.async 
+            // <<CHICKEN-TRACKS>> Swift 6: cast 'item' (NSSecureCoding?, not Sendable) to a Sendable
+            // URL here, before crossing the DispatchQueue.main.async boundary - fixes "sending 'item'
+            // risks causing data races"
+            let sErrorDesc:String? = error?.localizedDescription
+            let objUrl:URL?        = item as? URL
+
+            DispatchQueue.main.async
             {
-                if let error = error 
+                if let sErrorDesc = sErrorDesc
                 {
-                    appLogMsg("\(sCurrMethodDisp) Failed to load URL: [\(error.localizedDescription)] - Error!")
-                    self?.showError("Failed to load URL: [\(error.localizedDescription)]...")
+                    appLogMsg("\(sCurrMethodDisp) Failed to load URL: [\(sErrorDesc)] - Error!")
+                    self?.showError("Failed to load URL: [\(sErrorDesc)]...")
 
                     return
                 }
-                
-                if let url = item as? URL 
+
+                if let url = objUrl
                 {
                     appLogMsg("\(sCurrMethodDisp) Extracted URL: [\(url.absoluteString)]...")
                     self?.sharedText = url.absoluteString
                     self?.showPickerUI()
-                } 
+                }
                 else
                 {
                     appLogMsg("\(sCurrMethodDisp) Invalid URL format - Error!")

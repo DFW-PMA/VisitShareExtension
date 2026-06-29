@@ -18,20 +18,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		F03293632F1686C3002ACF91 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = F032934D2F1686C1002ACF91 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F03293542F1686C1002ACF91;
-			remoteInfo = VisitShareExtension;
-		};
-		F032936D2F1686C4002ACF91 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = F032934D2F1686C1002ACF91 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F03293542F1686C1002ACF91;
-			remoteInfo = VisitShareExtension;
-		};
 		F0FF3D242F17F60700B5B936 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F032934D2F1686C1002ACF91 /* Project object */;
@@ -71,8 +57,6 @@
 
 /* Begin PBXFileReference section */
 		F03293552F1686C1002ACF91 /* VisitShareExtension.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VisitShareExtension.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F03293622F1686C3002ACF91 /* VisitShareExtensionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VisitShareExtensionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F032936C2F1686C4002ACF91 /* VisitShareExtensionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VisitShareExtensionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F03293832F1687B8002ACF91 /* VisitShareExtensionAppEx.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VisitShareExtensionAppEx.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -112,16 +96,6 @@
 			path = VisitShareExtension;
 			sourceTree = "<group>";
 		};
-		F03293652F1686C3002ACF91 /* VisitShareExtensionTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = VisitShareExtensionTests;
-			sourceTree = "<group>";
-		};
-		F032936F2F1686C4002ACF91 /* VisitShareExtensionUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = VisitShareExtensionUITests;
-			sourceTree = "<group>";
-		};
 		F03293842F1687B8002ACF91 /* VisitShareExtensionAppEx */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -154,20 +128,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F032935F2F1686C3002ACF91 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F03293692F1686C4002ACF91 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		F03293802F1687B8002ACF91 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -184,8 +144,6 @@
 			children = (
 				F0A137C42F169A88008BCF87 /* Shared */,
 				F03293572F1686C1002ACF91 /* VisitShareExtension */,
-				F03293652F1686C3002ACF91 /* VisitShareExtensionTests */,
-				F032936F2F1686C4002ACF91 /* VisitShareExtensionUITests */,
 				F03293842F1687B8002ACF91 /* VisitShareExtensionAppEx */,
 				F0FF3D1F2F17F5E600B5B936 /* Frameworks */,
 				F03293562F1686C1002ACF91 /* Products */,
@@ -196,8 +154,6 @@
 			isa = PBXGroup;
 			children = (
 				F03293552F1686C1002ACF91 /* VisitShareExtension.app */,
-				F03293622F1686C3002ACF91 /* VisitShareExtensionTests.xctest */,
-				F032936C2F1686C4002ACF91 /* VisitShareExtensionUITests.xctest */,
 				F03293832F1687B8002ACF91 /* VisitShareExtensionAppEx.appex */,
 			);
 			name = Products;
@@ -245,52 +201,6 @@
 			productReference = F03293552F1686C1002ACF91 /* VisitShareExtension.app */;
 			productType = "com.apple.product-type.application";
 		};
-		F03293612F1686C3002ACF91 /* VisitShareExtensionTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F03293792F1686C4002ACF91 /* Build configuration list for PBXNativeTarget "VisitShareExtensionTests" */;
-			buildPhases = (
-				F032935E2F1686C3002ACF91 /* Sources */,
-				F032935F2F1686C3002ACF91 /* Frameworks */,
-				F03293602F1686C3002ACF91 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				F03293642F1686C3002ACF91 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				F03293652F1686C3002ACF91 /* VisitShareExtensionTests */,
-			);
-			name = VisitShareExtensionTests;
-			packageProductDependencies = (
-			);
-			productName = VisitShareExtensionTests;
-			productReference = F03293622F1686C3002ACF91 /* VisitShareExtensionTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		F032936B2F1686C4002ACF91 /* VisitShareExtensionUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F032937C2F1686C4002ACF91 /* Build configuration list for PBXNativeTarget "VisitShareExtensionUITests" */;
-			buildPhases = (
-				F03293682F1686C4002ACF91 /* Sources */,
-				F03293692F1686C4002ACF91 /* Frameworks */,
-				F032936A2F1686C4002ACF91 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				F032936E2F1686C4002ACF91 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				F032936F2F1686C4002ACF91 /* VisitShareExtensionUITests */,
-			);
-			name = VisitShareExtensionUITests;
-			packageProductDependencies = (
-			);
-			productName = VisitShareExtensionUITests;
-			productReference = F032936C2F1686C4002ACF91 /* VisitShareExtensionUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 		F03293822F1687B8002ACF91 /* VisitShareExtensionAppEx */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F032938F2F1687B8002ACF91 /* Build configuration list for PBXNativeTarget "VisitShareExtensionAppEx" */;
@@ -328,14 +238,6 @@
 					F03293542F1686C1002ACF91 = {
 						CreatedOnToolsVersion = 26.2;
 					};
-					F03293612F1686C3002ACF91 = {
-						CreatedOnToolsVersion = 26.2;
-						TestTargetID = F03293542F1686C1002ACF91;
-					};
-					F032936B2F1686C4002ACF91 = {
-						CreatedOnToolsVersion = 26.2;
-						TestTargetID = F03293542F1686C1002ACF91;
-					};
 					F03293822F1687B8002ACF91 = {
 						CreatedOnToolsVersion = 26.2;
 					};
@@ -363,8 +265,6 @@
 			projectRoot = "";
 			targets = (
 				F03293542F1686C1002ACF91 /* VisitShareExtension */,
-				F03293612F1686C3002ACF91 /* VisitShareExtensionTests */,
-				F032936B2F1686C4002ACF91 /* VisitShareExtensionUITests */,
 				F03293822F1687B8002ACF91 /* VisitShareExtensionAppEx */,
 			);
 		};
@@ -372,20 +272,6 @@
 
 /* Begin PBXResourcesBuildPhase section */
 		F03293532F1686C1002ACF91 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F03293602F1686C3002ACF91 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F032936A2F1686C4002ACF91 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -409,20 +295,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F032935E2F1686C3002ACF91 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F03293682F1686C4002ACF91 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		F032937F2F1687B8002ACF91 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -433,16 +305,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		F03293642F1686C3002ACF91 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F03293542F1686C1002ACF91 /* VisitShareExtension */;
-			targetProxy = F03293632F1686C3002ACF91 /* PBXContainerItemProxy */;
-		};
-		F032936E2F1686C4002ACF91 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F03293542F1686C1002ACF91 /* VisitShareExtension */;
-			targetProxy = F032936D2F1686C4002ACF91 /* PBXContainerItemProxy */;
-		};
 		F0FF3D252F17F60700B5B936 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F03293822F1687B8002ACF91 /* VisitShareExtensionAppEx */;
@@ -611,10 +473,9 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -648,95 +509,10 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		F032937A2F1686C4002ACF91 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J434W9VGHF;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtensionTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VisitShareExtension.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VisitShareExtension";
-			};
-			name = Debug;
-		};
-		F032937B2F1686C4002ACF91 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J434W9VGHF;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtensionTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VisitShareExtension.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VisitShareExtension";
-			};
-			name = Release;
-		};
-		F032937D2F1686C4002ACF91 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J434W9VGHF;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtensionUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = VisitShareExtension;
-			};
-			name = Debug;
-		};
-		F032937E2F1686C4002ACF91 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J434W9VGHF;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.PreferredMobileApplications.VisitShareExtensionUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = VisitShareExtension;
 			};
 			name = Release;
 		};
@@ -767,7 +543,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -799,7 +575,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -821,24 +597,6 @@
 			buildConfigurations = (
 				F03293772F1686C4002ACF91 /* Debug */,
 				F03293782F1686C4002ACF91 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		F03293792F1686C4002ACF91 /* Build configuration list for PBXNativeTarget "VisitShareExtensionTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				F032937A2F1686C4002ACF91 /* Debug */,
-				F032937B2F1686C4002ACF91 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		F032937C2F1686C4002ACF91 /* Build configuration list for PBXNativeTarget "VisitShareExtensionUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				F032937D2F1686C4002ACF91 /* Debug */,
-				F032937E2F1686C4002ACF91 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -6,6 +6,7 @@
 //  which is a known problematic area in iOS share extension APIs.
 //
 //  Version History:
+//  - v1.0301:Swift 6 - hop completion to @MainActor before calling main-actor-isolated method
 //  - v1.0201:Renamed openURL(...) to openURLViaMultiFallback(..._)
 //  - v1.0101:Fixed compile errors with NSSelectorFromString (non-optional) and 
 //             class method invocation for UIApplication.sharedApplication
@@ -23,7 +24,7 @@ extension ShareViewController
     //   - url:       The URL to open (should be a custom URL scheme for your target app)
     //   - completion:Called with true if any method succeeded, false otherwise
     
-    func openURLViaMultiFallback(_ url:URL, completion:((Bool)->Void)? = nil)
+    func openURLViaMultiFallback(_ url:URL, completion:(@Sendable (Bool)->Void)? = nil)
     {
 
         let sCurrMethod:String     = #function;
@@ -63,13 +64,13 @@ extension ShareViewController
             self.openURLViaResponderChain(url, completion:completion)
         }
 
-    }   // End of func openURLViaMultiFallback(_ url:URL, completion:((Bool)->Void)?).
+    }   // End of func openURLViaMultiFallback(_ url:URL, completion:(@Sendable (Bool)->Void)?).
     
     // MARK:- Method 2:Responder Chain
     
     // Try to open URL by walking the responder chain looking for an openURL:selector...
     
-    private func openURLViaResponderChain(_ url:URL, completion:((Bool)->Void)? = nil)
+    private func openURLViaResponderChain(_ url:URL, completion:(@Sendable (Bool)->Void)? = nil)
     {
 
         let sCurrMethod:String     = #function;
@@ -116,14 +117,14 @@ extension ShareViewController
 
         self.openURLViaSharedApplication(url, completion:completion)
 
-    }   // End of private func openURLViaResponderChain(_ url:URL, completion:((Bool)->Void)?).
+    }   // End of private func openURLViaResponderChain(_ url:URL, completion:(@Sendable (Bool)->Void)?).
     
     // MARK:- Method 3:Direct UIApplication Access
     
     // Try to access UIApplication.shared via dynamic selector calls
     // This works around the API unavailability in extensions...
     
-    private func openURLViaSharedApplication(_ url:URL, completion:((Bool)->Void)? = nil)
+    private func openURLViaSharedApplication(_ url:URL, completion:(@Sendable (Bool)->Void)? = nil)
     {
 
         let sCurrMethod:String     = #function;
@@ -219,13 +220,13 @@ extension ShareViewController
 
         self.openURLViaDirectSelector(url, completion:completion)
 
-    }   // End of private func openURLViaSharedApplication(_ url:URL, completion:((Bool)->Void)? = nil).
+    }   // End of private func openURLViaSharedApplication(_ url:URL, completion:(@Sendable (Bool)->Void)? = nil).
     
     // MARK:- Method 4:Low-Level Selector Registration
     
     // Last resort:Register and call selector directly...
     
-    private func openURLViaDirectSelector(_ url:URL, completion:((Bool)->Void)? = nil)
+    private func openURLViaDirectSelector(_ url:URL, completion:(@Sendable (Bool)->Void)? = nil)
     {
 
         let sCurrMethod:String     = #function;
@@ -276,7 +277,7 @@ extension ShareViewController
 
         completion?(false)
 
-    }   // End of private func openURLViaDirectSelector(_ url:URL, completion:((Bool)->Void)? = nil).
+    }   // End of private func openURLViaDirectSelector(_ url:URL, completion:(@Sendable (Bool)->Void)? = nil).
     
 }   // End of extension ShareViewController.
 

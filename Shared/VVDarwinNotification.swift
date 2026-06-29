@@ -14,14 +14,15 @@ enum VVDarwinNotification
     struct ClassInfo
     {
         static let sClsId        = "VVDarwinNotification"
-        static let sClsVers      = "v1.0401"
+        static let sClsVers      = "v1.0501"
         static let sClsDisp      = sClsId+".("+sClsVers+"): "
         static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         static let bClsTrace     = true
         static let bClsFileLog   = true
     }
 
-    static let notificationName = "com.PreferredMobileApplications.sharedExtensionPack.newHandoff" as CFString
+    // <<CHICKEN-TRACKS>> Swift 6: CFString isn't Sendable; this value is an immutable string literal, safe across processes - nonisolated(unsafe) is the minimal fix
+    nonisolated(unsafe) static let notificationName = "com.PreferredMobileApplications.sharedExtensionPack.newHandoff" as CFString
     
     // MARK: - Post (called from Extension)
     
@@ -119,8 +120,10 @@ private func darwinNotificationCallback(center:CFNotificationCenter?,
 private class VVDarwinHandoffCallback
 {
 
-    static let shared               = VVDarwinHandoffCallback()
-           var callback:(()->Void)?
+    // <<CHICKEN-TRACKS>> Swift 6: legacy singleton pattern, not Sendable; the Darwin notify center always
+    // delivers on the same queue this is used from - nonisolated(unsafe) is the minimal fix here
+    nonisolated(unsafe) static let shared = VVDarwinHandoffCallback()
+                        var callback:(()->Void)?
 
 }   // End of private class VVDarwinHandoffCallback.
 
