@@ -23,14 +23,14 @@ import GoogleMobileAds
 //@available(macOS 15, *)
 @available(iOS 14.0, *)
 @objc(JmAppDelegateVisitor)
-@JmEntityInfo(vers:"v1.8101")
+@JmEntityInfo(vers:"v1.8501")
 public class JmAppDelegateVisitor:NSObject, ObservableObject
 {
 
     //  struct ClassInfo
     //  {
         //  static let sClsId        = "JmAppDelegateVisitor"
-        //  static let sClsVers      = "v1.7901"
+        //  static let sClsVers      = "v1.8401"
         //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
         //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
         //  static let bClsTrace     = false
@@ -5593,6 +5593,28 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         self.appGlobalInfo.setAppInForeground()
 
+    // <<CHICKEN-TRACKS>> Layer 2 orphaned-session cleanup commented out (CollapseToMainWindow, 2026-07-01).
+    // vma-window-2 WindowGroup no longer exists — all additional windows are instances of the main
+    // WindowGroup (vma-window-1) which handles auth correctly on its own.  No orphaned session
+    // cleanup is needed; any restored window cold-launches into AppAuthenticateView naturally.
+    // Retained per §2f.
+    //#if INSTANTIATE_APP_VMA
+    //    let bDestroyOrphanedSession:Bool = UserDefaults.standard.bool(forKey:"vma.window2.destroyOrphanedSessionOnNextLaunch")
+    //    appLogMsg("\(sCurrMethodDisp) <Window2> 'vma.window2.destroyOrphanedSessionOnNextLaunch' flag is [\(bDestroyOrphanedSession)]...")
+    //    if (bDestroyOrphanedSession == true)
+    //    {
+    //        appLogMsg("\(sCurrMethodDisp) <Window2> Clearing flag and destroying orphaned session(s) before any scene connects...")
+    //        UserDefaults.standard.removeObject(forKey:"vma.window2.destroyOrphanedSessionOnNextLaunch")
+    //        UserDefaults.standard.synchronize()
+    //        nonisolated(unsafe) let unsafeSelf = self
+    //        MainActor.assumeIsolated
+    //        {
+    //            unsafeSelf.requestSceneSessionDestructionForWindow2(uiApplication, destroyAllWhenSoleSession:true)
+    //        }
+    //        appLogMsg("\(sCurrMethodDisp) <Window2> Orphaned session destruction requested...")
+    //    }
+    //#endif
+
     #if INSTANTIATE_APP_GLOBALMEMORYOVERLAY
         // Deferred so the main UIWindow exists and has a windowScene by the 
         // time we attempt install. Scene delegate fires first if scene-based,
@@ -5685,7 +5707,13 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     }   // End of @objc public func applicationWillResignActive(_ application:UIApplication).
 
-    @objc public func applicationDidEnterBackground(_ uiApplication:UIApplication) 
+    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — calls into
+    // requestSceneSessionDestructionForWindow2(_:), which is @MainActor (line ~5837). Marked this
+    // method @MainActor rather than rebinding self/locals — its only call site is a
+    // UIApplicationDelegate callback, already guaranteed main-thread by UIKit, same idiom as
+    // appDelegateVisitorDidDiscardSceneSessions(_:didDiscardSceneSessions:) above.
+    @MainActor
+    @objc public func applicationDidEnterBackground(_ uiApplication:UIApplication)
     {
 
         let sCurrMethod:String     = #function
@@ -5697,31 +5725,24 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         self.appGlobalInfo.setAppInBackground()
         
-    #if INSTANTIATE_APP_VMA
-        // <<CHICKEN-TRACKS>> Belt-and-suspenders session cleanup (04/15/2026):
-        // If the user has NOT successfully authenticated, destroy the "vma-window-2" scene
-        // session now so that it cannot be restored as the foreground scene on the next cold
-        // launch — which would bypass AppAuthenticateView and present ContentView with no
-        // auth data.  The primary defence is AppWindow2GateView; this is a secondary measure
-        // that prevents the stale session from persisting across app runs when auth never
-        // completed.  If the user IS logged in, we leave the session intact so that window 2
-        // is restored normally on the next launch and passes cleanly through the gate view.
-
-        let bIsUserLoggedIn:Bool = AppDevDetailsModelObservable.appDevDetailsModelObservable.bIsUserLoggedIn
-
-        appLogMsg("\(sCurrMethodDisp) <Window2> 'bIsUserLoggedIn' is [\(bIsUserLoggedIn)]...")
-
-        if (bIsUserLoggedIn == false)
-        {
-            appLogMsg("\(sCurrMethodDisp) <Window2> User NOT authenticated - requesting 'vma-window-2' scene session destruction to prevent unauthenticated cold-launch restore...")
-
-            self.requestSceneSessionDestructionForWindow2(uiApplication)
-        }
-        else
-        {
-            appLogMsg("\(sCurrMethodDisp) <Window2> User IS authenticated - preserving 'vma-window-2' scene session for normal restore...")
-        }
-    #endif
+    // <<CHICKEN-TRACKS>> Layer 1 vma-window-2 session cleanup commented out (CollapseToMainWindow, 2026-07-01).
+    // vma-window-2 WindowGroup no longer exists — no session cleanup needed on background.
+    // Any restored window cold-launches into AppAuthenticateView naturally via the main WindowGroup.
+    // requestSceneSessionDestructionForWindow2() is also retired (see below). Retained per §2f.
+    //#if INSTANTIATE_APP_VMA
+    //    let connectedWindowScenes = uiApplication.connectedScenes.compactMap { $0 as? UIWindowScene }
+    //    let bIsUserLoggedIn = AppDevDetailsModelObservable.appDevDetailsModelObservable.bIsUserLoggedIn
+    //    if (connectedWindowScenes.count <= 1)
+    //    {
+    //        UserDefaults.standard.set(true, forKey:"vma.window2.destroyOrphanedSessionOnNextLaunch")
+    //        UserDefaults.standard.synchronize()
+    //        self.requestSceneSessionDestructionForWindow2(uiApplication, destroyAllWhenSoleSession:true)
+    //    }
+    //    else if (bIsUserLoggedIn == false)
+    //    {
+    //        self.requestSceneSessionDestructionForWindow2(uiApplication)
+    //    }
+    //#endif
 
         // Exit:
 
@@ -5802,96 +5823,17 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     }   // End of public func appDelegateVisitorDidDiscardSceneSessions(_:didDiscardSceneSessions:).
 
-    // -------------------------------------------------------------------------
-    // requestSceneSessionDestructionForWindow2(_:)
+    // <<CHICKEN-TRACKS>> requestSceneSessionDestructionForWindow2 commented out (CollapseToMainWindow, 2026-07-01).
+    // vma-window-2 WindowGroup no longer exists — no secondary session cleanup needed.
+    // All additional windows are instances of the main WindowGroup (vma-window-1).
+    // Retained per §2f in case multi-window session management is needed in the future.
     //
-    // Proactively destroys the secondary UISceneSession (vma-window-2) so that
-    // it is NOT restored as the foreground scene on the next cold launch.
-    //
-    // Call sites:
-    //   - applicationDidEnterBackground() when bIsUserLoggedIn == false (primary)
-    //   - appDelegateVisitorConfigurationForConnecting() async dispatch
-    //   - Any future logout path that needs to clean up window 2 explicitly
-    //
-    // Identification strategy:
-    //   <<CHICKEN-TRACKS>> configuration.name matching replaced with session-count
-    //   identification (v1.7803).  Root cause: SwiftUI on iPadOS does NOT populate
-    //   UISceneConfiguration.name unless UISceneConfigurations are explicitly
-    //   declared in Info.plist.  Without that plist entry every session reports
-    //   configuration.name == nil, so the "vma-window-2" string predicate never
-    //   matched and requestSceneSessionDestruction was silently never called.
-    //
-    //   New strategy: the primary window (vma-window-1) is always the FIRST session
-    //   created and always present.  Any ADDITIONAL sessions beyond the first are
-    //   secondary windows.  We destroy all sessions except the one whose persistent
-    //   identifier sorts first (earliest-created), which is the primary.  If only
-    //   one session exists there is nothing to destroy.
-    // -------------------------------------------------------------------------
-
-    // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged "main
-    // actor-isolated default value in a nonisolated context" (the UIApplication.shared default
-    // parameter) plus the same UISceneSession property-isolation cluster as the method above.
-    // Marked @MainActor — its only call sites (applicationDidEnterBackground(_:), a
-    // UIApplicationDelegate callback, and its own doc-comment reference) are main-thread-guaranteed.
-    @MainActor
-    public func requestSceneSessionDestructionForWindow2(_ uiApplication:UIApplication = UIApplication.shared)
-    {
-
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
-
-        appLogMsg("\(sCurrMethodDisp) Invoked - 'uiApplication.openSessions' has [\(uiApplication.openSessions.count)] session(s)...")
-
-        // Log all open sessions for diagnostics...
-
-        let sortedSessions:[UISceneSession] = uiApplication.openSessions.sorted
-        { $0.persistentIdentifier < $1.persistentIdentifier }
-
-        for (iIdx, session) in sortedSessions.enumerated()
-        {
-            appLogMsg("\(sCurrMethodDisp) sortedSession #(\(iIdx)): 'persistentIdentifier' is [\(session.persistentIdentifier)] - 'configuration.name' is [\(session.configuration.name ?? "nil")] - 'role' is [\(session.role.rawValue)]...")
-        }
-
-        // Guard: if only one session exists, nothing to destroy...
-
-        if (sortedSessions.count <= 1)
-        {
-            appLogMsg("\(sCurrMethodDisp) <Window2> Only (\(sortedSessions.count)) session(s) present - no secondary session to destroy...")
-            appLogMsg("\(sCurrMethodDisp) Exiting...")
-
-            return
-        }
-
-        // The first (lowest persistentIdentifier) session is the primary window.
-        // Destroy all others — they are secondary windows that should not be
-        // restored without authentication.
-
-        let primarySession:UISceneSession      = sortedSessions[0]
-        let secondarySessions:[UISceneSession] = Array(sortedSessions.dropFirst())
-
-        appLogMsg("\(sCurrMethodDisp) <Window2> Primary session is [\(primarySession.persistentIdentifier)] - destroying (\(secondarySessions.count)) secondary session(s)...")
-
-        for (iIdx, session) in secondarySessions.enumerated()
-        {
-            appLogMsg("\(sCurrMethodDisp) <Window2> Requesting destruction of secondary session #(\(iIdx)) [\(session.persistentIdentifier)]...")
-
-            uiApplication.requestSceneSessionDestruction(session,
-                                                         options:nil,
-                                                         errorHandler:
-            { error in
-                appLogMsg("\(sCurrMethodDisp) <Window2> Scene session destruction error for [\(session.persistentIdentifier)]: [\(error.localizedDescription)] - Warning!")
-            })
-
-            appLogMsg("\(sCurrMethodDisp) <Window2> Requested destruction of secondary session #(\(iIdx)) [\(session.persistentIdentifier)]...")
-        }
-
-        // Exit:
-
-        appLogMsg("\(sCurrMethodDisp) Exiting...")
-
-        return
-
-    }   // End of public func requestSceneSessionDestructionForWindow2(_:).
+    //  @MainActor
+    //  public func requestSceneSessionDestructionForWindow2(_ uiApplication:UIApplication = UIApplication.shared,
+    //                                                       destroyAllWhenSoleSession:Bool = false)
+    //  {
+    //      ... (full body retained in backup JmAppDelegateVisitor_1.swift)
+    //  }   // End of public func requestSceneSessionDestructionForWindow2(_:).
 
     // -------------------------------------------------------------------------
     // appDelegateVisitorConfigurationForConnecting — WITHDRAWN (v1.7805)

@@ -277,7 +277,7 @@ DivorcePack is the proven target architecture: no SwiftData, JSON on disk, in-me
 - **In-memory layer:** `AppDataItemsRepo` (do not bypass this)
 - **Auth:** `AppAuthenticateView`, `PFAdminsModelObservable` (FaceID + User ID + Password)
 - **NL query pipeline:** `SFSpeechRecognizer` → `NLQueryProvider` → `NLEntityResolver` → `NLDatePreProcessor` → `NLQueryPostProcessor`
-- **Multi-window:** Two `WindowGroup` scenes (`vma-window-2` for secondary); scene restoration guarded in `AppWindow2GateView`
+- **Multi-window:** Single `WindowGroup` (`vma-window-1`) — additional windows open via `openWindow(id:"vma-window-1")` which creates additional instances of the same WindowGroup. The WindowGroup body handles auth for every window (AppAuthenticateView when not logged in, ContentView when logged in). `AppWindow2GateView` and the `vma-window-2` scene are retired (CollapseToMainWindow branch, 2026-07-01) — see §17.
 - **SSEBroker:** Actor-based subscriber map on SDMM198 for device data distribution
 - **MySQL:** Reverse SSH tunnel via `autossh` from office Intel i5 Mac Mini → SDMM198 → GCP Cloud SQL (port 3307)
 
@@ -1164,6 +1164,42 @@ clean build, then propagate via JMACodeSync exactly like the Swift 6 fixes in Se
   imported and reloaded correctly on iPhone and DRCMBP5 (Mac). iPad pending (loaned out).
 - [ ] Next: push to **JustAMultiplatformClock1** via JMACodeSync.
 
+### 13f. VMA — batchDeletePersistentModel() Emergency Fix (2026-06-30)
+A third instance of the same class of bug as §13e's lesson: `AppPersistentDataManager.
+batchDeletePersistentModel<T:PersistentModel>(_:)` (added Phase 4, v1.0102, before the JSON
+backend existed) was **never touched** by the Section 13 generic-dispatch refactor. It
+unconditionally did `self.appSwiftDataManager.modelContext!.delete(model:modelType)` — a force
+unwrap against the SwiftData backend with no check of `AppPersistentDataModeler.
+getPersistenceBackend(for:)` at all. Both real callers
+(`CLRequestGoodModelObservable.swift:914`, `CoreLocationSiteTrackingModelObservable.swift:1526`)
+pass `CLRequestGoodItem`/`CoreLocationSiteTrackingItem`, both of which are `.json` in
+`AppPersistentDataModeler.dictPersistenceBackend` (have been since 2026-06-16) — every call to
+this method was a guaranteed crash, whether or not `modelContext` happened to be nil.
+
+**Fix (`AppPersistentDataManager.swift` v1.0901):**
+- Added the same `AppPersistentDataModeler.getPersistenceBackend(for:)` + existential-opening
+  check used by every other delegation method in this file (`fetch`, `upsert`, `delete`, etc. —
+  see §13b). JSON-backed types now route to a new `AppJsonDataManager.deleteAllAny(_:)`.
+- The SwiftData fallthrough path now does `guard let modelContext = ... else { return }` instead
+  of `modelContext!` — logs and returns rather than crashing if the context is genuinely
+  unavailable.
+
+**New `AppJsonDataManager.swift` (v1.0201) API:** `deleteAll<T:JsonDataItem>(_ type:T.Type) throws`
+and its existential-erased counterpart `deleteAllAny(_ type: any JsonDataItem.Type) throws` —
+both write an empty array via the existing `writeToDisk` path (consistent with how `save`/`upsert`
+already write; `readFromDisk` already treats a missing file as an empty array, so this doesn't
+introduce a second "delete-all" semantic).
+
+**Standing rule going forward**: any `AppPersistentDataManager` method that reaches into
+`appSwiftDataManager.modelContext` directly (`batchDeletePersistentModel`,
+`getSwiftDataStoreURL`, `getSwiftDataContainerConfigurations`, `fetchWithDescriptor`,
+`nukeSwiftDataStore`) needs to be re-audited the same way: confirm whether it can ever be called
+for a type that has since flipped to `.json` in `AppPersistentDataModeler`, and if so, add the
+same backend-check-and-route pattern rather than assuming SwiftData is still the only backend.
+`fetchWithDescriptor`/`getSwiftDataContainerConfigurations` already guard `modelContext` for nil
+defensively; `batchDeletePersistentModel` did not — that combination (no nil guard AND no backend
+check) is what made this one crash unconditionally rather than just behave incorrectly.
+
 ---
 
 ## 14. macOS VIEW PRESENTATION — `.sheet()` vs `openWindow()`
@@ -1251,3 +1287,296 @@ JMACodeSync, breaking a `DispatchQueue.global().async { }` call site in
 When a compile error appears that looks like a Swift 6 concurrency violation, and the same file is
 known to work elsewhere: grep `project.pbxproj` for the `SWIFT_*` settings above and compare against
 a sibling app before proposing any code change.
+
+---
+
+## 16. CinemaPack — Vault Subdirectory PIN-Change Gating (agreed 2026-06-30)
+
+### 16a. The Bug
+`SubdirectoryEditView` (in `Views/SettingsSubdirectoryView.swift`) pre-loaded the existing
+`settings.sPinCode` directly into an editable `SecureField` on `.onAppear`, with no gate. Anyone
+who opened "Edit Directory" on a vault subdirectory could change its PIN outright — no current-PIN
+or Face ID confirmation required.
+
+### 16b. The Agreed Logic
+- **No PIN currently set** (`settings.sPinCode.isEmpty`): keep the existing simple flow — one field,
+  set a new 4-digit PIN directly, no gate.
+- **PIN already set**: the PIN-change UI starts **locked**.
+  - A "Change PIN" affordance reveals an authentication step: a Face ID button (only shown if
+    `settings.bUseFaceID` is true) and/or a "Current PIN" field.
+  - Success of *either* gate (Face ID or correct current PIN) is a **standalone, settings-scope
+    check only** — it must NOT call `setAuthenticated(subdirectory:authenticated:true)` and must NOT
+    affect vault browsing/lock state. Browsing access is always re-authenticated separately at its
+    own lock point (the Vault tab) — confirming/changing a PIN in Settings is a different trust
+    boundary than browsing-unlock and the two must never be conflated.
+  - Once the gate is cleared, reveal "New PIN" + "Confirm New PIN" fields; both must be 4 digits and
+    must match before Save commits the new `sPinCode`.
+  - Alerts required for: wrong current PIN, Face ID failure/unavailable, invalid new PIN length,
+    new/confirm mismatch.
+  - If the gate is never cleared, Save must leave `sPinCode` untouched — do not silently blank or
+    resave the pre-filled value.
+- **Per-vault PIN independence vs. shared Face ID**: each vault `SubdirectorySettings` has its own
+  independent `sPinCode` — PINs are never shared across subdirectories. `bUseFaceID` is just a
+  per-subdirectory permission flag to accept the device's one biometric (Face ID/Touch ID) as an
+  alternate gate; there is no per-vault "face," only a per-vault opt-in to use the single device
+  biometric.
+
+### 16c. Implementation Notes
+- The Face ID gate check must be a standalone variant — do not reuse
+  `SettingsSubdirectoryManager.authenticateWithFaceID(subdirectory:completion:)` as-is, since that
+  method calls `setAuthenticated(...)` on success (browsing-unlock side effect, explicitly excluded
+  per §16b). Implemented as `authenticateWithFaceIDForSettingsChange(subdirectory:completion:)` —
+  same `LAContext` evaluation, but never touches `dictAuthenticatedSubdirectories`.
+- The current-PIN check is `verifyCurrentPINForSettingsChange(subdirectory:enteredPIN:)` — compares
+  directly against `settings.sPinCode`, does not go through `authenticateWithPIN` (which also flips
+  the session-authenticated set).
+
+### 16d. STATUS — RESOLVED 2026-06-30 (emergency fix closed)
+Implemented in `SettingsSubdirectoryView.swift` (`SubdirectoryEditView`, now v1.0304) and
+`SettingsSubdirectoryManager.swift` (v1.0401). Two real bugs were found and fixed during
+implementation/testing — both are worth knowing about for any future "two buttons offering
+alternate auth methods" UI in any PACK App:
+
+**Bug 1 — stale async Face ID completion could silently open the gate via the wrong method.**
+If the user tapped "Verify with Face ID" and then, before the biometric prompt resolved, switched
+to the PIN path instead, the original (now-stale) Face ID completion handler could still fire
+`success` later and unconditionally set the gate-open flag — bypassing PIN verification entirely
+even though the user was no longer attempting Face ID. **Fix:** an `iGateAttemptToken:Int` is
+minted (incremented) at the start of every gate attempt and every explicit method switch; each
+async completion captures its own token value and checks it against the current value before
+acting. A completion whose token no longer matches is a stale attempt and is discarded (logged,
+not acted on). Apply this token-guard pattern any time an async authentication callback
+(Face ID, biometrics, network) can outlive a user's choice to switch away from it.
+
+**Bug 2 — "Verify with Face ID" and "Use Current PIN Instead" acted as one button.**
+Both buttons were direct children of the same `VStack`, which itself became a single Form row.
+SwiftUI Form/List rows give the *row's own tap gesture* priority over individually-stacked
+`Button`s inside it unless each button has an explicit button style — so tapping anywhere in that
+row (including directly on "Use Current PIN Instead") fired the *first* button's action (Face ID).
+**Fix:** every button inside that stacked VStack got `.buttonStyle(.borderless)`, which restores
+independent per-button tap targets. **General rule for any PACK App**: whenever 2+ `Button`s are
+stacked vertically (VStack/HStack) as siblings inside a single Form/List row (not each as a
+top-level Section child), give each one an explicit `.buttonStyle(.borderless)` (or `.plain`) or
+only the first button's action will ever fire, regardless of which one is tapped. Grep
+`Form`/`List` content for multi-`Button` `VStack`/`HStack` groupings as a quick audit when this
+class of bug is suspected elsewhere.
+
+### 16e. Final Logic Flow (as implemented and tested)
+```
+Edit Directory → Security Settings → Vault Protected = ON
+  │
+  ├─ No PIN exists yet (settings.sPinCode.isEmpty)
+  │     └─ Single "Enter PIN" field → Save validates 4 digits (if non-empty) → done, no gate
+  │
+  └─ PIN already exists
+        │
+        └─ Gate starts CLOSED (bPinChangeGateOpen = false, bGatePinModeChosen = false)
+              │
+              ├─ Choice screen shown: "Verify with Face ID" (only if bUseFaceID) AND
+              │   "Use Current PIN Instead" — both visible, each its own independent tap target
+              │   (.buttonStyle(.borderless) on each — see Bug 2)
+              │
+              ├─ Tap "Verify with Face ID"
+              │     ├─ mints new iGateAttemptToken, fires LAContext biometric prompt (async)
+              │     ├─ on completion: if token still current →
+              │     │     success → bPinChangeGateOpen = true (gate opens, no session/browsing change)
+              │     │     failure → alert shown, gate stays closed
+              │     └─ on completion: if token stale (user switched methods meanwhile) → ignored (see Bug 1)
+              │
+              ├─ Tap "Use Current PIN Instead"
+              │     ├─ bumps iGateAttemptToken (invalidates any in-flight Face ID attempt — Bug 1 fix)
+              │     ├─ bGatePinModeChosen = true → reveals "Current PIN" field + "Verify Current PIN"
+              │     │   button + "Use a Different Method" link (Face ID button now hidden)
+              │     ├─ "Verify Current PIN" → verifyCurrentPINForSettingsChange(...) against
+              │     │   settings.sPinCode directly (no session/browsing change either way)
+              │     │     match → bPinChangeGateOpen = true
+              │     │     no match → alert "Incorrect PIN", field cleared, stays in PIN mode
+              │     └─ "Use a Different Method" → bumps token, bGatePinModeChosen = false,
+              │         returns to the initial choice screen
+              │
+              └─ Once bPinChangeGateOpen = true (either method) → reveal "New PIN" + "Confirm New
+                  PIN" fields → Save requires both = 4 digits and equal → commits settings.sPinCode
+                  → if gate was never opened, Save leaves the original PIN untouched
+```
+
+---
+
+## 17. VMA — Multi-Window Architecture Evolution (2026-06-30 → 2026-07-01)
+
+### 17a. The Problem
+iPadOS scene session persistence: when the user closes the **main window (vma-window-1) first**
+and backgrounds the app with only window 2 remaining, the window-2 session survives. On the next
+cold launch iOS restores window 2 as the sole scene. `AppWindow2GateView.destroyOwnSceneSession()`
+fires from `onAppear`, calls `requestSceneSessionDestruction` on the sole connected scene — but
+iOS immediately re-creates a new window-2 scene (the app must have at least one foreground scene),
+which fires `onAppear` again, repeat forever. Launch screen flashes endlessly.
+
+Two prior layers (`destroyOwnSceneSession()` in the gate view and `applicationDidEnterBackground`
+destroying sessions when `bIsUserLoggedIn == false`) did not cover this case because:
+- `bIsUserLoggedIn` was still `true` when the user closed the primary window (closing a window
+  does NOT log out), so `applicationDidEnterBackground` preserved the window-2 session.
+- The first fix attempt (2026-06-30 round 1) called `requestSceneSessionDestruction` from
+  `applicationDidEnterBackground` — this is async. iOS kills the process before it completes;
+  the session survives.
+- The first loop-breaker guard checked `connectedWindowScenes.count <= 1 && openSessions.count <= 1`,
+  but iOS creates a fresh window-1 session at cold launch time, making `openSessions.count == 2`
+  even though window-2 was the only restored session — so the guard didn't fire and
+  `destroyOwnSceneSession()` proceeded with a broken heuristic that could destroy the wrong scene.
+
+### 17b. The Fix — Three Layers
+
+**Layer 1 — `applicationDidEnterBackground` (`JmAppDelegateVisitor.swift` v1.8401):**
+When `connectedWindowScenes.count <= 1` at background time (primary window was already closed),
+write `UserDefaults.standard.set(true, forKey:"vma.window2.destroyOrphanedSessionOnNextLaunch")`
+**synchronously** (`UserDefaults.synchronize()`), then also attempt `requestSceneSessionDestruction`
+as best-effort. The UserDefaults write survives a process kill; the async destruction may or may
+not complete — both are attempted, neither is relied on alone.
+
+**Layer 2 — `appDelegateVisitorDidFinishLaunchingWithOptions` (`JmAppDelegateVisitor.swift`):**
+On every cold launch, checks the UserDefaults flag. If set: clears it immediately, then calls
+`requestSceneSessionDestructionForWindow2(destroyAllWhenSoleSession:true)` inside
+`MainActor.assumeIsolated` (with `nonisolated(unsafe) let unsafeSelf = self` for Swift 6) —
+**before any scene connects**. This is the reliable fix: no scene construction is in progress,
+so destruction completes before iOS can restore the window-2 scene via `configurationForConnecting`.
+
+**Layer 3 — `destroyOwnSceneSession()` loop-breaker (`AppWindow2GateView.swift` v1.0502):**
+Simplified guard: if `connectedWindowScenes.count <= 1` (sole connected scene, regardless of
+`openSessions.count`), do NOT call `requestSceneSessionDestruction` — just show the holding screen
+and wait. The UserDefaults flag (Layer 1) ensures cleanup at the next launch (Layer 2). This
+breaks the loop for any scenario that reaches a sole-scene cold launch despite Layers 1 and 2.
+
+### 17c. Key Lessons
+- `requestSceneSessionDestruction` is **async** — never rely on it completing before iOS kills
+  the process after `applicationDidEnterBackground`. Always pair it with a synchronous durable
+  flag (UserDefaults) when the outcome must survive a process kill.
+- `openSessions.count` is NOT a reliable indicator of "how many user-opened windows exist" at
+  cold launch time — iOS may have created a fresh primary-window session in `openSessions` before
+  any scene has connected, inflating the count.
+- Calling `requestSceneSessionDestruction` on the SOLE connected scene causes iOS to re-create
+  that scene immediately (app must have at least one foreground scene) — infinite loop. The
+  loop-breaker must check `connectedWindowScenes.count`, not `openSessions.count`.
+- `bIsUserLoggedIn` is a per-session runtime flag — it is always `false` on a cold launch and
+  always `true` immediately after authentication. Relying on it to decide whether to destroy
+  window-2's session fails for the "authenticated user closes primary window" scenario.
+
+### 17d. Files Changed
+| File | Version | Change |
+|---|---|---|
+| `JmUtils/JmAppDelegateVisitor.swift` | v1.8401 | Layer 1 (UserDefaults flag on background) + Layer 2 (launch-time destruction) + `requestSceneSessionDestructionForWindow2` gets `destroyAllWhenSoleSession` param |
+| `Views/AppWindow2GateView.swift` | v1.0502 | Layer 3 (simplified loop-breaker guard) |
+
+### 17e. Crash-Scenario Remaining Gap — Fixed 2026-07-01
+
+**The gap:** Layers 1–3 assume the app exits gracefully (`applicationDidEnterBackground` fires). When
+the app **crashes** while window-2 is the sole connected scene, no lifecycle hook runs — the
+UserDefaults flag is never set, Layer 2 has nothing to act on, and Layer 3's loop-breaker leaves the
+app permanently stuck on the "Authentication Required" holding screen. Neither Xcode/LLDB restart
+nor `requestSceneSessionDestruction` from LLDB was sufficient to clear the stuck state.
+
+**Additional bug found:** `activatePrimaryScene()` always picked the gate view's own session.
+`configuration.name` is `nil` for both sessions at runtime — the filter
+`session.configuration.name != "vma-window-2"` returned `true` for both (nil ≠ "vma-window-2"),
+so `openSessions.first` returned the gate view's own session. Path B (`openWindow`) was never
+reached.
+
+**Fix (`AppWindow2GateView.swift` v1.0601):**
+
+**Part A — Force Reset button (escape hatch):**
+Added to the multi-scene stuck screen. Iterates all `openSessions`, calls
+`requestSceneSessionDestruction` on each, then calls `exit(0)` after 0.3 s. On the next cold launch
+iOS creates only a fresh window-1 session — the orphaned window-2 is gone. Button is disabled
+(`bForceResetInProgress`) after first tap to prevent double-fire.
+
+**Part B — `activatePrimaryScene()` session filter corrected:**
+Replaced the broken `configuration.name != "vma-window-2"` filter with an own-session exclusion
+by `persistentIdentifier` (always unique, never nil). Also added `openWindow(id:"vma-window-1")`
+in Path A alongside `requestSceneSessionActivation` — belt-and-suspenders in case iOS ever relaxes
+its live-scene activation restriction.
+
+**Part C — Sole-scene auth path:**
+When `UIApplication.shared.connectedScenes.count <= 1` (crash scenario — only window-2 was
+restored), the `else` branch now shows `AppAuthenticateView` directly in window-2 instead of the
+stuck holding screen. Local `@State` bindings (`uuid4ForcingViewRefresh`, `appGlobalAuthTypeForWindow2`)
+supply the two required init params. After a successful login `bIsUserLoggedIn` flips true on the
+singleton and the `body` re-evaluates to show `ContentView`. This intentionally breaks the
+"window-2 is reference-only" contract — a functional app in the wrong window beats an unusable app.
+
+**Key lessons added:**
+- `requestSceneSessionDestruction` from LLDB does not reliably clear sessions before Xcode restart —
+  the async request may not persist if the debug session is torn down immediately after.
+- `configuration.name` is `nil` for both `openSessions` entries at runtime, even though the scene
+  manifests list distinct names (`vma-window-1`, `vma-window-2`). Never filter sessions by
+  `configuration.name` — filter by `persistentIdentifier` instead.
+- The UserDefaults-flag architecture (Layers 1–2) is the right design for graceful exits but has
+  zero coverage for crashes. Provide a user-visible escape button for the crash scenario.
+
+### 17f. Files Changed (2026-07-01 round)
+| File | Version | Change |
+|---|---|---|
+| `Views/AppWindow2GateView.swift` | v1.0601 | Parts A/B/C: Force Reset button, corrected session filter, sole-scene auth path |
+
+### 17g. Final Architecture — CollapseToMainWindow (2026-07-01)
+All the window-2 complexity above was superseded by collapsing to a single `WindowGroup`.
+
+**Root insight:** the entire `AppWindow2GateView` gate existed to handle one scenario — a stale
+`vma-window-2` session restored by iOS without `vma-window-1` being present. But a single
+`WindowGroup` (id `"vma-window-1"`) handles this naturally: any restored window cold-launches
+into `AppAuthenticateView` (cold launch = `bIsUserLoggedIn` false), so no gate, no session
+destruction, no UserDefaults flags, no crash-recovery rabbit holes.
+
+**Changes (branch `CollapseToMainWindow`):**
+1. `VisitManagementAppApp.swift` (v1.4701) — `vma-window-2` `WindowGroup` commented out (§2f).
+   All `openWindow` call sites changed to `id:"vma-window-1"` (6 files, done via SlickEdit).
+2. `Views/AppWindow2GateView.swift` (v1.0603) — entire file excluded via `#if false` (§2f).
+3. `JmUtils/JmAppDelegateVisitor.swift` (v1.8501) — Layer 1 (`applicationDidEnterBackground`
+   Window2 block) and Layer 2 (`didFinishLaunchingWithOptions` UserDefaults flag block) commented
+   out. `requestSceneSessionDestructionForWindow2()` commented out.
+
+**Current multi-window model:**
+- "New Window" button calls `openWindow(id:"vma-window-1")` — opens another instance of the main `WindowGroup`.
+- Every window runs the same body: not logged in → `AppAuthenticateView`; logged in → `ContentView`.
+- The `.task{}` singleton init and memory overlay install run per-window; singletons guard
+  themselves against double-init (`isInstalled`, etc.).
+- Crash recovery: any restored window cold-launches cleanly into `AppAuthenticateView`. No gate needed.
+
+---
+
+## 18. `String.split(separator:)` WITH A STRING-LITERAL SEPARATOR — EXC_BREAKPOINT TRAP
+
+### 15a. The Symptom
+`AppTherapistDrivingTimeViewModel.parseStartTimeToInt(_:)` trapped with `EXC_BREAKPOINT` inside
+`sTime24h.split(separator:":").map { String($0) }` — on a perfectly valid input (`sTime24h = "9:03"`,
+confirmed in the debugger variable view right before the trap). No force-unwrap, no array
+out-of-bounds access, nothing obviously wrong in the surrounding code. Worked fine under Swift 5;
+trapped after the VMA Swift 6 toolchain/compiler conversion (Section 12) — always a **Debug** build,
+never Release/optimized.
+
+### 15b. Root Cause
+The separator `":"` was passed as a **String literal**, not an explicit `Character`. `String.split`
+has multiple overloads, and since `String` now conforms to `RegexComponent`, a literal separator can
+silently bind to the regex-pattern–based `split` overload instead of the plain `Character` overload —
+no compile error, no warning, just a different code path at the call site. On this toolchain that
+regex-engine path was tripping a runtime trap. This is a toolchain/overload-resolution hazard, not a
+logic bug in the calling code.
+
+### 15c. The Fix
+Replace `.split(separator:"X")` with `.components(separatedBy:"X")` when the separator is a string
+literal and you want simple, non-regex splitting. `components(separatedBy:)` takes a `String`
+directly and has no regex-engine path, so there is no ambiguity:
+```swift
+// Before (trapped at runtime on this toolchain):
+let listParts:[String] = sTime24h.split(separator:":").map { String($0) }
+
+// After (fixed — v1.0302):
+let listParts:[String] = sTime24h.components(separatedBy:":")
+```
+Confirmed fixed and tested across multiple Therapists on the iPad Pro M4 (2026-06-29).
+
+### 15d. Session Startup Addendum
+If an `EXC_BREAKPOINT`/runtime trap is reported on a line that has no force-unwrap, no out-of-bounds
+indexing, and no obviously-overflowing arithmetic — and the surrounding values look valid in the
+debugger — check for `.split(separator:)` (or any other stdlib call with several generic/regex-aware
+overloads) being passed a **string literal** where a `Character` was intended. Grep the codebase for
+`.split(separator:"` (string-literal separator) as a quick first pass; prefer
+`.components(separatedBy:)` for simple literal-string splitting going forward to sidestep the
+overload ambiguity entirely.
