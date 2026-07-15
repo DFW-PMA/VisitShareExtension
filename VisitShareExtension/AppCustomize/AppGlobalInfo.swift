@@ -2,18 +2,9 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.7201...
-//  Updated by Daryl Cox on 06/24/2026. (Added ENABLE_APP_CORELOCATIONCLOUDSUPPORT).
-//  Updated by Daryl Cox on 06/23/2026. Removed ALL 'ClassSingleton' references
-//  Updated by Daryl Cox on 06/19/2026. (Swift 6 migration, Section 12 — SENDABLE: ClassSingleton.appGlobalInfo
-//                                        and sAppVersionBuild changed 'var' -> 'let'; ACTOR-ISOLATION: UIDevice/
-//                                        UIScreen/UIApplication reads in init(), updateUIDeviceOrientation(),
-//                                        and checkAppInForegroundOrBackground() wrapped in
-//                                        MainActor.assumeIsolated; see <<CHICKEN-TRACKS>> notes at each site).
-//  Updated by Daryl Cox on 06/19/2026. (Swift 6 migration, Section 12 — nonisolated(unsafe) added to
-//                                        'jmAppGlobalInfoDelegateVisitor' and
-//                                        'listAppGlobalInfoPreXCGLoggerMessages'; see <<CHICKEN-TRACKS>>
-//                                        notes at each declaration).
+//  AppGlobalInfo.swift - v1.7114...
+//  Updated by Daryl Cox on 07/15/2026. (Added 'bGlobalInfoInitHasRun').
+//  Updated by Daryl Cox on 07/14/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE).
 //  Updated by Daryl Cox on 06/09/2026. (Added INSTANTIATE_VV_SCREENCAPTURE_OVERLAY).
 //  Updated by Daryl Cox on 05/26/2026. (Added various fields for DivorcePack (Claude) additions).
 //  Updated by Daryl Cox on 05/11/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO6).
@@ -43,6 +34,11 @@ import IOKit
 import UIKit
 #endif
 
+// <<CHICKEN-TRACKS>> ParseCore import added (centralized ParseCore init, see 'ensureParseCoreIsInitialized()' / 'initializeParseCore()' below).
+#if ENABLE_APP_GLOBALINFO_FOR_PARSECORE
+import ParseCore
+#endif
+
 // MARK: Global functions at module level (outside the class)...
 
 @inlinable
@@ -69,9 +65,10 @@ public func appLogMsg(_ sMessage:String)
     // which is called ~1,706 times across 35 of ~45 source files, including non-main-actor contexts
     // (delegate callbacks, completion handlers) — that cascade is the real risk, not this declaration.
     // Set exactly once at startup via setJmAppDelegateVisitorInstance(); read-only after that.
-           public nonisolated(unsafe) var jmAppGlobalInfoDelegateVisitor:JmAppDelegateVisitor? = nil
+           public nonisolated(unsafe) var jmAppGlobalInfoDelegateVisitor:JmAppDelegateVisitor? 
+                                                                           = nil
                                                                            // 'jmAppDelegateVisitor' MUST remain declared this way
-                                                                           // as having it reference the 'shared' instance of
+                                                                           // as having it reference the 'shared' instance of 
                                                                            // JmAppDelegateVisitor causes a circular reference
                                                                            // between the 'init()' methods of the 2 classes...
 
@@ -81,7 +78,8 @@ public func appLogMsg(_ sMessage:String)
     // reasoning as 'jmAppGlobalInfoDelegateVisitor' above. This is a boot-time-only "cart and horse"
     // cache valve: messages append here only before the XCGLogger/Visitor route is up; once
     // setJmAppDelegateVisitorInstance() drains it into the real log, it is never touched again.
-           public nonisolated(unsafe) var listAppGlobalInfoPreXCGLoggerMessages:[String]       = [String]()
+           public nonisolated(unsafe) var listAppGlobalInfoPreXCGLoggerMessages:[String]
+                                                                           = [String]()
 
 @inlinable
 public func appLogMsgViaGlobalCache(_ sMessage:String) 
@@ -228,12 +226,12 @@ public class AppGlobalInfo:NSObject
     // the class has internal 'var' properties. Added nonisolated(unsafe) rather than @MainActor to
     // avoid isolating the whole class (and by extension every one of AppGlobalInfo's ~18 consuming
     // files) — same reasoning as the boot-cache globals above: trusted, low-call-site singleton.
-//  struct ClassSingleton
-//  {
-//      nonisolated(unsafe) static let appGlobalInfo:AppGlobalInfo       = AppGlobalInfo()
-//  }
+    //  struct ClassSingleton
+    //  {
+    //      nonisolated(unsafe) static let appGlobalInfo:AppGlobalInfo       = AppGlobalInfo()
+    //  }
         nonisolated(unsafe) static let appGlobalInfo:AppGlobalInfo       = AppGlobalInfo()
-    
+
     // Objective-C accessor for singleton (computed property):
     //     - Swift code continues to use: AppGlobalInfo.appGlobalInfo
     //     - Objective-C code uses:       [AppGlobalInfo shared] or AppGlobalInfo.shared...
@@ -282,10 +280,10 @@ public class AppGlobalInfo:NSObject
     //                              ENABLE_APP_USER_AUTHENTICATION
     //                              ENABLE_APP_USER_AUTH_TYPE
     //                              ENABLE_APP_PARSECORE_FOR_SWIFT
+    //                              ENABLE_APP_GLOBALINFO_FOR_PARSECORE
     //                              ENABLE_APP_IAP_CAPABILITY
     //                              ENABLE_APP_ALARM_CAPABILITY
     //                              ENABLE_APP_LEGACY_CORELOC2
-    //                              ENABLE_APP_CORELOCATIONCLOUDSUPPORT
     //                              INSTANTIATE_APP_VV
     //                              INSTANTIATE_APP_VV_UIKIT_ALERTS
     //                              INSTANTIATE_APP_VMA
@@ -360,6 +358,15 @@ public class AppGlobalInfo:NSObject
     #endif
     }()
 
+    static let isEnabledGlobalInfoForParseCore:Bool                      =
+    {
+    #if ENABLE_APP_GLOBALINFO_FOR_PARSECORE
+        return true
+    #else
+        return false
+    #endif
+    }()
+
     static let isEnabledAppIAPCapability:Bool                            =
     {
     #if ENABLE_APP_IAP_CAPABILITY
@@ -381,15 +388,6 @@ public class AppGlobalInfo:NSObject
     static let isEnabledAppLegacyCoreLoc2:Bool                           =
     {
     #if ENABLE_APP_LEGACY_CORELOC2
-        return true
-    #else
-        return false
-    #endif
-    }()
-
-    static let isEnabledAppCoreLocCloudSupport:Bool                      =
-    {
-    #if ENABLE_APP_CORELOCATIONCLOUDSUPPORT
         return true
     #else
         return false
@@ -705,6 +703,8 @@ public class AppGlobalInfo:NSObject
 
     // Various 'App' (tracking) information:
 
+           var bGlobalInfoInitHasRun:Bool                                = false
+           var bGlobalInfoPostInitHasRun:Bool                            = false
            var tiGlobalAppStartTime:TimeInterval                         = ProcessInfo.processInfo.systemUptime
 
            var dblGlobalAppUptime:Double
@@ -847,6 +847,21 @@ public class AppGlobalInfo:NSObject
 //         var listPreXCGLoggerMessages:[String]                         = [String]()
 #endif
 
+    // <<CHICKEN-TRACKS>> Centralized ParseCore (Client) initialization state added.
+    // All 'JmAppParseCoreBkgdDataRepo*' instances now funnel through 'ensureParseCoreIsInitialized()'
+    // below instead of each independently calling 'Parse.initialize(with:)' - avoids relying on
+    // 'performBlockCatchingException' to silently no-op on 2nd/3rd/4th redundant init attempts,
+    // which was proving unreliable on some Intel simulator hosts (04/2026 - Repo/Repo2/Repo3/Repo4
+    // each had a different half-fix for this; consolidated here 'once and for all')...
+
+#if ENABLE_APP_GLOBALINFO_FOR_PARSECORE
+           var parseConfig:ParseClientConfiguration?                     = nil
+
+    private let parseCoreInitCondition:NSCondition                       = NSCondition()
+    private var bIsParseCoreInitialized:Bool                             = false
+    private var bHasParseCoreInitBeenCalled:Bool                         = false
+#endif
+
     // Private 'init()' to make this class a 'singleton':
 
     private override init()
@@ -856,6 +871,8 @@ public class AppGlobalInfo:NSObject
         let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
 
         super.init()
+
+        self.bGlobalInfoInitHasRun = true
 
     #if USE_APP_LOGGING_BY_VISITOR
         appLogMsgViaGlobalCache("\(sCurrMethodDisp) Invoked...")
@@ -974,7 +991,7 @@ public class AppGlobalInfo:NSObject
         // including a SwiftData model (CLRequestGoodItem) — exactly the kind of cascade this session
         // has been avoiding. Rebinding self to a nonisolated(unsafe) local sidesteps the diagnostic
         // without isolating anything: safe because init() is single-threaded by construction.
-        nonisolated(unsafe) let unsafeSelf = self
+        nonisolated(unsafe) let unsafeSelf          = self
         MainActor.assumeIsolated
         {
         if UIDevice.current.localizedModel == "Mac"
@@ -1062,11 +1079,12 @@ public class AppGlobalInfo:NSObject
     #if !USE_APP_LOGGING_BY_VISITOR
         // Finish any 'initialization' work:
 
-        appLogMsg("\(sCurrMethodDisp) AppGlobalInfo Invoking 'self.runPostInitializationTasks()'...")
-    
-        self.runPostInitializationTasks()
-
-        appLogMsg("\(sCurrMethodDisp) AppGlobalInfo Invoked  'self.runPostInitializationTasks()'...")
+        if (self.bGlobalInfoPostInitHasRun == false)
+        {
+            appLogMsg("\(sCurrMethodDisp) AppGlobalInfo Invoking 'self.runPostInitializationTasks()'...")
+            self.runPostInitializationTasks()
+            appLogMsg("\(sCurrMethodDisp) AppGlobalInfo Invoked  'self.runPostInitializationTasks()'...")
+        }
     #endif
     
         // Exit:
@@ -1080,6 +1098,19 @@ public class AppGlobalInfo:NSObject
         return
 
     }   // End of private override init().
+
+    public func checkIfGlobalInfoInitHasRun()->Bool
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) Invoked...")
+        appLogMsg("\(sCurrMethodDisp) Exiting - 'self.bGlobalInfoInitHasRun' is [\(self.bGlobalInfoInitHasRun)]...")
+
+        return self.bGlobalInfoInitHasRun
+
+    }   // End of public func checkIfGlobalInfoInitHasRun()->Bool.
 
 #if USE_APP_LOGGING_BY_VISITOR
     public func setJmAppDelegateVisitorInstance(jmAppDelegateVisitor:JmAppDelegateVisitor)
@@ -1112,11 +1143,12 @@ public class AppGlobalInfo:NSObject
 
         // Finish any 'initialization' work:
 
-        appLogMsg("\(sCurrMethodDisp) AppGlobalInfo Invoking 'self.runPostInitializationTasks()'...")
-    
-        self.runPostInitializationTasks()
-
-        appLogMsg("\(sCurrMethodDisp) AppGlobalInfo Invoked  'self.runPostInitializationTasks()'...")
+        if (self.bGlobalInfoPostInitHasRun == false)
+        {
+            appLogMsg("\(sCurrMethodDisp) AppGlobalInfo Invoking 'self.runPostInitializationTasks()'...")
+            self.runPostInitializationTasks()
+            appLogMsg("\(sCurrMethodDisp) AppGlobalInfo Invoked  'self.runPostInitializationTasks()'...")
+        }
     
         // Exit:
 
@@ -1127,23 +1159,168 @@ public class AppGlobalInfo:NSObject
     } // End of public func setJmAppDelegateVisitorInstance().
 #endif
 
+#if ENABLE_APP_GLOBALINFO_FOR_PARSECORE
+    // <<CHICKEN-TRACKS>> Centralized ParseCore (Client) initialization 'gate' added.
+    // Every 'JmAppParseCoreBkgdDataRepo*' instance calls THIS method from its own
+    // 'runPostInitializationTasks()' instead of calling 'Parse.initialize(with:)' itself.
+    //
+    // 'AppGlobalInfo' is ALWAYS the 1st singleton referenced (before any Repo), and its
+    // 'init()' synchronously calls 'self.runPostInitializationTasks()' -> 'self.initializeParseCore()'
+    // before 'init()' returns, so 'bIsParseCoreInitialized' will normally already be 'true' by the
+    // time any Repo reaches this method - the 'wait' below is a defensive fallback only, and should
+    // NOT block in practice.  It is written as a genuine lock-protected wait (not a flag-guard) so it
+    // stays correct even if that invariant is ever accidentally broken by a future refactor...
+
+    public func ensureParseCoreIsInitialized()
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Invoked - 'self.bIsParseCoreInitialized' is [\(self.bIsParseCoreInitialized)]...")
+
+        if (self.bIsParseCoreInitialized == true)
+        {
+        //  self.parseCoreInitCondition.unlock()
+            appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Exiting - ParseCore IS initialized (before .wait()) Test #1 - 'self.bIsParseCoreInitialized' is [\(self.bIsParseCoreInitialized)]...")
+            return
+        }
+
+        if (self.bHasParseCoreInitBeenCalled == false)
+        {
+            appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> AppGlobalInfo Invoking 'self.runPostInitializationTasks()'...")
+            self.runPostInitializationTasks()
+            appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> AppGlobalInfo Invoked  'self.runPostInitializationTasks()'...")
+        }
+
+        if (self.bIsParseCoreInitialized == true)
+        {
+        //  self.parseCoreInitCondition.unlock()
+            appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Exiting - ParseCore IS initialized (before .wait()) Test #2 - 'self.bIsParseCoreInitialized' is [\(self.bIsParseCoreInitialized)]...")
+            return
+        }
+
+        self.parseCoreInitCondition.lock()
+
+        while (self.bIsParseCoreInitialized == false)
+        {
+            appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> ParseCore is NOT YET initialized - waiting...")
+            self.parseCoreInitCondition.wait()
+        }
+
+        self.parseCoreInitCondition.unlock()
+
+        appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Exiting - ParseCore IS initialized (after .wait()) - 'self.bIsParseCoreInitialized' is [\(self.bIsParseCoreInitialized)]...")
+
+        return
+
+    }   // End of public func ensureParseCoreIsInitialized().
+
+    // <<CHICKEN-TRACKS>> The ACTUAL ParseCore (Client) initialization - moved here (05/2026) from
+    // 'JmAppParseCoreBkgdDataRepo.runPostInitializationTasks()' so it only ever runs ONCE, from a
+    // single, known caller ('self.runPostInitializationTasks()' below).  Sets 'bIsParseCoreInitialized'
+    // to 'true' and 'broadcast()'s (NOT 'signal()' - there can be MULTIPLE waiters) on exit...
+
+    private func initializeParseCore()
+    {
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+
+        self.bHasParseCoreInitBeenCalled = true
+
+        appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Invoked - 'self.bHasParseCoreInitBeenCalled is [\(self.bHasParseCoreInitBeenCalled)]...")
+
+        // Setup the ParseCore (Client) 'configuration'...
+        // --------------------------------------------------------------------------------------------------
+        // ParseCore doc: -> https://docs.parseplatform.org/ios/guide/
+        //
+        //     let parseConfig = ParseClientConfiguration {
+        //                                                 $0.applicationId = "parseAppId"
+        //                                                 $0.clientKey     = "parseClientKey"
+        //                                                 $0.server        = "parseServerUrlString"
+        //                                                }
+        //     Parse.initialize(with: parseConfig)
+        // --------------------------------------------------------------------------------------------------
+
+        appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Creating the ParseCore (Client) 'configuration'...")
+
+        self.parseConfig = ParseClientConfiguration
+                               {
+                                   $0.applicationId = "VDN7Gs0vvYMg5yokvC4I7Nh521hbm9NF2jluCgW3"
+                                   $0.clientKey     = "txwqvA4yxFiShXAiVyY3tMNG00vKpiW6UmdugVnI"
+                                   $0.server        = "https://pg-app-1ye5iesplk164f4dsvq8gtaddgv1xc.scalabl.cloud/1/"
+                               }
+
+        appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Passing the ParseCore (Client) 'configuration' on to ParseCore...")
+
+        let definesObjCModule = DefinesObjCOverrides()
+
+        // Swift automatically imports Objective-C methods with 'error:(NSError **)error' as throwing methods
+        // This is the correct Swift pattern for exception handling
+        do {
+            try definesObjCModule.performBlockCatchingException {
+                Parse.initialize(with: self.parseConfig!)
+            }
+        } catch {
+            appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Objective-C exception caught - Parse has already been initialized - Exception was: \(error.localizedDescription)...")
+        }
+
+        appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Passed  the ParseCore (Client) 'configuration' on to ParseCore...")
+
+        // Flip the flag and wake ALL waiter(s) (there can be more than one Repo waiting)...
+
+        self.parseCoreInitCondition.lock()
+        self.bIsParseCoreInitialized = true
+        self.parseCoreInitCondition.broadcast()
+        self.parseCoreInitCondition.unlock()
+
+        appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Exiting - 'bIsParseCoreInitialized' is [\(self.bIsParseCoreInitialized)]...")
+
+        return
+
+    }   // End of private func initializeParseCore().
+#endif
+
     private func runPostInitializationTasks()
     {
         
         let sCurrMethod:String     = #function
         let sCurrMethodDisp:String = "\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
 
-        appLogMsg("AppGlobalInfo.\(sCurrMethodDisp) Invoked - 'self' is [\(self)]...")
+        appLogMsg("AppGlobalInfo.\(sCurrMethodDisp) Invoked - 'self.bGlobalInfoPostInitHasRun' is [\(self.bGlobalInfoPostInitHasRun)] - 'self' is [\(self)]...")
 
         // Run 'post' Initialization task(s)...
 
         self.updateUIDeviceOrientation()
         self.displayUIDeviceInformation()
 
+        if (self.bGlobalInfoPostInitHasRun == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) Exiting - 'self.bGlobalInfoPostInitHasRun' is [\(self.bGlobalInfoPostInitHasRun)] - the method has already been run...")
+            return
+        }
+
+        self.bGlobalInfoPostInitHasRun = true
+
         // Detail how the App is 'logging'...
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bIsAppLoggingByVisitor' is [\(String(describing: AppGlobalInfo.bIsAppLoggingByVisitor))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sAppLoggingMethod' is [\(String(describing: AppGlobalInfo.sAppLoggingMethod))]...")
+
+    #if ENABLE_APP_GLOBALINFO_FOR_PARSECORE
+        // <<CHICKEN-TRACKS>> Centralized ParseCore (Client) initialization added (05/2026).
+        // This MUST run here (AppGlobalInfo is always the 1st singleton referenced) so that by the
+        // time any 'JmAppParseCoreBkgdDataRepo*' instance calls 'ensureParseCoreIsInitialized()',
+        // 'bIsParseCoreInitialized' is already 'true' and it returns immediately...
+
+        if (self.bIsParseCoreInitialized == false)
+        {
+            appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Calling 'self.initializeParseCore()'...")
+            self.initializeParseCore()
+            appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Called  'self.initializeParseCore()'...")
+        }
+    #endif
 
         // If we're flagged to 'test' String manipulation(s), then do so...
 
@@ -1358,10 +1535,10 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isUserAuthenticationAvailable' is [\(String(describing: AppGlobalInfo.isUserAuthenticationAvailable))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isUserAuthTypeAvailable' is [\(String(describing: AppGlobalInfo.isUserAuthTypeAvailable))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledParseCoreForSwift' is [\(String(describing: AppGlobalInfo.isEnabledParseCoreForSwift))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledGlobalInfoForParseCore' is [\(String(describing: AppGlobalInfo.isEnabledGlobalInfoForParseCore))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppIAPCapability' is [\(String(describing: AppGlobalInfo.isEnabledAppIAPCapability))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppAlarmCapability' is [\(String(describing: AppGlobalInfo.isEnabledAppAlarmCapability))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppLegacyCoreLoc2' is [\(String(describing: AppGlobalInfo.isEnabledAppLegacyCoreLoc2))]...")
-        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppCoreLocCloudSupport' is [\(String(describing: AppGlobalInfo.isEnabledAppCoreLocCloudSupport))]...")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVV' is [\(String(describing: AppGlobalInfo.bInstantiateAppVV))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVVUIKitAlerts' is [\(String(describing: AppGlobalInfo.bInstantiateAppVVUIKitAlerts))]...")
@@ -1420,6 +1597,11 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.iAlertViaSwiftUITimeout' is #(\(String(describing: AppGlobalInfo.iAlertViaSwiftUITimeout)))...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.iAlertViaUIKitTimeout' is #(\(String(describing: AppGlobalInfo.iAlertViaUIKitTimeout)))...")
 
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bGlobalInfoInitHasRun' is [\(String(describing: self.bGlobalInfoInitHasRun))]...")
+    #if ENABLE_APP_GLOBALINFO_FOR_PARSECORE
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bIsParseCoreInitialized' is [\(String(describing: self.bIsParseCoreInitialized))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bHasParseCoreInitBeenCalled' is [\(String(describing: self.bHasParseCoreInitBeenCalled))]...")
+    #endif
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.tiGlobalAppStartTime' is (\(String(describing: self.tiGlobalAppStartTime)))...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.dblGlobalAppUptime' is (\(String(describing: self.dblGlobalAppUptime)))...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sGlobalAppUptime' is [\(String(describing: self.sGlobalAppUptime))]...")
@@ -1867,6 +2049,7 @@ public class AppGlobalInfo:NSObject
         // from app/scene lifecycle delegate methods, which UIKit guarantees deliver on the main thread.
         // Wrapped in MainActor.assumeIsolated rather than isolating the whole class.
         let stateForegroundBackground = MainActor.assumeIsolated { UIApplication.shared.applicationState }
+    //  let stateForegroundBackground = UIApplication.shared.applicationState
     #endif
 
         switch stateForegroundBackground 
