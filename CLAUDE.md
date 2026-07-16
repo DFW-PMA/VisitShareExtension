@@ -10,6 +10,21 @@
 #                compiler-verified; DivorcePack is next
 #                Section 13 (AppPersistentDataManager generic JSON dispatch refactor) and Section 14
 #                (macOS .sheet() vs openWindow() convention) synced in from JustAMenuBarApp2 2026-06-25
+#                VisitVerify (VV) itself — a DFW-PMA healthcare suite app, outside the PACK App
+#                queue above — had its Swift 6 conversion (§12d) done as a standalone task on
+#                branch iOS27PlusSwift6, 2026-07-16: 'VisitVerify' app target fully converted,
+#                compiler-verified (clean build, 0 errors), AND on-device runtime-verified on
+#                Daryl's iPad Pro 11-inch M4 — reached the Swift splash screen, took the segue
+#                button, ObjC side came up successfully. 4 post-compile runtime bugs found and
+#                fixed along the way (all pre-existing fragility in AppGlobalInfo.swift/
+#                AppDelegate.m, newly surfaced by Swift 6's stricter checking, all specific to
+#                VV's ObjC-main.m-launch architecture — see §12d's "ON-DEVICE RUNTIME
+#                VERIFICATION" entry for full detail) — SESSION CLOSED, no further VV Swift 6
+#                work pending. 'VisitVerifyTests' target explicitly out of scope (unbuilt for 2+
+#                years, blocked by a pre-existing SPM package-linkage gap unrelated to Swift 6 —
+#                do not attempt). VV's JmEntityInfo macro migration (§11a) is unaffected/still
+#                held back. Daryl's plan: fan the runOnMainActorSync fix out to VMA first, then
+#                the other DFW-PMA healthcare apps, then the PACK Apps.
 
 
 ---
@@ -997,6 +1012,187 @@ For each PACK App in the migration order below:
   source-level parity is sufficient.
 - Verification: real `xcodebuild clean build`, no overrides, reading the now-permanent
   `project.pbxproj` setting directly — **BUILD SUCCEEDED**.
+
+#### VisitVerify (VV) — CONVERSION COMPLETE (app target only) — 2026-07-16
+- **NOTE:** VV is a DFW-PMA healthcare suite app, not a PACK App — it sits outside the
+  §11a/§12e PACK App queue (ClipPack → LocatePack → NomadPack) and was done as a standalone,
+  explicitly-requested task on branch `iOS27PlusSwift6`. VV's JmEntityInfo macro migration
+  (§11a) is **unaffected by this work** — VV is still deliberately held back from that CLI,
+  independent of Swift 6 status; most files in this app remain on the legacy hand-typed
+  `ClassInfo` pattern (§2b), which is expected and correct.
+- Status: [x] **`VisitVerify` app target fully converted and compiler-verified.** Xcode 26.6
+  (explicitly NOT the Xcode 27 Beta 3 / iOS 27 track — Daryl had already ported VV to iOS 27
+  under Xcode 27 Beta 3 separately, but this conversion was done under the current
+  DRCMBP5 Xcode 26.6 toolchain). `SWIFT_VERSION = 6.0` was already set permanently in
+  `project.pbxproj` for both targets (Debug + Release) before this session started — not a
+  scoped xcconfig override this time, a real committed project setting. Confirmed via a real
+  `xcodebuild clean build`, no overrides — **BUILD SUCCEEDED, 0 errors.** Destination: iPad Pro
+  13-inch (M5), iOS 26.5 simulator.
+- **`VisitVerifyTests` target: explicitly out of scope, do not attempt.** It has not been
+  built in 2+ years (confirmed by Daryl) and its build fails on missing SPM package linkage
+  (`JmEntityInfo`/`XMLCoder`/`MarkdownUI`/`SwiftOTP` not linked to the target at all, plus
+  `SwiftXLSX` which isn't a resolved package anywhere in this project — the app target avoids
+  needing it because `JmAppParseCoreBkgdDataRepo.swift` gates `import SwiftXLSX` behind
+  `#if INSTANTIATE_APP_BIGTESTTRACKING`, a flag set in the app target's `OTHER_SWIFT_FLAGS` but
+  not the Tests target's). This is a pre-existing package-linkage gap, **unrelated to Swift 6**
+  — do not attempt to fix it as part of a Swift 6 pass; it would require Xcode-UI-driven
+  "Frameworks, Libraries, and Embedded Content" surgery, not a source-level concurrency fix.
+- Context going in: Daryl had already pulled ~176 files' worth of already-Swift-6-converted
+  shared/common code over from VMA and JustAMultiplatformClock1 via JMACodeSync before this
+  session started (`AppGlobalInfo.swift`, `JmAppDeepCopyUtility.swift`, the persistence-layer
+  files from §3, etc. — all showed as modified/untracked in `git status` at session start).
+  This session's job was the remaining ~23 VV-unique files that JMACodeSync had no VMA/Clock1
+  counterpart for, plus a handful of already-"synced" files that still had live diagnostics
+  the sync hadn't caught (confirming the §13e lesson again: a file being in the synced set
+  does not mean it's actually diagnostic-clean for this app's specific call sites).
+- Files touched (backed up per §2k to `../work/Claude_code_CLIFirstCut`, each version-bumped,
+  each fix `<<CHICKEN-TRACKS>>`-commented): `Views/VVSwiftOnlyEnv.swift`,
+  `AppUtils/VisitVerifyAppBigTestStep0.swift`, `Models/VVDarwinNotification.swift`,
+  `Models/TherapistFileItem.swift`, `JmUtils/JmAppSwiftDataManager.swift`,
+  `Views/ContentViewInterface.swift`, `Views/ContentViewInterface2.swift`,
+  `VVObjCSwiftEnvBridge.swift`, `Modifiers/VVScreenCaptureOverlay.swift`,
+  `AppUtils/VisitVerifyAppBigTestTracking.swift`, `JmUtils/JmAppParseCoreBkgdDataRepo2.swift`,
+  `JmUtils/JmAppParseCoreBkgdDataRepo3.swift`, `JmUtils/JmAppParseCoreManager.swift`,
+  `Models/AppSettingsModelObservable.swift`, `JmUtils/JmAppDelegateVisitor.swift` (the last one
+  is common infra shared with VMA — the fixes below are VV-specific call sites/methods within
+  it that hadn't surfaced yet, not a re-do of VMA's own conversion).
+- Fix patterns used — all but two matched the existing §12d catalog directly (var→let+
+  `nonisolated(unsafe)` for never-reassigned NSObject singletons; whole-class `@MainActor` for
+  plain `ObservableObject`s/NSObjects whose only real consumers are SwiftUI Views or UIKit
+  scene-delegate callbacks, confirmed via grep each time; `self`/local-var rebind to
+  `nonisolated(unsafe) let unsafeSelf`/`unsafeX` immediately before `DispatchQueue.main.async(After)`
+  and `Task { @MainActor in }` closures). **Two new patterns surfaced this session, worth
+  checking for on any future app**:
+  - **Nested local type's `static let` doesn't inherit the outer type's `@MainActor`**
+    (`VVSwiftOnlyEnv.swift`): a legacy `ClassSingleton`-style nested `struct Singleton { static
+    let x = Foo() }` declared *inside* a computed property body does not pick up `@MainActor`
+    isolation from the outer `@MainActor`-annotated class — Swift's error is "main actor-isolated
+    default value in a nonisolated context" pointing at the *nested* struct's `static let`, even
+    though the outer class is correctly marked. Fix: explicitly annotate `@MainActor` on the
+    nested struct's `static let` too — annotations do not cascade into locally-scoped nested
+    types.
+  - **`@ObservedObject` on a property of a plain `NSObject` (not a SwiftUI `View`)** — used in
+    `ContentViewInterface.swift`/`ContentViewInterface2.swift`/`JmAppParseCoreManager.swift` as
+    a way to eagerly hold/instantiate a shared singleton reference, not for actual SwiftUI view
+    invalidation. `@ObservedObject`'s `wrappedValue` accessor is inferred `@MainActor`, which
+    then produces "property 'self.x' not initialized at super.init call" because the default-value
+    assignment can't be proven to happen on the main actor relative to `super.init()`. Two
+    different fixes were used depending on whether the property was actually referenced
+    elsewhere in the class: (1) `ContentViewInterface`/`ContentViewInterface2` — whole-class
+    `@MainActor`, since both are `@objc`-bridged into UIKit main-thread call sites
+    (`AppDelegate.m`, `BubbleMessagesViewController.m`) and the property genuinely is read
+    elsewhere; (2) `JmAppParseCoreManager` — the property (`jmAppSwiftDataManager`) was
+    referenced *nowhere else in the file* and the class is common infra used from non-main
+    ParseCore contexts, so whole-class `@MainActor` was rejected (matches a prior commented-out
+    `//@MainActor` attempt already backed out in this exact file) — instead the `@ObservedObject`
+    wrapper itself was dropped in favor of a plain `var`, since it provided no real capability on
+    a non-View type (nothing consumes `$jmAppSwiftDataManager` or reacts to `objectWillChange`).
+  - Also recurring in `JmAppDelegateVisitor.swift`: constructing `UIAlertAction`/`UIAlertController`
+    inside a method not itself `@MainActor` produces "sending task-isolated value of non-Sendable
+    type '(UIAlertAction) -> Void' risks causing data races" at the `UIAlertAction(...)` call
+    site itself — this is **not** fixable by rebinding captures to `nonisolated(unsafe)` (tried
+    first, did not work; the closure *literal* is what's being "sent" across the actor boundary,
+    independent of what it captures). The actual fix: mark the presenting method itself
+    `@MainActor` (`presentUIKitGlobalAlert`/`presentUIKitCompletionAlert` — both already only
+    ever called from within a `DispatchQueue.main.asyncAfter` closure, so this matches their real
+    runtime behavior) and change that closure literal at the call site to `{ @MainActor in ... }`
+    to match. Once caller and callee share the same actor, the "sending" diagnostic disappears
+    entirely — no capture-level fix was needed after that.
+- Verification: real `xcodebuild clean build`, no overrides, reading the now-permanent
+  `project.pbxproj` `SWIFT_VERSION = 6.0` setting directly — **BUILD SUCCEEDED**.
+
+#### VisitVerify (VV) — ON-DEVICE RUNTIME VERIFICATION — 2026-07-16
+- **A clean compile is not the same as a working launch.** VV's Swift 6 conversion above compiled
+  with 0 errors on the first try, but the very next on-device run (Daryl's iPad Pro 11-inch M4)
+  hit three separate runtime bugs in a row, one per launch attempt, each only reachable after
+  fixing the one before it. None of the three were caught by the compiler, and none were bugs in
+  the Swift 6 migration's own logic — all three were pre-existing fragility in shared/common
+  infrastructure (`AppGlobalInfo.swift`, `AppDelegate.m`) that the Swift 6 conversion's stricter
+  actor-isolation checking happened to newly surface. **Session startup addendum for any future
+  Swift 6 conversion with an on-device runtime step: budget time for this — do not treat a clean
+  build as done.**
+- **Root architectural cause, confirmed by Daryl:** VV is a 13-year-old, ~80% Objective-C
+  (~400,000 lines, written by Tony, who still writes in ObjC and hasn't adopted Swift) / ~20%
+  Swift (~100,000 lines) hybrid — unlike every other app this Swift 6 catalog covers (PACK Apps
+  and the other healthcare-suite apps), which are 98-100% Swift with a `@main` App-struct entry
+  point. VV boots through classic ObjC (`main.m` → `AppDelegate.m`) and only reactively drops into
+  Swift when `AppDelegate.m` instantiates `VVObjCSwiftEnvBridge`. The architecture is a deliberate
+  **two-phase boot**, documented in `AppDelegate.m`'s own comment block (lines ~2388-2489, worth
+  reading in full before touching this app's launch sequence again): a fast, self-contained Swift
+  splash screen (`VVSwiftSplashView3`) comes up first; the entire 400K-line ObjC side is deferred
+  until the user taps "Enter VV", which fires `delayedApplication:didFinishLaunchingWithOptions:`
+  from `VVSwiftStoryboard1UIHostingController.prepare(for segue:)`. All three runtime bugs below
+  were in that early, Swift-only, pre-segue window — none involved the ObjC side at all. This
+  explains why 20+ pure-Swift `@main` apps never hit any of them: they don't have "fast Swift
+  front door, heavy legacy side deferred behind a user action" as a shape, so the specific
+  early-boot conditions that exposed these bugs don't arise there.
+- **Bug 1 — `MainActor.assumeIsolated` trap (EXC_BREAKPOINT) in `AppGlobalInfo.init()`.**
+  `assumeIsolated` checks Swift Concurrency's *internal main-actor-executor association*, not
+  merely "is this the physical main thread". Apps launched via Swift `@main` always have that
+  association established before any of this code runs. VV's ObjC-driven launch reaches this
+  code early enough (inside `application:willFinishLaunchingWithOptions:`, before the run loop is
+  spinning) that the association can still be unset even though the thread genuinely is main —
+  `assumeIsolated` traps despite `Thread.isMainThread` being true. **Fix:** added a
+  `runOnMainActorSync<T>(_ body: @escaping @MainActor () -> T) -> T` helper to
+  `AppGlobalInfo.swift`, used at all 3 of the file's `MainActor.assumeIsolated` call sites (init's
+  device-type detection, device-orientation read, `applicationState` read). Final, working form
+  does an unconditional `unsafeBitCast` between the `@MainActor` closure and a plain closure —
+  see Bug 2 below for why the first version (a `Thread.isMainThread` check with a
+  `DispatchQueue.main.sync` fallback) was wrong. Safe because `@MainActor` is a compile-time-only
+  annotation with identical ABI to a plain closure — this satisfies the Swift 6 compiler without
+  adding any new runtime behavior, restoring exactly the unguarded-call behavior this code had
+  before its Swift 6 migration (which is what's been proven safe in production across 20+ apps
+  for years — Swift 6 added a compile-time proof obligation here, not a new runtime hazard).
+  **Daryl's plan:** fan this same fix out to the other apps using this common file — VMA first,
+  then the other DFW-PMA healthcare apps, then the PACK Apps — since it's a strict improvement
+  even where `assumeIsolated` already "works" (`Thread.isMainThread` is already true at every one
+  of those call sites, so the fixed version is a behavioral no-op for them, just proven via an
+  OS-level fact instead of Swift Concurrency's executor bookkeeping).
+- **Bug 2 — deadlock (0% CPU, permanently stuck at splash) from the first attempt at Bug 1's fix.**
+  The first version of `runOnMainActorSync` checked `Thread.isMainThread` and fell back to
+  `DispatchQueue.main.sync { @MainActor in body() }` when false. `AppGlobalInfo.init()` runs
+  inside the lazy `static let appGlobalInfo`'s once-only initialization lock (Swift's
+  `swift_once`-equivalent). When `init()` ran on a background thread, the `DispatchQueue.main.sync`
+  fallback blocked that thread waiting for the main thread — but the main thread's own later touch
+  of `AppGlobalInfo.appGlobalInfo`/`.shared` blocked right back, waiting on the *same* lazy-init
+  lock the background thread was already holding. Circular wait. **Lesson: never block/wait
+  synchronously on another thread from inside a lazy `static let`'s initializer** — the initializing
+  thread may not be who you think it is, and anything that thread waits on can turn into anything
+  ELSE waiting on the still-held init lock. **Fix:** dropped the `DispatchQueue.main.sync` fallback
+  entirely; `runOnMainActorSync` now always executes directly via `unsafeBitCast`, on whatever
+  thread calls it, with zero blocking/waiting of any kind.
+- **Bug 3 — `EXC_BAD_ACCESS` inside `Array.append()` on `listAppGlobalInfoPreXCGLoggerMessages`.**
+  This array (the pre-XCGLogger message buffer in `AppGlobalInfo.swift`) is a plain
+  `nonisolated(unsafe) var [String]`, safe only if genuinely single-threaded. That held for the
+  other 20+ apps' simpler boot sequences; it does not hold for VV, which has at least one extra
+  thread active during this exact boot window (very likely XCGLogger's own async log-destination
+  queue spinning up mid-cascade — Thread 3 in the debugger was a `_pthread_wqthread` GCD worker,
+  with `__XCGCustomLogger_...` visible in its stack). Two threads calling `.append()` on the same
+  `Array` concurrently — or one appending while `setJmAppDelegateVisitorInstance()`'s drain-read
+  (`.joined(separator:)`) runs on another — corrupts the buffer mid-reallocation. The array
+  inspected as perfectly valid (5 real elements) right up to the crash, which is consistent with
+  this being a genuine concurrent-mutation race rather than a logic bug in the visible code.
+  **Fix:** added `@usableFromInline nonisolated(unsafe) let lockPreXCGLoggerMessages = NSLock()`
+  and wrapped all 5 access points (both append sites, the drain-read snapshot, and a diagnostic
+  count-read) in lock/unlock. Note `@usableFromInline` (not `private`) was required — two of the
+  functions touching the lock are `@inlinable`, and `@inlinable` DOES enforce strict access-level
+  checking even in a plain app target (not just library-evolution targets), contrary to initial
+  assumption; this cost one extra build-fix cycle.
+- **Bug 4 (not a runtime crash, but load-bearing) — `runPostInitializationTasks()` launch-sequence
+  timing.** Even with Bugs 1-3 fixed, `JmAppDelegateVisitor.runPostInitializationTasks()` — called
+  from `AppDelegate.m`'s `application:willFinishLaunchingWithOptions:` — was starting this entire
+  nested-singleton-cascade (which every bug above lives inside) too early, before the run loop has
+  started spinning. **Fix:** moved the call from `willFinishLaunchingWithOptions:` to
+  `didFinishLaunchingWithOptions:` (old call site commented out per §2f, not deleted, with
+  cross-referenced CHICKEN-TRACKS notes on both ends). Confirmed independently correct after the
+  fact: `AppDelegate.m`'s own pre-existing architecture comment block (~line 2416) already
+  documented this exact move as the intended design (`--- moved to 'didFinishLaunching...'...`) —
+  this session's fix aligned the code with already-written intent, not a novel guess.
+- All 4 fixes verified building clean (`xcodebuild build`, incremental) after each round;
+  final verification was an actual on-device launch on Daryl's iPad Pro 11-inch M4 — confirmed
+  reaching the Swift splash screen, taking the segue button, and the Objective-C side coming up
+  successfully. This is the first PACK-catalog-adjacent Swift 6 conversion in this file verified
+  by a real on-device run rather than just a clean simulator build.
 
 #### ClipPack
 - Status: [ ] Not yet assessed

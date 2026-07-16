@@ -11,7 +11,7 @@ import Foundation
 import SwiftUI
 import UIKit
 
-@JmEntityInfo(vers:"v1.0402")
+@JmEntityInfo(vers:"v1.0501")
 @available(iOS 14.0, *)
 @objc(JmAppScreenCapture)
 class JmAppScreenCapture:NSObject
@@ -77,7 +77,8 @@ class JmAppScreenCapture:NSObject
     @objc public func triggerScreenCaptureUpload(_ tag:     String,
                                                  notifyFrom:String  = "",
                                                  notifyTo:  String  = "",
-                                                 notifyCc:  String  = "")
+                                                 notifyCc:  String  = "",
+                                                 bSilent:   Bool    = true)
     {
 
         //  let sCurrMethod:String     = #function
@@ -122,7 +123,8 @@ class JmAppScreenCapture:NSObject
                                         notifyTo:  sNotifyTo,
                                         notifyCc:  sNotifyCc,
                                         bZip:      false,
-                                        bSilent:   true)          // No user-facing Alert for background debug captures
+                                        bSilent:   bSilent)       // Maybe a user-facing Alert for background debug captures
+        //                              bSilent:   true)          // No user-facing Alert for background debug captures
 
         }
 

@@ -9,22 +9,13 @@
 import JmEntityInfo
 import Foundation
 import SwiftUI
+import Combine
 import UniformTypeIdentifiers
 
-@JmEntityInfo(vers:"v1.0301")
+@JmEntityInfo(vers:"v1.0401")
 public struct AppDocumentImportContentTypes
 {
     
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId          = "AppDocumentImportContentTypes"
-        //  static let sClsVers        = "v1.0201"
-        //  static let sClsDisp        = sClsId+"(.swift).("+sClsVers+"):"
-        //  static let sClsCopyRight   = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        //  static let bClsTrace       = false
-        //  static let bClsFileLog     = true
-    //  }
-
     // App Data field(s):
 
     // <<CHICKEN-TRACKS>> (2026-06-24) — 'var' -> 'let': nothing in the codebase mutates this list

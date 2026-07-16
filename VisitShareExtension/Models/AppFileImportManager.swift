@@ -20,20 +20,10 @@ import Combine
 // non-Sendable ObservableObject is flagged under Swift 6 strict concurrency as not concurrency-safe.
 // Matches the established pattern for other ObservableObject singletons in this codebase
 // (AlarmDataModelObservable, JmDeveloperUnlockManager) - this manager only drives UI state anyway.
-@JmEntityInfo(vers:"v1.0601")
+@JmEntityInfo(vers:"v1.0701")
 @MainActor
 class AppFileImportManager:ObservableObject
 {
-
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "AppFileImportManager"
-        //  static let sClsVers      = "v1.0601"
-        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        //  static let bClsTrace     = true
-        //  static let bClsFileLog   = true
-    //  }
 
     // MARK: - Singleton Instance...
 

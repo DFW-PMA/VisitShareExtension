@@ -23,7 +23,7 @@ import GoogleMobileAds
 //@available(macOS 15, *)
 @available(iOS 14.0, *)
 @objc(JmAppDelegateVisitor)
-@JmEntityInfo(vers:"v1.8501")
+@JmEntityInfo(vers:"v1.8502")
 public class JmAppDelegateVisitor:NSObject, ObservableObject
 {
 
@@ -2649,10 +2649,16 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> Processing UIKit alert request [\(alertRequest.requestId)] after [\(self.uiKitAlertSignalDelaySeconds)] second delay...")
 
         // Delay before presenting to allow View re-rendering...
+        // <<CHICKEN-TRACKS>> Swift 6: flagged "sending self risks causing data races" (self
+        // captured into DispatchQueue.main.asyncAfter's closure); rebound to nonisolated(unsafe)
+        // AND the closure marked '@MainActor in' since presentUIKitGlobalAlert() itself is now
+        // @MainActor (its UIAlertAction/UIAlertController construction requires it) — v1.8502
+
+        nonisolated(unsafe) let unsafeSelf = self
 
         DispatchQueue.main.asyncAfter(deadline:(.now() + self.uiKitAlertSignalDelaySeconds))
-        {
-            self.presentUIKitGlobalAlert(alertRequest)
+        { @MainActor in
+            unsafeSelf.presentUIKitGlobalAlert(alertRequest)
         }
 
         return
@@ -2665,6 +2671,11 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 // ============================================================================
 
 #if INSTANTIATE_APP_VV_UIKIT_ALERTS
+    // <<CHICKEN-TRACKS>> Swift 6: @MainActor — constructs UIAlertAction/UIAlertController and
+    // calls topViewController.present(...), all main-actor-isolated UIKit APIs; sole caller
+    // (processNextUIKitGlobalAlert()) already dispatches via DispatchQueue.main.asyncAfter, now
+    // marked '{ @MainActor in }' to match — v1.8502
+    @MainActor
     private func presentUIKitGlobalAlert(_ alertRequest:GlobalAlertRequest)
     {
 
@@ -2736,13 +2747,20 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                                                 preferredStyle:.alert)
 
         // Add button with action that calls reset...
+        // <<CHICKEN-TRACKS>> Swift 6: rebind 'self' to nonisolated(unsafe) before the closure —
+        // flagged "sending value of non-Sendable type '(UIAlertAction) -> Void' risks causing data
+        // races" because the closure captures non-Sendable 'self' (even weakly); [weak] retained
+        // on the rebound reference to preserve the original no-retain-cycle intent — v1.8502
+
+        nonisolated(unsafe) let unsafeSelf         = self
+        nonisolated(unsafe) let unsafeAlertRequest = alertRequest
 
         let action = UIAlertAction(title:alertRequest.alertButtonText, style:.default)
-        { [weak self] _ in
+        { [weak unsafeSelf] _ in
 
-            appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> User dismissed UIKit alert [\(alertRequest.requestId)]...")
+            appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> User dismissed UIKit alert [\(unsafeAlertRequest.requestId)]...")
 
-            self?.resetUIKitGlobalAlert()
+            unsafeSelf?.resetUIKitGlobalAlert()
         }
 
         alertController.addAction(action)
@@ -2751,12 +2769,18 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // WATCHDOG TIMER: Auto-reset if alert doesn't present within 'AppGlobalInfo.iAlertViaUIKitTimeout' seconds
         // ========================================================================
 
-        var watchdogCancelled = false
+        // <<CHICKEN-TRACKS>> Swift 6: 'var watchdogCancelled'/'let watchdogTimer' are both flagged
+        // "sending ... risks causing data races" — captured by 2 different Sendable-crossing
+        // closures below (the DispatchWorkItem itself, and the topViewController.present(...)
+        // completion handler). Both run on main thread serially in practice; nonisolated(unsafe)
+        // reflects that existing synchronization rather than changing it — v1.8502
 
-        let watchdogTimer = DispatchWorkItem 
+        nonisolated(unsafe) var watchdogCancelled = false
+
+        nonisolated(unsafe) let watchdogTimer = DispatchWorkItem
         { [weak self] in
 
-            guard let self = self, !watchdogCancelled 
+            guard let self = self, !watchdogCancelled
             else { return }
 
             self.alertQueueLock.lock()
@@ -2765,9 +2789,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             self.alertQueueLock.unlock()
 
             if (stillProcessing == true &&
-                currentId       == alertRequest.requestId)
+                currentId       == unsafeAlertRequest.requestId)
             {
-                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Alert [\(alertRequest.requestId)] failed to present within #(\(AppGlobalInfo.iAlertViaUIKitTimeout)) second(s) - Warning!")
+                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Alert [\(unsafeAlertRequest.requestId)] failed to present within #(\(AppGlobalInfo.iAlertViaUIKitTimeout)) second(s) - Warning!")
                 appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Auto-resetting and advancing queue...")
 
                 // <<CHICKEN-TRACKS>> Must-complete guard - if the alarm 'must-complete' flag is
@@ -2775,7 +2799,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
                 if (self.bAppDelegateVisitorAlertMustComplete == true)
                 {
-                    appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: 'bAppDelegateVisitorAlertMustComplete' is SET - bypassing auto-reset for alert [\(alertRequest.requestId)] - alert MUST be manually dismissed...")
+                    appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: 'bAppDelegateVisitorAlertMustComplete' is SET - bypassing auto-reset for alert [\(unsafeAlertRequest.requestId)] - alert MUST be manually dismissed...")
                     return
                 }
 
@@ -2797,7 +2821,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 self.currentUIKitGlobalAlertId    = nil
 
                 if (self.uiKitGlobalAlertQueue.count         > 0 &&
-                    self.uiKitGlobalAlertQueue[0].requestId == alertRequest.requestId)
+                    self.uiKitGlobalAlertQueue[0].requestId == unsafeAlertRequest.requestId)
                 {
                     self.uiKitGlobalAlertQueue.removeFirst()
                 }
@@ -2830,7 +2854,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 watchdogCancelled = true
                 watchdogTimer.cancel()
 
-                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> UIKit alert [\(alertRequest.requestId)] presented successfully...")
+                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> UIKit alert [\(unsafeAlertRequest.requestId)] presented successfully...")
             }
         }
 
@@ -3306,10 +3330,18 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> Processing UIKit completion alert request [\(alertRequest.requestId)] after #(\(self.uiKitAlertSignalDelaySeconds)) second delay...")
 
         // Delay before presenting...
+        // <<CHICKEN-TRACKS>> Swift 6: flagged "sending self"/"sending alertRequest risks causing
+        // data races" (self + CompletionAlertRequest — not Sendable because its
+        // completionHandler1/completionHandler2 closure properties aren't @Sendable — captured
+        // into DispatchQueue.main.asyncAfter's @MainActor closure); same idiom as
+        // processNextCompletionAlert() elsewhere in this file — v1.8502
+
+        nonisolated(unsafe) let unsafeSelf         = self
+        nonisolated(unsafe) let unsafeAlertRequest = alertRequest
 
         DispatchQueue.main.asyncAfter(deadline:(.now() + self.uiKitAlertSignalDelaySeconds))
-        {
-            self.presentUIKitCompletionAlert(alertRequest)
+        { @MainActor in
+            unsafeSelf.presentUIKitCompletionAlert(unsafeAlertRequest)
         }
 
         return
@@ -3322,6 +3354,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 // ============================================================================
 
 #if INSTANTIATE_APP_VV_UIKIT_ALERTS
+    // <<CHICKEN-TRACKS>> Swift 6: @MainActor — same reasoning as presentUIKitGlobalAlert() above —
+    // v1.8502
+    @MainActor
     private func presentUIKitCompletionAlert(_ alertRequest:CompletionAlertRequest)
     {
 
@@ -3398,13 +3433,20 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                                                 preferredStyle:.alert)
 
         // Add button 1...
+        // <<CHICKEN-TRACKS>> Swift 6: rebind 'self' to nonisolated(unsafe) before both action
+        // closures — flagged "sending value of non-Sendable type '(UIAlertAction) -> Void' risks
+        // causing data races"; [weak] retained on the rebound reference to preserve the original
+        // no-retain-cycle intent — v1.8502
 
-        let action1 = UIAlertAction(title:alertRequest.alertButtonText1, style:.default) 
-        { [weak self] _ in
+        nonisolated(unsafe) let unsafeSelf         = self
+        nonisolated(unsafe) let unsafeAlertRequest = alertRequest
 
-            appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> User tapped button 1 in UIKit completion alert [\(alertRequest.requestId)]...")
+        let action1 = UIAlertAction(title:alertRequest.alertButtonText1, style:.default)
+        { [weak unsafeSelf] _ in
 
-            self?.resetUIKitCompletionAlert(idButtonClicked:1)
+            appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> User tapped button 1 in UIKit completion alert [\(unsafeAlertRequest.requestId)]...")
+
+            unsafeSelf?.resetUIKitCompletionAlert(idButtonClicked:1)
 
         }
 
@@ -3414,12 +3456,12 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         if (alertRequest.alertButtonText2.count > 0)
         {
-            let action2 = UIAlertAction(title:alertRequest.alertButtonText2, style:.default) 
-            { [weak self] _ in
+            let action2 = UIAlertAction(title:alertRequest.alertButtonText2, style:.default)
+            { [weak unsafeSelf] _ in
 
-                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> User tapped button 2 in UIKit completion alert [\(alertRequest.requestId)]...")
+                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> User tapped button 2 in UIKit completion alert [\(unsafeAlertRequest.requestId)]...")
 
-                self?.resetUIKitCompletionAlert(idButtonClicked: 2)
+                unsafeSelf?.resetUIKitCompletionAlert(idButtonClicked: 2)
 
             }
 
@@ -3430,12 +3472,16 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         // WATCHDOG TIMER: Auto-reset if alert doesn't present within 'AppGlobalInfo.iAlertViaUIKitTimeout' seconds
         // ========================================================================
 
-        var watchdogCancelled = false
+        // <<CHICKEN-TRACKS>> Swift 6: 'var watchdogCancelled'/'let watchdogTimer' both flagged
+        // "sending ... risks causing data races" — same reasoning/fix as presentUIKitGlobalAlert()
+        // above — v1.8502
 
-        let watchdogTimer = DispatchWorkItem 
+        nonisolated(unsafe) var watchdogCancelled = false
+
+        nonisolated(unsafe) let watchdogTimer = DispatchWorkItem
         { [weak self] in
 
-            guard let self = self, !watchdogCancelled 
+            guard let self = self, !watchdogCancelled
             else { return }
 
             self.alertQueueLock.lock()
@@ -3444,9 +3490,9 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
             self.alertQueueLock.unlock()
 
             if (stillProcessing == true &&
-                currentId       == alertRequest.requestId)
+                currentId       == unsafeAlertRequest.requestId)
             {
-                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Completion alert [\(alertRequest.requestId)] failed to present within #(\(AppGlobalInfo.iAlertViaUIKitTimeout)) second(s) - Error!")
+                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Completion alert [\(unsafeAlertRequest.requestId)] failed to present within #(\(AppGlobalInfo.iAlertViaUIKitTimeout)) second(s) - Error!")
                 appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: Auto-resetting and advancing queue...")
 
                 // <<CHICKEN-TRACKS>> Must-complete guard - if the alarm 'must-complete' flag is
@@ -3454,7 +3500,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
                 if (self.bAppDelegateVisitorAlertMustComplete == true)
                 {
-                    appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: 'bAppDelegateVisitorAlertMustComplete' is SET - bypassing auto-reset for alert [\(alertRequest.requestId)] - alert MUST be manually dismissed...")
+                    appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> WATCHDOG: 'bAppDelegateVisitorAlertMustComplete' is SET - bypassing auto-reset for alert [\(unsafeAlertRequest.requestId)] - alert MUST be manually dismissed...")
                     return
                 }
 
@@ -3478,7 +3524,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 self.appDelegateVisitorCompletionClosure2 = nil
 
                 if (self.uiKitCompletionAlertQueue.count         > 0 &&
-                    self.uiKitCompletionAlertQueue[0].requestId == alertRequest.requestId)
+                    self.uiKitCompletionAlertQueue[0].requestId == unsafeAlertRequest.requestId)
                 {
                     self.uiKitCompletionAlertQueue.removeFirst()
                 }
@@ -3511,7 +3557,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
                 watchdogCancelled = true
                 watchdogTimer.cancel()
 
-                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> UIKit completion alert [\(alertRequest.requestId)] presented successfully...")
+                appLogMsg("\(sCurrMethodDisp) <AlertViaUIKit> UIKit completion alert [\(unsafeAlertRequest.requestId)] presented successfully...")
             }
         }
 

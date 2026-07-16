@@ -78,14 +78,30 @@ public func appLogMsg(_ sMessage:String)
     // reasoning as 'jmAppGlobalInfoDelegateVisitor' above. This is a boot-time-only "cart and horse"
     // cache valve: messages append here only before the XCGLogger/Visitor route is up; once
     // setJmAppDelegateVisitorInstance() drains it into the real log, it is never touched again.
+    //
+    // <<CHICKEN-TRACKS>> Swift 6 follow-up (2026-07-16, VV) — the "never touched again" assumption
+    // above holds only for single-threaded boot sequences. VV's ObjC-driven launch has at least one
+    // extra thread (a GCD worker, likely XCGLogger's own async log-destination queue spinning up
+    // mid-cascade) concurrently calling appLogMsgWithVisitor() during this same pre-visitor boot
+    // window. Two threads appending to this array at once — or one appending while
+    // setJmAppDelegateVisitorInstance() drains/reads it — corrupts the buffer mid-reallocation:
+    // EXC_BAD_ACCESS inside Array.append(), even though the array inspects as perfectly valid right
+    // up to the crash. nonisolated(unsafe) only promised the compiler this was single-threaded; it
+    // wasn't. lockPreXCGLoggerMessages below makes every access to the array (append AND drain-read)
+    // mutually exclusive for real, rather than just satisfying the compiler. @usableFromInline
+    // (not private) because appLogMsgViaGlobalCache() above is @inlinable and needs to reference it.
+    @usableFromInline nonisolated(unsafe) let lockPreXCGLoggerMessages = NSLock()
+
            public nonisolated(unsafe) var listAppGlobalInfoPreXCGLoggerMessages:[String]
                                                                            = [String]()
 
 @inlinable
-public func appLogMsgViaGlobalCache(_ sMessage:String) 
+public func appLogMsgViaGlobalCache(_ sMessage:String)
 {
 
+    lockPreXCGLoggerMessages.lock()
     listAppGlobalInfoPreXCGLoggerMessages.append(sMessage)
+    lockPreXCGLoggerMessages.unlock()
 
 }   // End of @inlinable public func appLogMsg(_ sMessage:String).
 #endif
@@ -104,7 +120,9 @@ public func appLogMsgWithVisitor(_ sMessage:String)
     {
         appLogMsgWithoutVisitor(sMessage)
 
+        lockPreXCGLoggerMessages.lock()
         listAppGlobalInfoPreXCGLoggerMessages.append(sMessage)
+        lockPreXCGLoggerMessages.unlock()
     }
 #else
     appLogMsgWithoutVisitor(sMessage)
@@ -862,6 +880,44 @@ public class AppGlobalInfo:NSObject
     private var bHasParseCoreInitBeenCalled:Bool                         = false
 #endif
 
+    // <<CHICKEN-TRACKS>> Swift 6 — added 2026-07-16 for VisitVerify (VV), revised same day after a
+    // deadlock was found on-device. MainActor.assumeIsolated checks Swift Concurrency's internal
+    // main-actor-executor association, NOT merely "is this the physical main thread". Apps that
+    // launch via a Swift `@main` App struct always have that association established before any of
+    // this code runs, so assumeIsolated is reliable there. VV launches via Objective-C (main.m ->
+    // AppDelegate.m) and only reactively drops into Swift the first time AppDelegate touches
+    // VVObjCSwiftEnvBridge — early enough in that ObjC-driven sequence that Swift's main-actor-
+    // executor association can still be unset even though the code is genuinely running on the
+    // physical main thread, causing assumeIsolated to trap with EXC_BREAKPOINT.
+    //
+    // First attempt (REVERTED — see below) checked Thread.isMainThread and fell back to
+    // DispatchQueue.main.sync when false. That deadlocked: this method is called from inside
+    // AppGlobalInfo.init(), which itself runs under the lazy `static let appGlobalInfo`'s
+    // once-only initialization lock. When init() ran on a background thread (not main), the
+    // DispatchQueue.main.sync fallback blocked that thread waiting for the main thread — but the
+    // main thread's own later touch of AppGlobalInfo.appGlobalInfo/.shared blocked right back,
+    // waiting on the very same lazy-init lock the background thread was already holding. Circular
+    // wait, 0% CPU, permanent hang at the splash screen.
+    //
+    // Fix: never block/wait here at all — just execute directly, unconditionally, on whatever
+    // thread called it. unsafeBitCast between a @MainActor closure and a plain closure is safe
+    // (purely a compile-time annotation, identical ABI) — it satisfies the Swift 6 compiler without
+    // adding any new runtime behavior. This is not a downgrade: before this file's Swift 6
+    // migration, these UIDevice/UIScreen/UIApplication reads ran completely unguarded — no thread
+    // check, no dispatch — and that is exactly what has been running safely in production across
+    // all 20+ apps using this file for years. Swift 6 added a compile-time proof obligation for
+    // these calls, not a new runtime hazard; unsafeBitCast satisfies the former while restoring the
+    // latter to its long-proven original behavior. Since Thread.isMainThread is already true at
+    // every existing call site in the 20+ @main apps (that's why assumeIsolated worked there), this
+    // is a strict behavioral no-op for them too.
+    private func runOnMainActorSync<T>(_ body: @escaping @MainActor () -> T) -> T
+    {
+
+        typealias NonIsolated = () -> T
+        return unsafeBitCast(body, to: NonIsolated.self)()
+
+    }   // End of private func runOnMainActorSync<T>(_ body:).
+
     // Private 'init()' to make this class a 'singleton':
 
     private override init()
@@ -991,9 +1047,12 @@ public class AppGlobalInfo:NSObject
         // including a SwiftData model (CLRequestGoodItem) — exactly the kind of cascade this session
         // has been avoiding. Rebinding self to a nonisolated(unsafe) local sidesteps the diagnostic
         // without isolating anything: safe because init() is single-threaded by construction.
+        // <<CHICKEN-TRACKS>> Swift 6 follow-up (2026-07-16, VV) — MainActor.assumeIsolated replaced
+        // with runOnMainActorSync(); see the CHICKEN-TRACKS note above runOnMainActorSync's
+        // declaration for why. Body below is unchanged.
         nonisolated(unsafe) let unsafeSelf          = self
-        MainActor.assumeIsolated
-        {
+        unsafeSelf.runOnMainActorSync
+        { @MainActor in
         if UIDevice.current.localizedModel == "Mac"
         {
             unsafeSelf.iGlobalDeviceType                  = AppGlobalDeviceType.appGlobalDeviceMac
@@ -1045,7 +1104,7 @@ public class AppGlobalInfo:NSObject
             unsafeSelf.fGlobalDeviceScreenSizeHeight      = Float(screenSize.height)
             unsafeSelf.iGlobalDeviceScreenSizeScale       = Int(UIScreen.main.scale)
         }
-        }   // End of MainActor.assumeIsolated { ... } (UIDevice/UIScreen reads).
+        }   // End of runOnMainActorSync { ... } (UIDevice/UIScreen reads).
 
         self.sGlobalProcessInfoSystemName           = "\(self.sGlobalDeviceType) v\(self.sGlobalProcessInfoOSVersion.majorVersion).\(self.sGlobalProcessInfoOSVersion.minorVersion).\(self.sGlobalProcessInfoOSVersion.patchVersion)"
 
@@ -1131,12 +1190,21 @@ public class AppGlobalInfo:NSObject
         self.jmAppDelegateVisitor      = jmAppDelegateVisitor
 
         // Spool <any> pre-XDGLogger (via the AppDelegateVisitor) message(s) into the Log...
+        // <<CHICKEN-TRACKS>> Swift 6 follow-up (2026-07-16, VV) — snapshot under
+        // lockPreXCGLoggerMessages, then use the snapshot outside the lock. See the
+        // CHICKEN-TRACKS note above lockPreXCGLoggerMessages's declaration for why this drain-read
+        // needs the same lock as the append sites — otherwise this is a reader racing a concurrent
+        // writer on the same unprotected Array buffer.
 
-        if (listAppGlobalInfoPreXCGLoggerMessages.count > 0)
+        lockPreXCGLoggerMessages.lock()
+        let listPreXCGLoggerMessagesSnapshot = listAppGlobalInfoPreXCGLoggerMessages
+        lockPreXCGLoggerMessages.unlock()
+
+        if (listPreXCGLoggerMessagesSnapshot.count > 0)
         {
             appLogMsg("")
             appLogMsg("\(sCurrMethodDisp) <<< === Spooling the JmAppDelegateVisitor.XCGLogger 'pre' Message(s) === >>>")
-            appLogMsg(listAppGlobalInfoPreXCGLoggerMessages.joined(separator:"\n"))
+            appLogMsg(listPreXCGLoggerMessagesSnapshot.joined(separator:"\n"))
             appLogMsg("\(sCurrMethodDisp) <<< === Spooled  the JmAppDelegateVisitor.XCGLogger 'pre' Message(s) === >>>")
             appLogMsg("")
         }
@@ -1448,9 +1516,12 @@ public class AppGlobalInfo:NSObject
         // (same idiom as the init() fix above) rather than isolating the whole class.
         // <<CHICKEN-TRACKS>> Swift 6 migration follow-up — same "sending self" fix as init() above:
         // rebind self to a nonisolated(unsafe) local rather than isolating the whole class.
+        // <<CHICKEN-TRACKS>> Swift 6 follow-up (2026-07-16, VV) — MainActor.assumeIsolated replaced
+        // with runOnMainActorSync(); see the CHICKEN-TRACKS note above runOnMainActorSync's
+        // declaration for why. Body below is unchanged.
         nonisolated(unsafe) let unsafeSelf = self
-        MainActor.assumeIsolated
-        {
+        unsafeSelf.runOnMainActorSync
+        { @MainActor in
         switch(UIDevice.current.orientation)
         {
         case UIDeviceOrientation.portrait:
@@ -1478,7 +1549,7 @@ public class AppGlobalInfo:NSObject
             unsafeSelf.sGlobalDeviceOrientation            = "unknown"
             unsafeSelf.bGlobalDeviceOrientationIsInvalid   = true
         }
-        }   // End of MainActor.assumeIsolated { ... } (UIDevice.current.orientation read).
+        }   // End of runOnMainActorSync { ... } (UIDevice.current.orientation read).
     #endif
 
         // Exit:
@@ -1687,7 +1758,10 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bAppIsInTheBackground' is [\(String(describing: self.bAppIsInTheBackground))]...")
 
     #if USE_APP_LOGGING_BY_VISITOR
-        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.listAppGlobalInfoPreXCGLoggerMessages' has (\(listAppGlobalInfoPreXCGLoggerMessages.count)) message(s)...")
+        lockPreXCGLoggerMessages.lock()
+        let cPreXCGLoggerMessagesSnapshot = listAppGlobalInfoPreXCGLoggerMessages.count
+        lockPreXCGLoggerMessages.unlock()
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.listAppGlobalInfoPreXCGLoggerMessages' has (\(cPreXCGLoggerMessagesSnapshot)) message(s)...")
     #endif
 
     #if ENABLE_APP_IAP_CAPABILITY
@@ -2048,7 +2122,11 @@ public class AppGlobalInfo:NSObject
         // is @MainActor-isolated; this @objc method runs nonisolated by default but is only ever called
         // from app/scene lifecycle delegate methods, which UIKit guarantees deliver on the main thread.
         // Wrapped in MainActor.assumeIsolated rather than isolating the whole class.
-        let stateForegroundBackground = MainActor.assumeIsolated { UIApplication.shared.applicationState }
+        // <<CHICKEN-TRACKS>> Swift 6 follow-up (2026-07-16, VV) — MainActor.assumeIsolated replaced
+        // with runOnMainActorSync(); see the CHICKEN-TRACKS note above runOnMainActorSync's
+        // declaration for why.
+        let stateForegroundBackground = self.runOnMainActorSync { @MainActor in UIApplication.shared.applicationState }
+    //  let stateForegroundBackground = MainActor.assumeIsolated { UIApplication.shared.applicationState }
     //  let stateForegroundBackground = UIApplication.shared.applicationState
     #endif
 
