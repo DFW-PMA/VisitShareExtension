@@ -1,7 +1,7 @@
 # CLAUDE.md — PACK Apps (CinemaPack, DataGridPack, QRZoomPack, NomadPack, DivorcePack, ClipPack, LocatePack, NWSNexRadRadarApp2, etc) 
 # JustMacApps ONLY (No DFW-PMA Healthcare Suite Apps)
 # Developer: Daryl Cox — JustMacApps
-# Last updated: 2026-06-25 (synced)
+# Last updated: 2026-07-17 (synced)
 # Special Notes: Sections 8 through 10 have already been completed by 06/19/2026
 #                Section 11 (JmEntityInfo migration) is the active migration task — NWSNexRadRadarApp2,
 #                CinemaPack, DataGridPack, and QRZoomPack done; DivorcePack is next as of 2026-06-21
@@ -25,6 +25,13 @@
 #                do not attempt). VV's JmEntityInfo macro migration (§11a) is unaffected/still
 #                held back. Daryl's plan: fan the runOnMainActorSync fix out to VMA first, then
 #                the other DFW-PMA healthcare apps, then the PACK Apps.
+#                Swift 6 migration is now COMPLETE across VV, VMA, VSX, VVBigTestRunner1, and all
+#                Pack Apps (only older sample apps may still be Swift 5) — Section 12 is closed out
+#                as of 2026-07-17. New §12h added: a confirmed, complete 3-site
+#                `@preconcurrency` inventory (AppDocumentExportPickerView.swift,
+#                AppDocumentImportPickerView.swift, JmAppSashidoParseService.swift) kept as a
+#                standing Swift 7 readiness watch list — see §12h before adding any new
+#                `@preconcurrency`/`nonisolated(unsafe)` site.
 
 
 ---
@@ -1277,6 +1284,39 @@ func foo(_ operation:@MainActor () -> Void)
 immediately followed by `(` with no space) across the source tree before starting fixes — this lets
 the parse-blocker sites be found and fixed in one pass up front, rather than discovered one at a time
 as each one blocks the next diagnostic from appearing.
+
+### 12h. Concurrency Escape-Hatch Registry — Swift 7 Readiness Watch List (2026-07-17)
+Swift 6 conversion is complete across the board (VV, VMA, VSX, VVBigTestRunner1, all Pack Apps —
+only older sample apps may still be Swift 5). This is the **full, confirmed inventory** of every
+`@preconcurrency` site remaining in the codebase — not a partial pass. Purpose: a standing watch
+list so a future Swift 7 bump (whatever it turns out to require) starts from a known, minimal
+footprint instead of a fresh grep-the-world audit.
+
+| # | File | Scope | Directive | Reason |
+|---|---|---|---|---|
+| 1 | `AppDocumentExportPickerView.swift` | Synced across Pack Apps (macOS `#if` block only) | `@preconcurrency import AppKit` | `NSSavePanel.begin(completionHandler:)` isn't concurrency-audited by Apple — closure literal flagged "sending non-Sendable type" even with `nonisolated(unsafe)` on captures |
+| 2 | `AppDocumentImportPickerView.swift` | Synced across Pack Apps (macOS `#if` block only) | `@preconcurrency import AppKit` | Same root cause, `NSOpenPanel.begin(completionHandler:)` |
+| 3 | `JmAppSashidoParseService.swift` | `JmUtils_Library` — healthcare apps only (VMA/VV, Sashido/ParseCore backend) | `@preconcurrency import ParseCore` (gated by `ENABLE_APP_PARSECORE_FOR_SWIFT`) | ParseCore (Obj-C bridge, Sashido.io backend) predates Swift concurrency entirely — `PFObject`/`ParseClientConfiguration` are not Sendable-audited |
+
+**Risk profile is NOT uniform across these three:**
+- **#1/#2 — narrow, clean.** The `@preconcurrency import` is scoped to a macOS-only block, paired
+  correctly with `@MainActor` on the presenting `static func present(...)`, and neither file needs
+  `@unchecked Sendable`/`nonisolated(unsafe)` anywhere. If Apple ever ships a concurrency-audited
+  AppKit, this is a one-line-per-file removal.
+- **#3 — wider, structural.** The `@preconcurrency import` is only the entry point; the file also
+  carries a `nonisolated(unsafe) static let shared`, a repeated `nonisolated(unsafe) let unsafeSelf`
+  rebind pattern used to cross into `MainActor.run`/`Task { @MainActor in }` closures from the
+  class's deliberately-off-MainActor methods, and a `nonisolated(unsafe) let unsafeObjects` rebind
+  crossing a `withCheckedThrowingContinuation` boundary (`[PFObject]` isn't Sendable). This is load-bearing
+  for how the class is designed to run (background-thread service updating `@Published` properties
+  via explicit `MainActor.run` hops) — not something to "clean up" opportunistically. Removing it
+  would require either ParseCore itself becoming Sendable-audited (unlikely — treat as inactive
+  upstream) or replacing the Sashido/Parse backend entirely.
+
+**Standing rule:** if any future PR introduces a new `@preconcurrency` import or `nonisolated(unsafe)`
+site outside these three files, treat it as a stop-and-ask signal — check for a Sendable-conformant
+alternative first. The goal is to keep this table at exactly 3 known/understood entries, not let it
+grow silently as new SDKs get bridged in.
 
 ---
 
