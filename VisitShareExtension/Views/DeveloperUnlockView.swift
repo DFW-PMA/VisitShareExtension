@@ -21,7 +21,7 @@ import CoreImage.CIFilterBuiltins
 // In production: move to its own DeveloperUnlockView.swift file in a shared module.
 // DeveloperFeaturesView stays per-app (different options per app).
 
-@JmEntityInfo(vers:"v1.0701")
+@JmEntityInfo(vers:"v1.0805")
 struct DeveloperUnlockView:View
 {
 
@@ -170,12 +170,25 @@ struct DeveloperUnlockView:View
                         
                         VStack(spacing:8) 
                         {
-                            Text("HOTP expects: \(devUnlockMgr.sCurrentExpectedCode)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .padding(8)
-                                .background(Color(.systemYellow).opacity(0.1))
-                                .cornerRadius(8)
+                            HStack
+                            {
+                                Spacer()
+
+                            //  Text("\(devUnlockMgr.sCurrentExpectedCode)")
+                            //  Text("\(devUnlockMgr.sCurrentExpectedCode.reversed())")
+                                Text("\(String(devUnlockMgr.sCurrentExpectedCode.reversed()))")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .padding(6)
+                                //  .background(Color(.systemYellow).opacity(0.1))
+                                //  .cornerRadius(8)
+                            }
+                        //  Text("HOTP expects: \(devUnlockMgr.sCurrentExpectedCode)")
+                        //      .font(.caption)
+                        //      .foregroundColor(.secondary)
+                        //      .padding(8)
+                        //      .background(Color(.systemYellow).opacity(0.1))
+                        //      .cornerRadius(8)
                         }
                         .padding(.bottom)
                     }
