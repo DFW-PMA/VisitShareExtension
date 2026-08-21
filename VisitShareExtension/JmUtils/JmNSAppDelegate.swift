@@ -13,7 +13,7 @@ import Combine
 import XCGLogger
 
 #if os(macOS)
-@JmEntityInfo(vers:"v1.2401")
+@JmEntityInfo(vers:"v1.2501")
 class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
 {
 
@@ -131,6 +131,18 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
 
         self.jmAppDelegateVisitor.appDelegateVisitorDidFinishLaunching(aNotification)
 
+        // <<CHICKEN-TRACKS>> App-specific extension hook point (2026-08-20, agreed w/ Daryl for
+        // JMAMediaClips) - when ENABLE_APP_DELEGATE_EXTENSIONS is defined for this app's target
+        // (OTHER_SWIFT_FLAGS in project.pbxproj), call out to this app's own JmNSAppDelegate
+        // extension (see e.g. JMAMediaClips/Models/AppDelegate.swift, which supplies
+        // 'appDelegateExtDidFinishLaunching(_:)') so this shared file's own
+        // applicationDidFinishLaunching() implementation never needs per-app edits. Compiles to
+        // nothing - and this file stays byte-identical/syncable - for every app that doesn't
+        // define the flag.
+    #if ENABLE_APP_DELEGATE_EXTENSIONS
+        self.appDelegateExtDidFinishLaunching(aNotification)
+    #endif
+
         // Exit:
 
         appLogMsg("\(sCurrMethodDisp) Method Exiting...")
@@ -212,6 +224,13 @@ class JmNSAppDelegate:NSObject, NSApplicationDelegate, ObservableObject
         appLogMsg("\(sCurrMethodDisp) -> Unhandled url(s) -> \(urls)")
 
         self.jmAppDelegateVisitor.appDelegateVisitorApplication(application, open:urls)
+
+        // <<CHICKEN-TRACKS>> App-specific extension hook point (2026-08-20, agreed w/ Daryl for
+        // JMAMediaClips) - see the matching hook in applicationDidFinishLaunching() above for the
+        // full rationale. Supplies 'appDelegateExtApplication(_:open:)'.
+    #if ENABLE_APP_DELEGATE_EXTENSIONS
+        self.appDelegateExtApplication(application, open:urls)
+    #endif
 
         // Exit:
 

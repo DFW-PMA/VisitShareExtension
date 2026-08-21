@@ -24,7 +24,7 @@ final class AppGlobalInfoConfig:NSObject
 {
     
     static let sGlobalInfoAppId:String                                   = "VisitShareExtensionAppEx"
-    static let sGlobalInfoAppVers:String                                 = "v1.6501"
+    static let sGlobalInfoAppVers:String                                 = "v1.6901"
     static let sGlobalInfoAppDisp:String                                 = sGlobalInfoAppId+".("+sGlobalInfoAppVers+"): "
     static let sGlobalInfoAppCopyRight:String                            = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
     static let sGlobalInfoAppLogFilespecMaxSize:Int64                    = 10000000
@@ -35,7 +35,15 @@ final class AppGlobalInfoConfig:NSObject
     static let sGlobalInfoAppLastCrashLogFilespec:String                 = sGlobalInfoAppId+".crashed_last.log"
     static let sGlobalInfoAppCrashMarkerFilespec:String                  = sGlobalInfoAppId+".crash_marker.txt"
 
-    static let bUseApplicationShortTitle:Bool                            = true
+    // <<CHICKEN-TRACKS>> Added 08/04/2026 - raw crash-capture files written directly by main.m
+    // (bypassing NSLog/XCGLogger) - .exception_raw.json from the existing NSException handler,
+    // .trap_raw.bin from the new sigaction()-based signal handler covering Swift-native traps.
+    // See VV_Claude_documentation/VV-crash-logging-summary.md for the full design...
+
+    static let sGlobalInfoAppExceptionRawFilespec:String                 = sGlobalInfoAppId+".exception_raw.json"
+    static let sGlobalInfoAppTrapRawFilespec:String                      = sGlobalInfoAppId+".trap_raw.bin"
+
+    static let bUseApplicationShortTitle:Bool                            = false
     static let sApplicationTitle:String                                  = sGlobalInfoAppId
     static let sApplicationShortTitle:String                             = "VSXEX"
 

@@ -9,25 +9,16 @@
 import JmEntityInfo
 import Foundation
 import SwiftUI
+import MarkdownUI
 #if INSTANTIATE_APP_SWIFTDATAMANAGER || INSTANTIATE_APP_JMSWIFTDATAMANAGER
 import SwiftData
 #endif
 
-@JmEntityInfo(vers:"v1.2403")
+@JmEntityInfo(vers:"v1.2705")
 @available(iOS 17.0, *)
 struct AppAboutView:View
 {
     
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "AppAboutView"
-        //  static let sClsVers      = "v1.2403"
-        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        //  static let sClsCopyRight = "Copyright © JustMacApps 2023-2026. All rights reserved."
-        //  static let bClsTrace     = false
-        //  static let bClsFileLog   = true
-    //  }
-
     // App Data field(s):
 
 //  @Environment(\.dismiss)                 var dismiss
@@ -44,6 +35,19 @@ struct AppAboutView:View
                     var jmAppDelegateVisitor:JmAppDelegateVisitor = JmAppDelegateVisitor.appDelegateVisitor
 #endif
 
+                    let sAppBundlePath:String                     = Bundle.main.bundlePath
+
+    // <<CHICKEN-TRACKS>> Added (v1.2601, 2026-08-07) — optional "Credits" section, sourced entirely
+    // from an 'AppAboutCredits.md' file at the bundle root (checked via 'sAppBundlePath' above, per
+    // Daryl's direction) rather than hardcoded in this View. Lives in NomadPack/Resources/ — a
+    // PBXFileSystemSynchronizedRootGroup, so any file placed there lands at the bundle root
+    // automatically (same mechanism 'HelpBasic.md' already uses via HelpBasicLoader.swift — no
+    // .xcodeproj edits needed to add/change it). If the file is absent, 'sAppAboutCreditsMarkdown'
+    // is empty and the body below simply omits the section — logged, not treated as an error, since
+    // not every App in this family will necessarily ship one.
+
+                    let sAppAboutCreditsMarkdown:String
+
 #if os(macOS)
             private let pasteboard                                = NSPasteboard.general
 #elseif os(iOS)
@@ -52,25 +56,42 @@ struct AppAboutView:View
 
     init()
     {
-
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
-        
+
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
-        // Exit...
+        // Look for an optional 'AppAboutCredits.md' file at the bundle root...
+
+        let sCreditsFilespec:String = Bundle.main.bundlePath + "/AppAboutCredits.md"
+
+        if (FileManager.default.fileExists(atPath:sCreditsFilespec) == true)
+        {
+            do
+            {
+                let sLoadedCreditsMarkdown:String = try String(contentsOfFile:sCreditsFilespec, encoding:.utf8)
+                self.sAppAboutCreditsMarkdown = sLoadedCreditsMarkdown
+                appLogMsg("\(sCurrMethodDisp) Found and loaded 'AppAboutCredits.md' at [\(sCreditsFilespec)] - #(\(sLoadedCreditsMarkdown.count)) character(s)...")
+            }
+            catch
+            {
+                self.sAppAboutCreditsMarkdown = ""
+                appLogMsg("\(sCurrMethodDisp) 'AppAboutCredits.md' exists at [\(sCreditsFilespec)] but failed to load - Error: [\(error.localizedDescription)] - Error!")
+            }
+        }
+        else
+        {
+            self.sAppAboutCreditsMarkdown = ""
+            appLogMsg("\(sCurrMethodDisp) No 'AppAboutCredits.md' file found at [\(sCreditsFilespec)] - skipping Credits section...")
+        }
 
         appLogMsg("\(sCurrMethodDisp) Exiting...")
-
         return
-
-    }   // End of init().
+    }
 
     var body:some View 
     {
-        
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - [\(String(describing:JmXcodeBuildSettings.jmAppVersionAndBuildNumber))]...")
+        let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'sAppBundlePath' is [\(sAppBundlePath)]...")
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'appGlobalDeviceType' is (\(String(describing:appGlobalDeviceType)))...")
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'AppGlobalInfo.bIsAppLoggingByVisitor' is [\(AppGlobalInfo.bIsAppLoggingByVisitor)] and 'AppGlobalInfo.sAppLoggingMethod' is [\(AppGlobalInfo.sAppLoggingMethod)]...")
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body(some View) - 'supportsMultipleWindows' is (\(String(describing:supportsMultipleWindows)))...")
@@ -240,6 +261,44 @@ struct AppAboutView:View
                             .italic()
                             .font(.caption2)
 
+                        // <<CHICKEN-TRACKS>> Added (v1.2601, 2026-08-07) — "Credits" section, below
+                        // the copyright block per Daryl's placement instruction. Omitted entirely
+                        // (no Divider, no empty space) when 'sAppAboutCreditsMarkdown' is empty —
+                        // see the init()/property CHICKEN-TRACKS above for how it's loaded. The
+                        // heading itself ("## Credits") lives IN the .md file, not hardcoded here,
+                        // so the file fully owns its own content/structure.
+                        if (!sAppAboutCreditsMarkdown.isEmpty)
+                        {
+                            Text("")
+                                .font(.caption2)
+                            Text("- - - - - - - - - - - - - - -")
+                                .font(.caption2)
+                            Text("")
+                                .font(.caption2)
+                            // <<CHICKEN-TRACKS>> Fixed (v1.2606, 2026-08-07) — plain SwiftUI '.font()'
+                            // has no effect on a 'Markdown' view (confirmed against the swift-
+                            // markdown-ui package source): it builds its own Font internally from a
+                            // separate '\.textStyle'/'\.theme' environment pipeline (FontSize/
+                            // FontWeight/etc., composed into an AttributeContainer), never reading
+                            // SwiftUI's '\.font' environment key that plain Text consults. The
+                            // correct modifier is '.markdownTextStyle { FontSize(...) }' — it sets
+                            // the theme's BASE text size, and since '.basic' theme's headings are
+                            // defined as relative em-multipliers of that base (heading2 = 1.5x, see
+                            // Theme+Basic.swift), this scales the "## Credits" heading down
+                            // proportionally too, not just the body text.
+                            Markdown(sAppAboutCreditsMarkdown)
+                                .markdownTheme(.basic)
+                                .markdownTextStyle
+                                {
+                                    FontSize(11)
+                                }
+                                .textSelection(.enabled)
+                            Text("")
+                                .font(.caption2)
+                            Text("- - - - - - - - - - - - - - -")
+                                .font(.caption2)
+                        }
+
                 #if os(iOS) && INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
                     if (!appGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac &&
                         (AppGlobalInfo.bEnableAppAdsPlaceholder  == true ||
@@ -260,7 +319,46 @@ struct AppAboutView:View
                     .frame(minHeight:200)
                 #endif
 
-                    Divider()
+                    // <<CHICKEN-TRACKS>> Added (v1.2607, 2026-08-09) — reserve-space placeholder at
+                    // the TRUE end of the outer ScrollView's content. Needed now that 'Divider()' and
+                    // the Ad banner (below) have moved OUT of this ScrollView to become real
+                    // ZStack(alignment:.bottom) siblings (see that CHICKEN-TRACKS) — without this,
+                    // the last visible line of scrollable text would be hidden behind the now-pinned
+                    // overlay. Same ~100pt value the pre-existing (and, it turns out, largely inert —
+                    // see below) inner reserve-space block above already used for this same Ad
+                    // banner's footprint.
+                #if os(iOS) && INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
+                    if (!appGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac &&
+                        (AppGlobalInfo.bEnableAppAdsPlaceholder  == true ||
+                         AppGlobalInfo.bEnableAppAdsTesting      == true ||
+                         AppGlobalInfo.bEnableAppAdsProduction   == true))
+                    {
+                        Text("")
+                            .hidden()
+                            .frame(minWidth: 1, idealWidth: 2, maxWidth: 3,
+                                   minHeight:1, idealHeight:2, maxHeight:3)
+                            .padding(.bottom, 100)
+                    }
+                #endif
+                }
+
+                Text("")
+                    .hidden()
+                    .onAppear(perform:{ let _ = self.finishAppInitialization() })
+                    .frame(minWidth: 1, idealWidth: 2, maxWidth: 3,
+                           minHeight:1, idealHeight:2, maxHeight:3)
+
+                // <<CHICKEN-TRACKS>> Fixed (v1.2607, 2026-08-09) — 'Divider()' and the Ad banner used
+                // to be siblings INSIDE the outer ScrollView above (scroll-flow content), not true
+                // ZStack(alignment:.bottom) overlay children, despite the ZStack wrapper — the exact
+                // same bug already found and fixed today in NWSNexRadRadarViews.swift/
+                // AppCoreLocationMapView.swift: no visible scrollbar hint, so the Ad was easy to miss
+                // entirely unless you happened to scroll all the way down. Moved here, as direct
+                // ZStack children, so the Ad is now genuinely pinned/always-visible at the true
+                // bottom of the screen, and the scrollable text area above it is what the user must
+                // scroll through — matching Daryl's 2026-08-09 direction exactly.
+
+                Divider()
 
             #if os(iOS) && INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
                 if (!appGlobalInfo.bGlobalProcessInfoIsiOSAppOnMac &&
@@ -273,9 +371,9 @@ struct AppAboutView:View
                     if (AppGlobalInfo.bEnableAppAdsTesting    == true ||
                         AppGlobalInfo.bEnableAppAdsProduction == true)
                     {
-                        let _ = print("ContentView.View: Invoking 'BannerContentView()'...")
-                        BannerContentView(navigationTitle:"AdMobSwiftUIDemoApp2")
-                        let _ = print("ContentView.View: Invoked  'BannerContentView()'...")
+                        let _ = appLogMsg("AppAboutView.View: Invoking 'BannerContentView()'...")
+                        BannerContentView(navigationTitle:"")
+                        let _ = appLogMsg("AppAboutView.View: Invoked  'BannerContentView()'...")
                     }
                     else
                     {
@@ -285,13 +383,14 @@ struct AppAboutView:View
                             {
                             if #available(iOS 17.0, *)
                             {
-                                GeometryReader 
+                                GeometryReader
                                 { geometry in
                                     Image(ImageResource(name:"Gfx/Placeholder-for-Ads", bundle:Bundle.main))
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width:geometry.size.width)
+                                        .frame(width:geometry.size.width, height:50)
                                 }
+                                .frame(height:50)
                             }
                             else
                             {
@@ -307,13 +406,6 @@ struct AppAboutView:View
                     .frame(minHeight:75)
                 }
             #endif
-                }
-
-                Text("")            
-                    .hidden()
-                    .onAppear(perform:{ let _ = self.finishAppInitialization() })
-                    .frame(minWidth: 1, idealWidth: 2, maxWidth: 3,
-                           minHeight:1, idealHeight:2, maxHeight:3)
             }
             .frame(minHeight:75)
         }
@@ -322,9 +414,6 @@ struct AppAboutView:View
     
     private func finishAppInitialization()
     {
-
-        //  let sCurrMethod:String     = #function;
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
@@ -336,41 +425,29 @@ struct AppAboutView:View
         self.jmAppDelegateVisitor.checkAppDelegateVisitorTraceLogFileForSize()
         appLogMsg("\(ClassInfo.sClsDisp) Invoked  the 'jmAppDelegateVisitor.checkAppDelegateVisitorTraceLogFileForSize()'...")
     #endif
-
-        // Exit...
-  
         appLogMsg("\(sCurrMethodDisp) Exiting...")
         return
-
-    } // End of private func finishAppInitialization().
+    }
     
 #if USE_APP_LOGGING_BY_VISITOR
     private func getLogFilespecFileSizeDisplayableMB()->String
     {
-        
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked - 'sAppDelegateVisitorLogFilespec' is [\(jmAppDelegateVisitor.sAppDelegateVisitorLogFilespec!)]...")
 
         // Get the size of the LogFilespec in a displayable MB string...
 
         let sLogFilespecSizeInMB:String = JmFileIO.getFilespecSizeAsDisplayableMB(sFilespec:self.jmAppDelegateVisitor.sAppDelegateVisitorLogFilespec)
-
-        // Exit...
-    
         appLogMsg("\(sCurrMethodDisp) Exiting - 'sLogFilespecSizeInMB' is [\(sLogFilespecSizeInMB)] for 'sAppDelegateVisitorLogFilespec' of [\(jmAppDelegateVisitor.sAppDelegateVisitorLogFilespec!)]...")
         return sLogFilespecSizeInMB
-        
-    }   // End of private func getLogFilespecFileSizeDisplayableMB()->String.
+    }
 #endif
 
 #if USE_APP_LOGGING_BY_VISITOR && INSTANTIATE_APP_JMSWIFTDATAMANAGER
     private func getJmSwiftDataFilesLocation()->String
     {
-        
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -391,20 +468,15 @@ struct AppAboutView:View
             }
         }
 
-        // Exit...
-    
         appLogMsg("\(sCurrMethodDisp) Exiting - 'sJmSwiftDataFilesLocation' is [\(sJmSwiftDataFilesLocation)]...")
         return sJmSwiftDataFilesLocation
-        
-    }   // End of private func getJmSwiftDataFilesLocation()->String.
+    }
 #endif
     
 #if INSTANTIATE_APP_SWIFTDATAMANAGER
     private func getAppSwiftDataFilesLocation()->String
     {
-        
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
@@ -422,20 +494,15 @@ struct AppAboutView:View
             }
         }
 
-        // Exit...
-    
         appLogMsg("\(sCurrMethodDisp) Exiting - 'sAppSwiftDataFilesLocation' is [\(sAppSwiftDataFilesLocation)]...")
         return sAppSwiftDataFilesLocation
-        
-    }   // End of private func getAppSwiftDataFilesLocation()->String.
+    }
 #endif
     
 #if USE_APP_LOGGING_BY_VISITOR
     private func copyLogFilespecToClipboard()
     {
-        
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked - for text of [\(self.jmAppDelegateVisitor.sAppDelegateVisitorLogFilespec!)]...")
         
@@ -446,19 +513,13 @@ struct AppAboutView:View
         pasteboard.string = self.jmAppDelegateVisitor.sAppDelegateVisitorLogFilespec!
     #endif
 
-        // Exit...
-    
         appLogMsg("\(sCurrMethodDisp) Exiting...")
         return
-        
-    }   // End of private func copyLogFilespecToClipboard().
+    }
 #endif
     
     private func copyUserDefaultsFilespecToClipboard()
     {
-        
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
           
         appLogMsg("\(sCurrMethodDisp) Invoked - for text of [\(self.appGlobalInfo.sAppUserDefaultsFileLocation)]...")
@@ -470,19 +531,14 @@ struct AppAboutView:View
         pasteboard.string = self.appGlobalInfo.sAppUserDefaultsFileLocation
     #endif
 
-        // Exit...
-    
         appLogMsg("\(sCurrMethodDisp) Exiting...")
         return
-        
-    }   // End of private func copyUserDefaultsFilespecToClipboard().
+    }
     
 #if USE_APP_LOGGING_BY_VISITOR && INSTANTIATE_APP_JMSWIFTDATAMANAGER
     private func copyJmSwiftDataFilesLocationToClipboard()
     {
-        
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let sJmSwiftDataFilesLocation:String = self.getJmSwiftDataFilesLocation()
           
@@ -495,20 +551,15 @@ struct AppAboutView:View
         pasteboard.string = sJmSwiftDataFilesLocation
     #endif
 
-        // Exit...
-    
         appLogMsg("\(sCurrMethodDisp) Exiting...")
         return
-        
-    }   // End of private func copyJmSwiftDataFilesLocationToClipboard().
+    }
 #endif
     
 #if INSTANTIATE_APP_SWIFTDATAMANAGER
     private func copyAppSwiftDataFilesLocationToClipboard()
     {
-        
-        let sCurrMethod:String     = #function
-        let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         let sAppSwiftDataFilesLocation:String = self.getAppSwiftDataFilesLocation()
           
@@ -521,12 +572,9 @@ struct AppAboutView:View
         pasteboard.string = sAppSwiftDataFilesLocation
     #endif
 
-        // Exit...
-    
         appLogMsg("\(sCurrMethodDisp) Exiting...")
         return
-        
-    }   // End of private func copyAppSwiftDataFilesLocationToClipboard().
+    }
 #endif
     
 }   // End of struct AppAboutView:View.

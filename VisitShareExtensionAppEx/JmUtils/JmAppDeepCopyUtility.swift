@@ -49,6 +49,22 @@ protocol JmAppDeepCopyProtocol
 
 }
 
+// <<CHICKEN-TRACKS>> Swift 6.2/Xcode 26.3 fix (2026-07-23) - deepCopy<T>/deepCopyForSwiftUI<T>
+// below are generic over an UNCONSTRAINED T (could be any type, Sendable or not) - the compiler
+// can't prove T's safety crossing into the synchronous main-thread hop used in each
+// (DispatchQueue.main.sync / jmAppSyncUpdateUIOnMainThread - both genuinely block until the
+// closure completes, so no actual concurrent access is possible while the calling thread waits).
+// Constraining T:Sendable would break this shared, widely-used utility for existing non-Sendable
+// callers. Standard fix for exactly this shape: box the value in a private @unchecked Sendable
+// wrapper immediately before the hop - the box's Sendable conformance is unconditional (does not
+// depend on T), so this satisfies the checker without constraining every call site. See
+// VV-Swift6-Concurrency-Handoff.md and CLAUDE.md §19.
+
+private struct JmDeepCopyUncheckedSendableBox<Value>: @unchecked Sendable
+{
+    let value:Value
+}
+
 // MARK: 'Deep' Copy Class:
 
 // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — deepCopy<T>(...) and
@@ -60,20 +76,11 @@ protocol JmAppDeepCopyProtocol
 // no behavioral change, still synchronous/blocking exactly as before. This utility is shared across
 // roughly a dozen+ files/Apps, so no API signature changes were made (no Sendable constraint added
 // to T) — only the internal closure-crossing implementation changed.
-@JmEntityInfo(vers:"v1.2001")
+
+@JmEntityInfo(vers:"v1.2301")
 class JmAppDeepCopyUtility
 {
     
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "JmAppDeepCopyUtility"
-        //  static let sClsVers      = "v1.1901"
-        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        //  static let bClsTrace     = false
-        //  static let bClsFileLog   = false
-    //  }
-
     // App static 'global' field(s):
 
     private static let bInternalTraceFlag:Bool = false
@@ -82,9 +89,6 @@ class JmAppDeepCopyUtility
     
     private static func getMetaTypeStringForObject(object:Any)->String
     {
-        
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
@@ -123,24 +127,18 @@ class JmAppDeepCopyUtility
             appLogMsg("\(sCurrMethodDisp) Supplied object is 'typeOf' [\(String(describing:type(of:object)))]/[\(sValueTypeOf)]...")
         }
         
-        // Exit:
-        
         if (bInternalTraceFlag == true)
         {
             appLogMsg("\(sCurrMethodDisp) Exiting - 'sValueTypeOf' is [\(sValueTypeOf)]...")
         }
         
         return sValueTypeOf
-        
-    }   // End of private static func getMetaTypeStringForObject(object:Any)->String.
+    }
     
     // MARK: - Generic Deep Copy Method:
     
     static func deepCopy<T>(_ object:T, targetObject:inout T?, onMainThread:Bool = false)->T?
     {
-        
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
@@ -158,20 +156,19 @@ class JmAppDeepCopyUtility
         {
             if (onMainThread == true)
             {
-                nonisolated(unsafe) let capturedLocalCopy = localCopy
+                let boxedLocalCopy = JmDeepCopyUncheckedSendableBox(value:localCopy)
 
                 withUnsafeMutablePointer(to:&targetObject)
                 { targetObjectPtr in
-
                     nonisolated(unsafe) let safeTargetObjectPtr = targetObjectPtr
 
                     DispatchQueue.main.sync
                     {
-                        safeTargetObjectPtr.pointee = capturedLocalCopy
+                        safeTargetObjectPtr.pointee = boxedLocalCopy.value
 
                         if (bInternalTraceFlag == true)
                         {
-                            appLogMsg("\(sCurrMethodDisp) Intermediate - 'localCopy' of [\(String(describing: capturedLocalCopy))] copied to 'targetObject' of [\(String(describing: safeTargetObjectPtr.pointee))] on the 'main' Thread...")
+                            appLogMsg("\(sCurrMethodDisp) Intermediate - 'localCopy' of [\(String(describing: boxedLocalCopy.value))] copied to 'targetObject' of [\(String(describing: safeTargetObjectPtr.pointee))] on the 'main' Thread...")
                         }
                     }
                 }
@@ -187,24 +184,18 @@ class JmAppDeepCopyUtility
             }
         }
         
-        // Exit:
-        
         if (bInternalTraceFlag == true)
         {
             appLogMsg("\(sCurrMethodDisp) Exiting - 'localCopy' is [\(String(describing: localCopy))]...")
         }
         
         return localCopy
-        
-    }   // End of static func deepCopy<T>(_ object:T, targetObject:inout T?, onMainThread:Bool = false)->T?.
+    }
     
     // MARK: - Core Deep Copy Implementation:
     
     private static func performDeepCopy<T>(_ object:T)->T?
     {
-        
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
@@ -229,16 +220,12 @@ class JmAppDeepCopyUtility
         }
         
         return deepCopyAnyAsT
-        
-    }   // End of private static func performDeepCopy<T>(_ object:T)->T?.
+    }
     
     // MARK: - Recursive Deep Copy for Any Type:
     
     private static func deepCopyAny(_ object:Any)->Any
     {
-        
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
@@ -283,22 +270,18 @@ class JmAppDeepCopyUtility
                 
                 return deepCopyableObject.createDeepCopy()
             }
+
             // You might want to add custom handling here for specific types...
 
             appLogMsg("\(sCurrMethodDisp) Warning::Performing 'shallow' copy for unmatched type:[\(type(of:object))] - simply returning the object...")
-
             return object
         }
-        
-    }   // End of private static func deepCopyAny(_ object:Any)->Any.
+    }
     
     // MARK: - Array Deep Copy:
     
     private static func deepCopyArray(_ object:Any)->Any
     {
-        
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
@@ -307,7 +290,6 @@ class JmAppDeepCopyUtility
         }
         
         // Perform 'array' deep copies:
-        
         // Handle NSArray...
         
         if let nsArray = object as? NSArray
@@ -323,7 +305,6 @@ class JmAppDeepCopyUtility
                 autoreleasepool
                 {
                     let copiedItem = deepCopyAny(item)
-                    
                     mutableCopy.add(copiedItem)
                 }
             }
@@ -354,24 +335,18 @@ class JmAppDeepCopyUtility
             return copiedArray
         }
         
-        // Exit:
-        
         if (bInternalTraceFlag == true)
         {
             appLogMsg("\(sCurrMethodDisp) Exiting - 'deep' Copy failed - returning original 'object' of [\(object)]...")
         }
         
         return object
-        
-    }   // End of private static func deepCopyArray(_ object:Any)->Any.
+    }
     
     // MARK: - Dictionary Deep Copy:
     
     private static func deepCopyDictionary(_ object:Any)->Any
     {
-        
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
         
         if (bInternalTraceFlag == true)
@@ -396,7 +371,6 @@ class JmAppDeepCopyUtility
                 {
                     let copiedKey   = deepCopyAny(key)
                     let copiedValue = deepCopyAny(value)
-                    
                     mutableCopy.setObject(copiedValue, forKey:copiedKey as! NSCopying)
                 }
             }
@@ -414,14 +388,11 @@ class JmAppDeepCopyUtility
             {
                 let copiedKey   = deepCopyAny(key) as! AnyHashable
                 let copiedValue = deepCopyAny(value)
-                
                 copiedDict[copiedKey] = copiedValue
             }
             
             return copiedDict
         }
-        
-        // Exit:
         
         if (bInternalTraceFlag == true)
         {
@@ -429,8 +400,7 @@ class JmAppDeepCopyUtility
         }
         
         return object
-        
-    }   // End of private static func deepCopyDictionary(_ object:Any)->Any.
+    }
     
     // MARK: - Convenience Methods for Common Types
     
@@ -438,76 +408,55 @@ class JmAppDeepCopyUtility
     
     static func deepCopy(_ array:[String], onMainThread:Bool = false)->[String]?
     {
-     
         var dummyArray:[Any]? = [Any]()
-        
         return deepCopy(array as [Any], targetObject:&dummyArray, onMainThread: onMainThread) as? [String]
-        
-    }   // End of static func deepCopy(_ array:[String], onMainThread:Bool = false)->[String]?.
+    }
     
     //  [[String:Any]]
     
     static func deepCopy(_ array:[[String:Any]], onMainThread:Bool = false)->[[String:Any]]?
     {
-        
         var dummyArrayOfDict:[[String:Any]]? = [[String:Any]]()
-        
         return deepCopy(array as [[String:Any]], targetObject:&dummyArrayOfDict, onMainThread: onMainThread)
-        
-    }   // End of static func deepCopy(_ array:[[String:Any]], onMainThread:Bool = false)->[[String:Any]]?.
+    }
     
     // Deep copy an array of integers:
     
     static func deepCopy(_ array:[Int], onMainThread:Bool = false)->[Int]?
     {
-        
         var dummyArray:[Any]? = [Any]()
-        
         return deepCopy(array as [Any], targetObject:&dummyArray, onMainThread:onMainThread) as? [Int]
-        
-    }   // End of static func deepCopy(_ array:[Int], onMainThread:Bool = false)->[Int]?.
+    }
     
     //  [[Int:Any]]
     
     static func deepCopy(_ array:[[Int:Any]], onMainThread:Bool = false)->[[Int:Any]]?
     {
-        
         var dummyArrayOfDict:[[Int:Any]]? = [[Int:Any]]()
-        
         return deepCopy(array as [[Int:Any]], targetObject:&dummyArrayOfDict, onMainThread: onMainThread)
-        
-    }   // End of static func deepCopy(_ array:[[Int:Any]], onMainThread:Bool = false)->[[Int:Any]]?.
+    }
     
     static func deepCopy(_ array:[Any], onMainThread:Bool = false)->[Any]?
     {
-        
         var dummyArray:[Any]? = [Any]()
-        
         return deepCopy(array as [Any], targetObject:&dummyArray, onMainThread: onMainThread)
-        
-    }   // End of static func deepCopy(_ array:[Any], onMainThread:Bool = false)->[Any]?.
+    }
     
     // Deep copy a dictionary with string keys:
     
     static func deepCopy(_ dict:[String:Any], onMainThread:Bool = false)->[String:Any]?
     {
-        
         var dummyDict:[AnyHashable:Any]? = [String:Any]()
-        
         return deepCopy(dict as Dictionary<AnyHashable,Any>, targetObject:&dummyDict, onMainThread:onMainThread) as? [String:Any]
-        
-    }   // End of static func deepCopy(_ dict:[String:Any], onMainThread:Bool = false)->[String:Any]?.
+    }
     
     /// Deep copy a dictionary with integer keys:
     
     static func deepCopy(_ dict:[Int:Any], onMainThread:Bool = false)->[Int:Any]?
     {
-        
         var dummyDict:[AnyHashable:Any]? = [String:Any]()
-        
         return deepCopy(dict as Dictionary<AnyHashable,Any>, targetObject:&dummyDict, onMainThread:onMainThread) as? [Int:Any]
-        
-    }   // End of static func deepCopy(_ dict:[Int:Any], onMainThread:Bool = false)->[Int:Any]?.
+    }
     
 }   // End of class JmAppDeepCopyUtility.
 
@@ -523,16 +472,13 @@ extension JmAppDeepCopyUtility
     
     static func deepCopyForSwiftUI<T>(_ object:T, targetObject:inout T?)->T?
     {
-        
         return deepCopy(object, targetObject:&targetObject, onMainThread:true)
-        
-    }   // End of static func deepCopyForSwiftUI<T>(_ object:T, targetObject:inout T?)->T?.
+    }
     
     // Add this overload for non-optional targets...
 
     static func deepCopyForSwiftUI<T>(_ object:T, targetObject:inout T)->T?
     {
-
         var optionalTarget:T? = targetObject
         let result            = deepCopy(object, targetObject:&optionalTarget, onMainThread:false)
     
@@ -540,16 +486,15 @@ extension JmAppDeepCopyUtility
         
         if let unwrapped = optionalTarget
         {
-            nonisolated(unsafe) let capturedUnwrapped = unwrapped
+            let boxedUnwrapped = JmDeepCopyUncheckedSendableBox(value:unwrapped)
 
             withUnsafeMutablePointer(to:&targetObject)
             { targetObjectPtr in
-
                 nonisolated(unsafe) let safeTargetObjectPtr = targetObjectPtr
 
                 jmAppSyncUpdateUIOnMainThread
                 {
-                    safeTargetObjectPtr.pointee = capturedUnwrapped
+                    safeTargetObjectPtr.pointee = boxedUnwrapped.value
                 }
             }
         }
@@ -574,8 +519,7 @@ extension JmAppDeepCopyUtility
     //  }
     
         return result
-
-    }   // End of static func deepCopyForSwiftUI<T>(_ object:T, targetObject:inout T)->T?.
+    }
 
 }   // End of extension JmAppDeepCopyUtility.
 #endif

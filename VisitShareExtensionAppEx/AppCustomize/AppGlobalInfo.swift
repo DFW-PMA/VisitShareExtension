@@ -2,7 +2,9 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.7114...
+//  AppGlobalInfo.swift - v1.7201...
+//  Updated by Daryl Cox on 08/20/2026. (Added ENABLE_APP_DELEGATE_EXTENSIONS).
+//  Updated by Claude/Daryl Cox on 08/04/2026. (Added 'sGlobalInfoAppExceptionRawFilespec'/'sGlobalInfoAppTrapRawFilespec' mirror constants for the new main.m raw crash-capture files).
 //  Updated by Daryl Cox on 07/15/2026. (Added 'bGlobalInfoInitHasRun').
 //  Updated by Daryl Cox on 07/14/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE).
 //  Updated by Daryl Cox on 06/09/2026. (Added INSTANTIATE_VV_SCREENCAPTURE_OVERLAY).
@@ -270,7 +272,15 @@ public class AppGlobalInfo:NSObject
     static let sGlobalInfoAppLogFilespec:String                          = AppGlobalInfoConfig.sGlobalInfoAppLogFilespec          
     static let sGlobalInfoAppLastGoodLogFilespec:String                  = AppGlobalInfoConfig.sGlobalInfoAppLastGoodLogFilespec  
     static let sGlobalInfoAppLastCrashLogFilespec:String                 = AppGlobalInfoConfig.sGlobalInfoAppLastCrashLogFilespec 
-    static let sGlobalInfoAppCrashMarkerFilespec:String                  = AppGlobalInfoConfig.sGlobalInfoAppCrashMarkerFilespec  
+    static let sGlobalInfoAppCrashMarkerFilespec:String                  = AppGlobalInfoConfig.sGlobalInfoAppCrashMarkerFilespec
+    // <<CHICKEN-TRACKS>> 08/04/2026 - NOT mirroring 'sGlobalInfoAppExceptionRawFilespec'/
+    // 'sGlobalInfoAppTrapRawFilespec' as statics here too (unlike the other constants above) -
+    // this class already exposes them as INSTANCE properties below (for main.m's ObjC access),
+    // and a static + instance member of the identical name on the same @objcMembers class appears
+    // to break the property's Objective-C bridging (confirmed empirically - the class-method form
+    // works fine alone, the instance-property form works fine alone, but NOT declared together
+    // under the same name). Swift-side static access, if ever needed, should go straight to
+    // 'AppGlobalInfoConfig.sGlobalInfoAppExceptionRawFilespec' instead...
     static let sGlobalInfoAppMemPressureWarningMarkerFilespec:String     = "AppMemPressureWarningMarker.txt"
                                                                            // Companion marker written when the GCD memory pressure
                                                                            // source fires a '.warning' event.  Presence at next launch
@@ -302,6 +312,7 @@ public class AppGlobalInfo:NSObject
     //                              ENABLE_APP_IAP_CAPABILITY
     //                              ENABLE_APP_ALARM_CAPABILITY
     //                              ENABLE_APP_LEGACY_CORELOC2
+    //                              ENABLE_APP_DELEGATE_EXTENSIONS
     //                              INSTANTIATE_APP_VV
     //                              INSTANTIATE_APP_VV_UIKIT_ALERTS
     //                              INSTANTIATE_APP_VMA
@@ -406,6 +417,15 @@ public class AppGlobalInfo:NSObject
     static let isEnabledAppLegacyCoreLoc2:Bool                           =
     {
     #if ENABLE_APP_LEGACY_CORELOC2
+        return true
+    #else
+        return false
+    #endif
+    }()
+
+    static let isEnabledAppDelegateExtensions:Bool                       =
+    {
+    #if ENABLE_APP_DELEGATE_EXTENSIONS
         return true
     #else
         return false
@@ -838,6 +858,18 @@ public class AppGlobalInfo:NSObject
            var sAppVersionAndBuildNumber:String                          = "-unknown-"
            var sAppCopyright:String                                      = "-unknown-"
            var sAppUserDefaultsFileLocation:String                       = "-unknown-"
+
+    // <<CHICKEN-TRACKS>> Added 08/04/2026 - instance-property mirrors of the static
+    // 'sGlobalInfoAppExceptionRawFilespec'/'sGlobalInfoAppTrapRawFilespec' constants above, for
+    // main.m to consume. Every EXISTING AppGlobalInfo access from main.m goes through the
+    // singleton instance ('AppGlobalInfo *appInfo = [AppGlobalInfo shared]; appInfo.xxx') - bare
+    // static/class-level members (accessed as '[AppGlobalInfo xxx]') are not reliably bridged to
+    // Objective-C in this build, confirmed the hard way. Keep both forms: the static 'let' above
+    // remains the single source of truth for Swift-side (Phase 2) consumption; these instance
+    // wrappers exist ONLY so main.m has a proven-working access path...
+
+           var sGlobalInfoAppExceptionRawFilespec:String                 { AppGlobalInfoConfig.sGlobalInfoAppExceptionRawFilespec }
+           var sGlobalInfoAppTrapRawFilespec:String                      { AppGlobalInfoConfig.sGlobalInfoAppTrapRawFilespec }
 
            var bAppIsInTheBackground:Bool                                = false
                                                                            // false: App is NOT in the Background...
@@ -1610,6 +1642,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppIAPCapability' is [\(String(describing: AppGlobalInfo.isEnabledAppIAPCapability))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppAlarmCapability' is [\(String(describing: AppGlobalInfo.isEnabledAppAlarmCapability))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppLegacyCoreLoc2' is [\(String(describing: AppGlobalInfo.isEnabledAppLegacyCoreLoc2))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppDelegateExtensions' is [\(String(describing: AppGlobalInfo.isEnabledAppDelegateExtensions))]...")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVV' is [\(String(describing: AppGlobalInfo.bInstantiateAppVV))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVVUIKitAlerts' is [\(String(describing: AppGlobalInfo.bInstantiateAppVVUIKitAlerts))]...")
