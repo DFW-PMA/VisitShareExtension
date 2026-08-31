@@ -13,6 +13,12 @@ import JmEntityInfo
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
+import PDFKit
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 // MARK: - Display Mode Enum
 
@@ -25,6 +31,8 @@ enum AppGeneralFileDisplayMode
     case progress
     case image          // Tier 0 - image media (jpg, jpeg, png, gif, heic, heif, webp, tiff, tif, bmp)
     case video          // Tier 0 - video media (mp4, mov, m4v, avi, mkv, wmv, flv, webm, mpeg, mpg, 3gp)
+    case pdf            // Tier 0.5 - PDF documents, checked before Markdown/spreadsheet/JSON so a
+                         // PDF's binary bytes never get run through those text-oriented parsers
     case spreadsheet
     case json
     case rawText
@@ -34,7 +42,7 @@ enum AppGeneralFileDisplayMode
 
 // MARK: - AppGeneralFileView
 
-@JmEntityInfo(vers:"v1.0901")
+@JmEntityInfo(vers:"v1.1001")
 struct AppGeneralFileView:View
 {
     
@@ -218,6 +226,8 @@ struct AppGeneralFileView:View
                         {
                         case .progress:
                             progressView
+                        case .pdf:
+                            pdfView
                         case .spreadsheet:
                             spreadsheetView
                         case .json:
@@ -328,8 +338,43 @@ struct AppGeneralFileView:View
         .padding()
     }
     
+    // MARK: - PDF View
+
+    // <<CHICKEN-TRACKS>> (2026-08-28) — PDF support added at Daryl's request (found via
+    // WorkRoute's own Phase 5.2 work - this shared/common file didn't render PDFs at all before).
+    // Deliberately kept inside the existing NavigationStack/Dismiss-button chrome (same as
+    // spreadsheetView/jsonView/rawTextView/markdownView below), NOT routed through the Tier 0
+    // media bypass path (mediaView) - that path is built specifically around CineViewLocItem/
+    // MediaType/FullScreenImageViewer's media-library semantics (resume position, .cineview
+    // sidecar files, etc.), which don't apply to a PDF document at all. PDFKit's own PDFView
+    // provides native scrolling/paging/pinch-zoom, so no custom gesture code is needed here
+    // (unlike WorkRoutePDFPreviewView.swift, which is otherwise the same shape).
+
+    private var pdfView:some View
+    {
+        Group
+        {
+            if let pdfDocument = PDFDocument(data:self.rawFileData)
+            {
+                AppPDFKitRepresentable(pdfDocument:pdfDocument)
+            }
+            else
+            {
+                VStack(spacing:16)
+                {
+                    Image(systemName:"exclamationmark.triangle.fill")
+                        .font(.system(size:48))
+                        .foregroundColor(.orange)
+
+                    Text("Unable to load this PDF.")
+                        .font(.headline)
+                }
+            }
+        }
+    }   // End of private var pdfView:some View.
+
     // MARK: - Spreadsheet View
-    
+
     private var spreadsheetView:some View
     {
         Group
@@ -897,6 +942,19 @@ struct AppGeneralFileView:View
                     return
                 }
 
+                // PDF early-exit: detected by extension before Markdown/Tier 1, so a PDF's
+                // binary bytes never get run through the text-oriented Markdown/spreadsheet/JSON
+                // parse attempts (which would just fail anyway, but this is cleaner and matches
+                // how Markdown itself is checked before Tier 1 below).
+
+                if await tryRenderAsPDF(url:url, data:fileData)
+                {
+                    appLogMsg("\(sCurrMethodDisp) Success - Using PDF View...")
+                    appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+                    return
+                }
+
                 // Markdown early-exit: detected by extension before Tier 1 so we skip
                 // the spreadsheet / JSON parse attempts entirely for .md / .markdown files.
 
@@ -966,6 +1024,40 @@ struct AppGeneralFileView:View
         return
 
     }   // End of private func processFile(at url:URL).
+
+    // MARK: - PDF Rendering (pre-Markdown/Tier-1 extension check)
+
+    private func tryRenderAsPDF(url:URL, data:Data) async -> Bool
+    {
+
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - checking for PDF file extension...")
+
+        let sFileExtension = url.pathExtension.lowercased()
+
+        guard (sFileExtension == "pdf") else
+        {
+            appLogMsg("\(sCurrMethodDisp) Not a PDF file (extension: [\(sFileExtension)]) - Exiting with [false]...")
+
+            return false
+        }
+
+        appLogMsg("\(sCurrMethodDisp) Detected PDF file (extension: [\(sFileExtension)]) - 'rawFileData' already holds the bytes...")
+
+        // 'rawFileData' was already set to 'data' just before this call (see processFile) - no
+        // separate state property needed, pdfView reads it directly via PDFDocument(data:).
+
+        await MainActor.run
+        {
+            displayMode = .pdf
+        }
+
+        appLogMsg("\(sCurrMethodDisp) Exiting with [true]...")
+
+        return true
+
+    }   // End of private func tryRenderAsPDF(url:URL, data:Data) async -> Bool.
 
     // MARK: - Markdown Rendering (pre-Tier-1 extension check)
 
@@ -1290,3 +1382,60 @@ struct AppGeneralFileView:View
     }
 
 }   // End of struct AppGeneralFileView:View.
+
+// MARK: - AppPDFKitRepresentable
+
+// <<CHICKEN-TRACKS>> (2026-08-28) — PDFKit's PDFView is natively cross-platform, so this is one
+// shared wrapper + a small platform-conditional Representable, same shape already used for
+// WorkRoute's own (private, app-specific) WorkRoutePDFKitRepresentable - kept as a SEPARATE,
+// distinctly-named type here since this file is common/shared code Daryl plans to push to other
+// Apps via JMACodeSync/JMACodePush (per his own note, this is dev-only tooling, gated behind the
+// same HOTP access as the rest of AppDocumentsFileReaderView/AppGeneralFileView).
+
+#if os(iOS)
+struct AppPDFKitRepresentable:UIViewRepresentable
+{
+
+    let pdfDocument:PDFDocument
+
+    func makeUIView(context:Context) -> PDFView
+    {
+        let objPdfView = PDFView()
+        objPdfView.autoScales       = true
+        objPdfView.displayMode      = .singlePageContinuous
+        objPdfView.displayDirection = .vertical
+        objPdfView.document         = self.pdfDocument
+        return objPdfView
+    }   // End of func makeUIView(context:) -> PDFView.
+
+    func updateUIView(_ objPdfView:PDFView, context:Context)
+    {
+        objPdfView.document = self.pdfDocument
+        return
+    }   // End of func updateUIView(_ objPdfView:PDFView, context:Context).
+
+}   // End of struct AppPDFKitRepresentable:UIViewRepresentable.
+#elseif os(macOS)
+struct AppPDFKitRepresentable:NSViewRepresentable
+{
+
+    let pdfDocument:PDFDocument
+
+    func makeNSView(context:Context) -> PDFView
+    {
+        let objPdfView = PDFView()
+        objPdfView.autoScales       = true
+        objPdfView.displayMode      = .singlePageContinuous
+        objPdfView.displayDirection = .vertical
+        objPdfView.document         = self.pdfDocument
+        return objPdfView
+    }   // End of func makeNSView(context:) -> PDFView.
+
+    func updateNSView(_ objPdfView:PDFView, context:Context)
+    {
+        objPdfView.document = self.pdfDocument
+        return
+    }   // End of func updateNSView(_ objPdfView:PDFView, context:Context).
+
+}   // End of struct AppPDFKitRepresentable:NSViewRepresentable.
+#endif

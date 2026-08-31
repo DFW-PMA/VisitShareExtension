@@ -2,7 +2,8 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.7201...
+//  AppGlobalInfo.swift - v1.7301...
+//  Updated by Daryl Cox on 08/27/2026. (Added ENABLE_DRC_BUILD_DISTRIBUTION).
 //  Updated by Daryl Cox on 08/20/2026. (Added ENABLE_APP_DELEGATE_EXTENSIONS).
 //  Updated by Claude/Daryl Cox on 08/04/2026. (Added 'sGlobalInfoAppExceptionRawFilespec'/'sGlobalInfoAppTrapRawFilespec' mirror constants for the new main.m raw crash-capture files).
 //  Updated by Daryl Cox on 07/15/2026. (Added 'bGlobalInfoInitHasRun').
@@ -313,6 +314,7 @@ public class AppGlobalInfo:NSObject
     //                              ENABLE_APP_ALARM_CAPABILITY
     //                              ENABLE_APP_LEGACY_CORELOC2
     //                              ENABLE_APP_DELEGATE_EXTENSIONS
+    //                              ENABLE_DRC_BUILD_DISTRIBUTION
     //                              INSTANTIATE_APP_VV
     //                              INSTANTIATE_APP_VV_UIKIT_ALERTS
     //                              INSTANTIATE_APP_VMA
@@ -426,6 +428,15 @@ public class AppGlobalInfo:NSObject
     static let isEnabledAppDelegateExtensions:Bool                       =
     {
     #if ENABLE_APP_DELEGATE_EXTENSIONS
+        return true
+    #else
+        return false
+    #endif
+    }()
+
+    static let isEnabledAppDrcBuildDistribution:Bool                     =
+    {
+    #if ENABLE_DRC_BUILD_DISTRIBUTION
         return true
     #else
         return false
@@ -1643,6 +1654,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppAlarmCapability' is [\(String(describing: AppGlobalInfo.isEnabledAppAlarmCapability))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppLegacyCoreLoc2' is [\(String(describing: AppGlobalInfo.isEnabledAppLegacyCoreLoc2))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppDelegateExtensions' is [\(String(describing: AppGlobalInfo.isEnabledAppDelegateExtensions))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.isEnabledAppDrcBuildDistribution' is [\(String(describing: AppGlobalInfo.isEnabledAppDrcBuildDistribution))]...")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVV' is [\(String(describing: AppGlobalInfo.bInstantiateAppVV))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppVVUIKitAlerts' is [\(String(describing: AppGlobalInfo.bInstantiateAppVVUIKitAlerts))]...")
