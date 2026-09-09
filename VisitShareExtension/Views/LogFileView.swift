@@ -1,6 +1,6 @@
 //
 //  LogFileView.swift
-//  JustAMultiplatformClock1
+//  NomadPack
 //
 //  Created by JustMacApps.net on 03/20/2024.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.

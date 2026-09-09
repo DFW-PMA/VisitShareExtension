@@ -23,7 +23,7 @@ import GoogleMobileAds
 //@available(macOS 15, *)
 @available(iOS 14.0, *)
 @objc(JmAppDelegateVisitor)
-@JmEntityInfo(vers:"v1.8502")
+@JmEntityInfo(vers:"v1.8601")
 public class JmAppDelegateVisitor:NSObject, ObservableObject
 {
 
@@ -387,6 +387,22 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     var bWasAppLogFilePresentAtStartup:Bool                        = false
     var bWasAppCrashFilePresentAtStartup:Bool                      = false
+
+    // <<CHICKEN-TRACKS>> 09/01/2026 - 'bWasAppCrashFilePresentAtStartup' only means "previous
+    // session didn't exit cleanly" (marker file survived) - it CANNOT distinguish an actual
+    // code-level crash from an ordinary OS-level termination (jetsam/low-memory kill, launch
+    // watchdog timeout, user force-quit), none of which our crash handlers can catch (a SIGKILL
+    // can't be intercepted). This property defaults to MIRRORING the raw marker flag (set
+    // alongside it in 'performAppDelegateVisitorStartupCrashLogic()' below) - it is NOT computed
+    // independently here, deliberately, so any App that doesn't wire in JmCrashCaptureManager sees
+    // zero behavior change. Only JmCrashCaptureManager.processPreviousCrashIfNeeded() downgrades
+    // this to 'false' - and only after checking for actual raw exception/trap capture evidence -
+    // reclassifying an unconfirmed termination from the 'crash' bucket into the 'success' bucket
+    // (with an explanatory note appended). Read THIS property (not the raw marker) anywhere the
+    // decision of "was this really a crash" drives user-facing text or which log file to offer for
+    // upload - see SettingsSingleViewCore.checkIfAppDidCrash()/HelpCommands.checkIfAppDidCrash()...
+
+    var bWasAppCrashConfirmedAtStartup:Bool                        = false
     var bAppDelegateVisitorCrashMarkerFilespecIsUsable:Bool        = false
     var bAppDelegateVisitorCrashMarkerFilespecIsCreated:Bool       = false
     var urlAppDelegateVisitorCrashMarkerFilespec:URL?              = nil
@@ -887,6 +903,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         asToString.append("[")
         asToString.append("bWasAppLogFilePresentAtStartup': [\(self.bWasAppLogFilePresentAtStartup)],")
         asToString.append("bWasAppCrashFilePresentAtStartup': [\(self.bWasAppCrashFilePresentAtStartup)],")
+        asToString.append("bWasAppCrashConfirmedAtStartup': [\(self.bWasAppCrashConfirmedAtStartup)],")
         asToString.append("bAppDelegateVisitorCrashMarkerFilespecIsUsable': [\(self.bAppDelegateVisitorCrashMarkerFilespecIsUsable)],")
         asToString.append("bAppDelegateVisitorCrashMarkerFilespecIsCreated': [\(self.bAppDelegateVisitorCrashMarkerFilespecIsCreated)],")
         asToString.append("urlAppDelegateVisitorCrashMarkerFilespec': [\(String(describing: self.urlAppDelegateVisitorCrashMarkerFilespec))],")
@@ -1542,6 +1559,12 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         {
             self.bWasAppCrashFilePresentAtStartup = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
 
+            // <<CHICKEN-TRACKS>> 09/01/2026 - default mirror of the raw marker flag - see this
+            // property's own CHICKEN-TRACKS note above ('bWasAppCrashConfirmedAtStartup' declaration)
+            // for why this is a mirror-by-default rather than an independently-computed value...
+
+            self.bWasAppCrashConfirmedAtStartup = self.bWasAppCrashFilePresentAtStartup
+
             if (self.bWasAppCrashFilePresentAtStartup == false)
             {
                 appLogMsg("\(sCurrMethodDisp) <VisitorCrashLogic> <<< PREVIOUS App execution appears to have been SUCCESSFULL!!! >>>")
@@ -1711,6 +1734,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         self.bAppDelegateVisitorCrashMarkerFilespecIsCreated = false
         self.bAppDelegateVisitorCrashMarkerFilespecIsUsable  = false
         self.bWasAppCrashFilePresentAtStartup                = false
+        self.bWasAppCrashConfirmedAtStartup                  = false   // <<CHICKEN-TRACKS>> 09/01/2026 - keep paired with the raw marker flag reset above
 
         let bDoesAppCrashFileExist:Bool = JmFileIO.fileExists(sFilespec:self.sAppDelegateVisitorCrashMarkerFilespec)
 
