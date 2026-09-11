@@ -14,7 +14,7 @@ import MarkdownUI
 import SwiftData
 #endif
 
-@JmEntityInfo(vers:"v1.2705")
+@JmEntityInfo(vers:"v1.2801")
 @available(iOS 17.0, *)
 struct AppAboutView:View
 {
@@ -121,7 +121,7 @@ struct AppAboutView:View
                     }
                 }
             #if os(macOS)
-                .buttonStyle(.borderedProminent)
+                .appGlassCompatButtonStyle(fallback:.borderedProminent)
             //  .background(???.isPressed ? .blue : .gray)
                 .cornerRadius(10)
                 .foregroundColor(Color.primary)

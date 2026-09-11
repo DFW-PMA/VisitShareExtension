@@ -1,11 +1,11 @@
 //
 //  AppMarkdownViewerView.swift
-//  DataGridPack
+//  AnyPack
 //
 //  Created by JustMacApps.net on 04/27/2026.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
-//  NOTE: Shared viewer used by both DataGridPack (ContentView) and
+//  NOTE: Shared viewer used by both AnyPack (ContentView) and
 //        VMA (AppGeneralFileView).  When the SPM shared-module migration
 //        lands this file moves there; until then a copy lives in each
 //        project that uses it.
@@ -42,7 +42,7 @@ enum MarkdownThemeOption:String, CaseIterable, Identifiable
 
 // MARK: - AppMarkdownViewerView
 
-@JmEntityInfo(vers:"v1.0401")
+@JmEntityInfo(vers:"v1.0501")
 struct AppMarkdownViewerView:View
 {
 
@@ -214,11 +214,14 @@ struct AppMarkdownViewerView:View
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+        // <<CHICKEN-TRACKS>> (2026-09-10, branch 'PossibleLiquidGlassEffects') — iOS 26+/macOS 26+
+        // gets '.glassEffect()' tinted to AccentColor; pre-26 keeps the exact prior platform-
+        // conditional background unchanged.
         #if os(macOS)
-            .background(Color(NSColor.controlBackgroundColor))
+            .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:0) { Color(NSColor.controlBackgroundColor) })
         #endif
         #if os(iOS)
-            .background(Color(UIColor.secondarySystemBackground))
+            .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:0) { Color(UIColor.secondarySystemBackground) })
         #endif
             .border(Color.gray.opacity(0.2), width:0.5)
 
@@ -285,11 +288,13 @@ struct AppMarkdownViewerView:View
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
+        // <<CHICKEN-TRACKS>> (2026-09-10, branch 'PossibleLiquidGlassEffects') — same compat
+        // treatment as the toolbar strip above.
         #if os(macOS)
-            .background(Color(NSColor.controlBackgroundColor))
+            .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:0) { Color(NSColor.controlBackgroundColor) })
         #endif
         #if os(iOS)
-            .background(Color(UIColor.secondarySystemBackground))
+            .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:0) { Color(UIColor.secondarySystemBackground) })
         #endif
             .border(Color.gray.opacity(0.2), width:0.5)
 

@@ -154,7 +154,7 @@ final class FileItem:Identifiable, Hashable, ObservableObject
 
 // MARK: - AppDocumentsFileReaderView (Main View with Navigation)
 
-@JmEntityInfo(vers:"v1.2001")
+@JmEntityInfo(vers:"v1.2101")
 struct AppDocumentsFileReaderView:View
 {
 
@@ -598,7 +598,7 @@ struct AppDocumentsFileReaderView:View
                         }
                     }
                 #if os(macOS)
-                    .buttonStyle(.borderedProminent)
+                    .appGlassCompatButtonStyle(fallback:.borderedProminent)
                     .cornerRadius(10)
                     .foregroundColor(Color.primary)
                 #endif
@@ -644,7 +644,7 @@ struct AppDocumentsFileReaderView:View
                     }
                 #endif
                 #if os(macOS)
-                    .buttonStyle(.borderedProminent)
+                    .appGlassCompatButtonStyle(fallback:.borderedProminent)
                     .cornerRadius(10)
                     .foregroundColor(Color.primary)
                 #endif
@@ -1790,7 +1790,7 @@ struct AppDocumentsFileItemDetails:View
                     }
                 //  .quickLookPreview($fileUrl)
                 #if os(macOS)
-                    .buttonStyle(.borderedProminent)
+                    .appGlassCompatButtonStyle(fallback:.borderedProminent)
                     .padding()
                     .cornerRadius(10)
                     .foregroundColor(Color.primary)
@@ -2209,7 +2209,7 @@ struct AppBasicFileView:View
                     }
                 }
             #if os(macOS)
-                .buttonStyle(.borderedProminent)
+                .appGlassCompatButtonStyle(fallback:.borderedProminent)
                 .padding()
                 .cornerRadius(10)
                 .foregroundColor(Color.primary)

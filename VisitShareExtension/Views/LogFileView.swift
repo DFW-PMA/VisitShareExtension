@@ -11,7 +11,7 @@ import Foundation
 import SwiftUI
 import QuickLook
 
-@JmEntityInfo(vers:"v1.2001")
+@JmEntityInfo(vers:"v1.2101")
 struct LogFileView:View 
 {
     
@@ -90,7 +90,7 @@ struct LogFileView:View
                 }
                 .quickLookPreview($logFileUrl)
             #if os(macOS)
-                .buttonStyle(.borderedProminent)
+                .appGlassCompatButtonStyle(fallback:.borderedProminent)
                 .padding()
             //  .background(???.isPressed ? .blue : .gray)
                 .cornerRadius(10)
@@ -126,7 +126,7 @@ struct LogFileView:View
                     Button("Ok", role:.cancel) { }
                 }
             #if os(macOS)
-                .buttonStyle(.borderedProminent)
+                .appGlassCompatButtonStyle(fallback:.borderedProminent)
                 .padding()
             //  .background(???.isPressed ? .blue : .gray)
                 .cornerRadius(10)

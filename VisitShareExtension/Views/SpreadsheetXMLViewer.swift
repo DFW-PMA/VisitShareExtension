@@ -11,7 +11,7 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
-@JmEntityInfo(vers:"v1.0807")
+@JmEntityInfo(vers:"v1.0902")
 struct SpreadsheetXMLViewer:View
 {
     
@@ -46,9 +46,15 @@ struct SpreadsheetXMLViewer:View
     var body:some View
     {
         
-        NavigationView
+        // <<CHICKEN-TRACKS>> (2026-09-10, branch 'PossibleLiquidGlassEffects') — NavigationView ->
+        // NavigationStack. Dev-only file (Documents/folder inspector) — its only App Store 'life'
+        // is via a future push to AnyPack, per Daryl. No NavigationLink/programmatic push
+        // navigation existed here to migrate to NavigationPath, so this is a pure container swap.
+        // Also makes this file eligible for the automatic system Liquid Glass toolbar treatment
+        // NavigationStack+.toolbar gets for free on iOS 26+/macOS 26+ (NavigationView doesn't).
+        NavigationStack
         {
-            ZStack 
+            ZStack
             {
                 // Main Content...
 
@@ -135,12 +141,16 @@ struct SpreadsheetXMLViewer:View
                 }
             }
         }
-    #if os(iOS)
-        .navigationViewStyle(.stack)
-    #endif
+        // <<CHICKEN-TRACKS>> (2026-09-10) — '.navigationViewStyle(.stack)' retired (commented, not
+        // deleted, per §2f): NavigationStack has no navigationViewStyle concept — it's always
+        // single-column/stack-based by design, which is exactly what '.stack' was forcing on the
+        // old NavigationView.
+        //  #if os(iOS)
+        //  .navigationViewStyle(.stack)
+        //  #endif
 
     }
-    
+
     // MARK: - View Components...
     
     private func emptyStateView()->some View
@@ -219,11 +229,14 @@ struct SpreadsheetXMLViewer:View
             .padding(.vertical, 4)
         }
     //  .background(Color(UIColor.systemBackground))
+    // <<CHICKEN-TRACKS>> (2026-09-10, branch 'PossibleLiquidGlassEffects') — iOS 26+/macOS 26+
+    // gets '.glassEffect()' tinted to AccentColor; pre-26 keeps the exact prior platform-
+    // conditional background unchanged.
     #if os(macOS)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:0) { Color(nsColor: .windowBackgroundColor) })
     #endif
     #if os(iOS)
-        .background(Color(uiColor:UIColor.systemBackground))
+        .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:0) { Color(uiColor:UIColor.systemBackground) })
     #endif
         .border(Color.gray.opacity(0.2), width:0.5)
 
@@ -268,11 +281,13 @@ struct SpreadsheetXMLViewer:View
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
     //  .background(Color(UIColor.secondarySystemBackground))
+    // <<CHICKEN-TRACKS>> (2026-09-10, branch 'PossibleLiquidGlassEffects') — same compat
+    // treatment as worksheetTabBar above.
     #if os(macOS)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:0) { Color(nsColor: .windowBackgroundColor) })
     #endif
     #if os(iOS)
-        .background(Color(uiColor:UIColor.secondarySystemBackground))
+        .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:0) { Color(uiColor:UIColor.secondarySystemBackground) })
     #endif
         .border(Color.gray.opacity(0.2), width:0.5)
 
@@ -298,13 +313,14 @@ struct SpreadsheetXMLViewer:View
             }
             .padding(40)
         //  .background(Color(UIColor.systemGray))
+        // <<CHICKEN-TRACKS>> (2026-09-10, branch 'PossibleLiquidGlassEffects') — same compat
+        // treatment as worksheetTabBar/statusBar above.
         #if os(macOS)
-            .background(Color(nsColor:.systemGray))
+            .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:12) { Color(nsColor:.systemGray) })
         #endif
         #if os(iOS)
-            .background(Color(UIColor.systemGray))
+            .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:12) { Color(UIColor.systemGray) })
         #endif
-            .cornerRadius(12)
         }
 
     }   // End of private func loadingOverlay()->some View.

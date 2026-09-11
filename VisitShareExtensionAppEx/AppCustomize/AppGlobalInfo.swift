@@ -2,7 +2,9 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.7301...
+//  AppGlobalInfo.swift - v1.7503...
+//  Updated by Claude/Daryl Cox on 09/09/2026. (Added bGlobalDeviceHWSupportsOnDeviceAI — 3rd on-device-AI flag, distinguishes hardware ineligibility from OS-too-old).
+//  Updated by Claude/Daryl Cox on 09/09/2026. (Added bGlobalDeviceOSSupportsOnDeviceAI / bGlobalDeviceHasOnDeviceAI on-device-AI detection flags).
 //  Updated by Daryl Cox on 08/27/2026. (Added ENABLE_DRC_BUILD_DISTRIBUTION).
 //  Updated by Daryl Cox on 08/20/2026. (Added ENABLE_APP_DELEGATE_EXTENSIONS).
 //  Updated by Claude/Daryl Cox on 08/04/2026. (Added 'sGlobalInfoAppExceptionRawFilespec'/'sGlobalInfoAppTrapRawFilespec' mirror constants for the new main.m raw crash-capture files).
@@ -38,8 +40,20 @@ import UIKit
 #endif
 
 // <<CHICKEN-TRACKS>> ParseCore import added (centralized ParseCore init, see 'ensureParseCoreIsInitialized()' / 'initializeParseCore()' below).
+
 #if ENABLE_APP_GLOBALINFO_FOR_PARSECORE
 import ParseCore
+#endif
+
+// <<CHICKEN-TRACKS>> On-device AI detection (SystemLanguageModel) — gated by canImport only, no
+// per-app ENABLE_* flag (unlike ParseCore above), since @available(iOS 26.0, macOS 26.0, *) guards
+// on actual usage already keep this safe to compile at any deployment target across the app fleet
+// (confirmed down to VV's iOS 17.0 base) as long as the build toolchain's SDK is new enough for the
+// framework to exist at all (canImport). Architecture agreed 09/09/2026 — see
+// bGlobalDeviceOSSupportsOnDeviceAI / bGlobalDeviceHasOnDeviceAI below.
+
+#if canImport(FoundationModels)
+import FoundationModels
 #endif
 
 // MARK: Global functions at module level (outside the class)...
@@ -68,6 +82,7 @@ public func appLogMsg(_ sMessage:String)
     // which is called ~1,706 times across 35 of ~45 source files, including non-main-actor contexts
     // (delegate callbacks, completion handlers) — that cascade is the real risk, not this declaration.
     // Set exactly once at startup via setJmAppDelegateVisitorInstance(); read-only after that.
+
            public nonisolated(unsafe) var jmAppGlobalInfoDelegateVisitor:JmAppDelegateVisitor? 
                                                                            = nil
                                                                            // 'jmAppDelegateVisitor' MUST remain declared this way
@@ -93,6 +108,7 @@ public func appLogMsg(_ sMessage:String)
     // wasn't. lockPreXCGLoggerMessages below makes every access to the array (append AND drain-read)
     // mutually exclusive for real, rather than just satisfying the compiler. @usableFromInline
     // (not private) because appLogMsgViaGlobalCache() above is @inlinable and needs to reference it.
+
     @usableFromInline nonisolated(unsafe) let lockPreXCGLoggerMessages = NSLock()
 
            public nonisolated(unsafe) var listAppGlobalInfoPreXCGLoggerMessages:[String]
@@ -110,6 +126,7 @@ public func appLogMsgViaGlobalCache(_ sMessage:String)
 #endif
 
 //@inlinable - NOTE: This method can NOT be marked @inlinable - problems with 'jmAppDelegateVisitor'...
+
 public func appLogMsgWithVisitor(_ sMessage:String)
 {
 
@@ -251,6 +268,7 @@ public class AppGlobalInfo:NSObject
     //  {
     //      nonisolated(unsafe) static let appGlobalInfo:AppGlobalInfo       = AppGlobalInfo()
     //  }
+
         nonisolated(unsafe) static let appGlobalInfo:AppGlobalInfo       = AppGlobalInfo()
 
     // Objective-C accessor for singleton (computed property):
@@ -274,6 +292,7 @@ public class AppGlobalInfo:NSObject
     static let sGlobalInfoAppLastGoodLogFilespec:String                  = AppGlobalInfoConfig.sGlobalInfoAppLastGoodLogFilespec  
     static let sGlobalInfoAppLastCrashLogFilespec:String                 = AppGlobalInfoConfig.sGlobalInfoAppLastCrashLogFilespec 
     static let sGlobalInfoAppCrashMarkerFilespec:String                  = AppGlobalInfoConfig.sGlobalInfoAppCrashMarkerFilespec
+
     // <<CHICKEN-TRACKS>> 08/04/2026 - NOT mirroring 'sGlobalInfoAppExceptionRawFilespec'/
     // 'sGlobalInfoAppTrapRawFilespec' as statics here too (unlike the other constants above) -
     // this class already exposes them as INSTANCE properties below (for main.m's ObjC access),
@@ -282,6 +301,7 @@ public class AppGlobalInfo:NSObject
     // works fine alone, the instance-property form works fine alone, but NOT declared together
     // under the same name). Swift-side static access, if ever needed, should go straight to
     // 'AppGlobalInfoConfig.sGlobalInfoAppExceptionRawFilespec' instead...
+
     static let sGlobalInfoAppMemPressureWarningMarkerFilespec:String     = "AppMemPressureWarningMarker.txt"
                                                                            // Companion marker written when the GCD memory pressure
                                                                            // source fires a '.warning' event.  Presence at next launch
@@ -712,8 +732,10 @@ public class AppGlobalInfo:NSObject
     static let sAppBundleId:String                                       = "net.justmacapps.divorcepack"
     static let sAppVersion:String                                        = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     static let sAppBuild:String                                          = Bundle.main.infoDictionary?["CFBundleVersion"]            as? String ?? "1"
+
     // <<CHICKEN-TRACKS>> Swift 6 migration (Section 12, NWSNexRadRadarApp2) — flagged SENDABLE.
     // Changed 'var' -> 'let': confirmed via grep this is never reassigned anywhere in the codebase.
+
     static let sAppVersionBuild:String                                   = "\(sAppVersion) (\(sAppBuild))"
 
     // ----------------------------------------------------------
@@ -819,6 +841,57 @@ public class AppGlobalInfo:NSObject
            var bGlobalDeviceIsIPhone:Bool                                = false
            var bGlobalDeviceIsAppleWatch:Bool                            = false
            var bGlobalDeviceIsXcodeSimulator:Bool                        = false
+
+           // <<CHICKEN-TRACKS>> On-device AI (Apple Intelligence / FoundationModels) detection —
+           // added 09/09/2026, agreed architecture: THREE flags, not two (revised same day after
+           // Daryl caught the gap — OS-support alone doesn't capture 'OS is new enough but THIS
+           // device's silicon isn't eligible', e.g. iPhone 14 Pro Max on iOS 27 Beta 8: OS flag is
+           // true, hardware flag is false; A17 Pro/M-series is Apple Intelligence's real floor, not
+           // just the OS version). 'OS supports' and 'hardware supports' are both launch-time
+           // constants (computed once below in init(), like every other bGlobalDevice* flag) —
+           // neither the OS version nor a device's physical chip can change mid-session. 'Has
+           // on-device AI' is deliberately NOT cached the same way: Apple Intelligence can be toggled
+           // on/off in Settings, or the on-device model can finish downloading, while VMA keeps
+           // running through a workday — so it's a computed property, re-read live via
+           // SystemLanguageModel.default.availability on every access, matching the explicit
+           // reasoning already used for this exact check in
+           // JMAAppIntentsSample1/AppIntentSample1ModelObservable.swift. No per-app ENABLE_* gate is
+           // used (see the canImport(FoundationModels) note above the import) — @available guards
+           // below keep this safe to compile at any deployment target across the app fleet (VV's
+           // iOS 17.0 base included). bGlobalDeviceHWSupportsOnDeviceAI is derived from the
+           // same SystemLanguageModel.default.availability call, cached once in init(): only
+           // .unavailable(.deviceNotEligible) maps to hardware-ineligible — .appleIntelligenceNotEnabled
+           // and .modelNotReady both mean the hardware itself is fine, just not currently toggled
+           // on/ready, which is exactly the distinction bGlobalDeviceHasOnDeviceAI still needs to
+           // capture live (unchanged below).
+
+           var bGlobalDeviceOSSupportsOnDeviceAI:Bool                    = false
+           var bGlobalDeviceHWSupportsOnDeviceAI:Bool                    = false
+           var bGlobalDeviceHasOnDeviceAI:Bool
+           {
+           #if canImport(FoundationModels)
+               guard self.bGlobalDeviceOSSupportsOnDeviceAI 
+               else { return false }
+
+               if #available(iOS 26.0, macOS 26.0, *)
+               {
+                   switch SystemLanguageModel.default.availability
+                   {
+                   case .available:
+                       return true
+                   case .unavailable:
+                       return false
+                   }
+               }
+               else
+               {
+                   return false
+               }
+           #else
+               return false
+           #endif
+           }
+
            var cgfGlobalDeviceImageSizeForQR:CGFloat                     = 64
 
            var sGlobalDeviceName:String                                  = "-unknown-"
@@ -1167,7 +1240,47 @@ public class AppGlobalInfo:NSObject
         self.self.bGlobalDeviceIsXcodeSimulator = true
     #endif
 
-        self.sAppCategory                           = JmXcodeBuildSettings.jmAppCategory   
+        // <<CHICKEN-TRACKS>> bGlobalDeviceOSSupportsOnDeviceAI / bGlobalDeviceHWSupportsOnDeviceAI
+        // — single combined #available check covers both platforms; for an iOS binary running
+        // "Designed for iPad" on Apple Silicon Mac, this correctly exercises the iOS branch (it's
+        // still iOS code), not the macOS one — no branching on bGlobalProcessInfoIsiOSAppOnMac
+        // needed. See the flags' declarations above for the full architecture note.
+        // (bGlobalDeviceHasOnDeviceAI is NOT set here — it's a computed property, re-read live on
+        // each access; see its declaration.) Hardware eligibility can only be queried via
+        // SystemLanguageModel.default.availability, which itself requires the OS gate — so it's
+        // computed inside the same #available branch, once, and cached just like the OS flag (a
+        // device's physical chip doesn't change mid-session either).
+
+    #if canImport(FoundationModels)
+        if #available(iOS 26.0, macOS 26.0, *)
+        {
+            self.bGlobalDeviceOSSupportsOnDeviceAI = true
+
+            switch SystemLanguageModel.default.availability
+            {
+            case .available:
+                self.bGlobalDeviceHWSupportsOnDeviceAI = true
+            case .unavailable(let reason):
+                switch reason
+                {
+                case .deviceNotEligible:
+                    self.bGlobalDeviceHWSupportsOnDeviceAI = false
+                default:
+                    self.bGlobalDeviceHWSupportsOnDeviceAI = true
+                }
+            }
+        }
+        else
+        {
+            self.bGlobalDeviceOSSupportsOnDeviceAI     = false
+            self.bGlobalDeviceHWSupportsOnDeviceAI     = false
+        }
+    #else
+        self.bGlobalDeviceOSSupportsOnDeviceAI         = false
+        self.bGlobalDeviceHWSupportsOnDeviceAI         = false
+    #endif
+
+        self.sAppCategory                           = JmXcodeBuildSettings.jmAppCategory
         self.sAppDisplayName                        = JmXcodeBuildSettings.jmAppDisplayName
         self.sAppBundleIdentifier                   = JmXcodeBuildSettings.jmAppBundleIdentifier
         self.sAppVersionAndBuildNumber              = JmXcodeBuildSettings.jmAppVersionAndBuildNumber
@@ -1747,6 +1860,9 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bGlobalDeviceIsIPhone' is [\(String(describing: self.bGlobalDeviceIsIPhone))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bGlobalDeviceIsAppleWatch' is [\(String(describing: self.bGlobalDeviceIsAppleWatch))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bGlobalDeviceIsXcodeSimulator' is [\(String(describing: self.bGlobalDeviceIsXcodeSimulator))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bGlobalDeviceOSSupportsOnDeviceAI' is [\(String(describing: self.bGlobalDeviceOSSupportsOnDeviceAI))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bGlobalDeviceHWSupportsOnDeviceAI' is [\(String(describing: self.bGlobalDeviceHWSupportsOnDeviceAI))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bGlobalDeviceHasOnDeviceAI' is [\(String(describing: self.bGlobalDeviceHasOnDeviceAI))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.cgfGlobalDeviceImageSizeForQR' is (\(String(describing: self.cgfGlobalDeviceImageSizeForQR)))...")
         
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sGlobalDeviceName' is [\(String(describing: self.sGlobalDeviceName))]...")

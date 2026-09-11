@@ -5,7 +5,7 @@
 //  Created by Claude/Daryl Cox on 02/10/2026.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
-//  NOTE: Simplified clone of DataGridPack's ContentView for use in VMA
+//  NOTE: Simplified clone of AnyPack's ContentView for use in VMA
 //        Always initialized with a file URL - no import/loading modes
 //
 

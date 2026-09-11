@@ -47,7 +47,7 @@ enum CSVDelimiterType:String, CaseIterable, Identifiable
     }
 }
 
-@JmEntityInfo(vers:"v1.1001")
+@JmEntityInfo(vers:"v1.1101")
 struct SettingsDataGridView:View
 {
     
@@ -299,7 +299,7 @@ struct SettingsDataGridView:View
             //          AppAboutView()
             //      }
             //  #if os(macOS)
-            //      .buttonStyle(.borderedProminent)
+            //      .appGlassCompatButtonStyle(fallback:.borderedProminent)
             //  //  .background(???.isPressed ? .blue : .gray)
             //      .cornerRadius(10)
             //      .foregroundColor(Color.primary)
@@ -337,7 +337,7 @@ struct SettingsDataGridView:View
             //              .navigationBarBackButtonHidden(true)
             //      }
             //  #if os(macOS)
-            //      .buttonStyle(.borderedProminent)
+            //      .appGlassCompatButtonStyle(fallback:.borderedProminent)
             //  //  .background(???.isPressed ? .blue : .gray)
             //      .cornerRadius(10)
             //      .foregroundColor(Color.primary)
@@ -366,7 +366,7 @@ struct SettingsDataGridView:View
                         }
                     }
                 #if os(macOS)
-                    .buttonStyle(.borderedProminent)
+                    .appGlassCompatButtonStyle(fallback:.borderedProminent)
                 //  .background(???.isPressed ? .blue : .gray)
                     .cornerRadius(10)
                     .foregroundColor(Color.primary)

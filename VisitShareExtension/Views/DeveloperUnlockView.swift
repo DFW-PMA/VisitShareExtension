@@ -21,7 +21,7 @@ import CoreImage.CIFilterBuiltins
 // In production: move to its own DeveloperUnlockView.swift file in a shared module.
 // DeveloperFeaturesView stays per-app (different options per app).
 
-@JmEntityInfo(vers:"v1.0805")
+@JmEntityInfo(vers:"v1.0901")
 struct DeveloperUnlockView:View
 {
 
@@ -127,13 +127,16 @@ struct DeveloperUnlockView:View
                         #endif
                             .frame(height:70)
                         //  .background(Color.appSystemGray6)
+                        // <<CHICKEN-TRACKS>> (2026-09-10, branch 'PossibleLiquidGlassEffects') —
+                        // iOS 26+/macOS 26+ gets '.glassEffect()' tinted to the app's AccentColor;
+                        // pre-26 keeps the EXACT prior platform-conditional gray background,
+                        // unchanged.
                         #if os(macOS)
-                            .background(Color(nsColor:.systemGray))
+                            .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:12) { Color(nsColor:.systemGray) })
                         #endif
                         #if os(iOS)
-                            .background(Color(UIColor.systemGray6))
+                            .modifier(AppGlassEffectCardFallbackModifier(cornerRadius:12) { Color(UIColor.systemGray6) })
                         #endif
-                            .cornerRadius(12)
                             .padding(.horizontal)
                             .onChange(of:sEnteredCode) { _, sNew in
                                 if sNew.count > 6 { sEnteredCode = String(sNew.prefix(6)) }
@@ -245,7 +248,7 @@ struct DeveloperUnlockView:View
                 {
                     Button("Dismiss") { presentationMode.wrappedValue.dismiss() }
                     #if os(macOS)
-                        .buttonStyle(.borderedProminent)
+                        .appGlassCompatButtonStyle(fallback:.borderedProminent)
                         .padding()
                     //  .background(???.isPressed ? .blue : .gray)
                         .cornerRadius(10)
@@ -274,7 +277,7 @@ struct DeveloperUnlockView:View
                 }
                 .buttonStyle(.plain)
             #if os(macOS)
-                .buttonStyle(.borderedProminent)
+                .appGlassCompatButtonStyle(fallback:.borderedProminent)
                 .padding()
             //  .background(???.isPressed ? .blue : .gray)
                 .cornerRadius(10)
@@ -419,7 +422,7 @@ struct DeveloperFeaturesView:View
                 .buttonStyle(.plain)
             #endif
             #if os(macOS)
-                .buttonStyle(.borderedProminent)
+                .appGlassCompatButtonStyle(fallback:.borderedProminent)
                 .padding()
             //  .background(???.isPressed ? .blue : .gray)
                 .cornerRadius(10)

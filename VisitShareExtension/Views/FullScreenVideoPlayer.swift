@@ -16,7 +16,7 @@ import Combine
 
 // Mark: 'Full' Screen Video Player...
 
-@JmEntityInfo(vers:"v1.0601")
+@JmEntityInfo(vers:"v1.0701")
 struct FullScreenVideoPlayer:View
 {
     
@@ -189,7 +189,7 @@ struct FullScreenVideoPlayer:View
                         }
                     }
                 #if os(macOS)
-                    .buttonStyle(.borderedProminent)
+                    .appGlassCompatButtonStyle(fallback:.borderedProminent)
                     .cornerRadius(10)
                 #endif
                     .padding(.trailing, 8)
@@ -229,7 +229,7 @@ struct FullScreenVideoPlayer:View
                         }
                     }
                 #if os(macOS)
-                    .buttonStyle(.borderedProminent)
+                    .appGlassCompatButtonStyle(fallback:.borderedProminent)
                     .cornerRadius(10)
                     .foregroundColor(Color.primary)
                 #endif

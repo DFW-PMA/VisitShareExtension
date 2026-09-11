@@ -1,6 +1,6 @@
 //
 //  AppDocumentImportContentTypes.swift
-//  DataGridPack
+//  AnyPack
 //
 //  Created by JustMacApps.net on 04/08/2026.
 //  Copyright © 2023-2026 JustMacApps. All rights reserved.
@@ -12,7 +12,7 @@ import SwiftUI
 import Combine
 import UniformTypeIdentifiers
 
-@JmEntityInfo(vers:"v1.0401")
+@JmEntityInfo(vers:"v1.0402")
 public struct AppDocumentImportContentTypes
 {
     
@@ -45,7 +45,15 @@ public struct AppDocumentImportContentTypes
                                                                 // Markdown support (.md / .markdown)...
                                                                  UTType(filenameExtension:"md")!,
                                                                  UTType(filenameExtension:"markdown")!,
-                                                                 UTType("net.daringfireball.markdown")!
+                                                                 UTType("net.daringfireball.markdown")!,
+                                                                // <<CHICKEN-TRACKS>> (2026-09-10) - .propertyList added explicitly for the
+                                                                // Import picker/NSOpenPanel. Already implicitly allowed via 'public.data'
+                                                                // above (com.apple.property-list conforms to it), but listing it directly
+                                                                // documents .plist as an intentionally-supported type, not an accident of
+                                                                // the broad public.data catch-all. See Info.plist's new
+                                                                // CFBundleDocumentTypes/LSItemContentTypes entry for the matching
+                                                                // LaunchServices-side fix (Dock icon drop / Finder Open With).
+                                                                 .propertyList
                                                             ]
 
 }   // End of public struct AppDocumentImportContentTypes.
