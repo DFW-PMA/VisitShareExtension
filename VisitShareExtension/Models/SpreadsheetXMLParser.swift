@@ -9,7 +9,7 @@
 import JmEntityInfo
 import Foundation
 
-@JmEntityInfo(vers:"v1.0205")
+@JmEntityInfo(vers:"v1.0302")
 class SpreadsheetXMLParser:NSObject 
 {
 
@@ -45,6 +45,14 @@ class SpreadsheetXMLParser:NSObject
     private var isInData:Bool                             = false
 
     private var parseError:Error?                         = nil
+
+    // <<CHICKEN-TRACKS>> (2026-10-05) Style/layout capture state (for faithful .xlsx conversion)...
+    private var currentStyleID:String?                    = nil
+    private var currentStyle:SpreadsheetXMLStyle?         = nil
+    private var currentColumnLayoutIndex:Int              = 0
+    private var bFreezePanes:Bool                         = false
+    private var iSplitHorizontal:Int                      = 0
+    private var iSplitVertical:Int                        = 0
 
     // MARK: - Public Parse Method...
 
@@ -82,6 +90,20 @@ class SpreadsheetXMLParser:NSObject
         }
 
         appLogMsg("\(sCurrMethodDisp) File data loaded, size: [\(originalData.count)] bytes...")
+
+        // <<CHICKEN-TRACKS>> (2026-10-07) A SpreadsheetML file whose download/copy was CUT SHORT (seen: a Safari-on-iPad download of a
+        //                    58.8MB BigTest .xls stopped 9,056 bytes early, mid-tag) used to surface as a bare XML parse error. Say what
+        //                    is really wrong instead: the file starts a <Workbook> but never closes it.
+        if (Self.isTruncatedWorkbook(originalData))
+        {
+            let sMsg:String = "This file looks incomplete - it ends partway through (\(originalData.count) bytes) without its closing </Workbook> tag, so the download or copy was probably cut short. Download or copy it again, then import it again."
+
+            appLogMsg("\(sCurrMethodDisp) ERROR: \(sMsg)")
+
+            return .failure(NSError(domain:  "SpreadsheetXMLParser",
+                                    code:    SpreadsheetXMLParser.iTruncatedFileErrorCode,
+                                    userInfo:[NSLocalizedDescriptionKey:sMsg]))
+        }
 
         // Pre-process XML to fix common issues (defensive programming)...
 
@@ -276,6 +298,33 @@ class SpreadsheetXMLParser:NSObject
 
     }   // End of private func preprocessXMLData(_ data:Data)->Data.
 
+    /// NSError code used when a SpreadsheetML file is cut off (callers treat it as a real error, not "not a spreadsheet").
+    static let iTruncatedFileErrorCode:Int = 1004
+
+    /// True when the data opens a <Workbook> but its tail has no closing </Workbook>.
+    private static func isTruncatedWorkbook(_ data:Data)->Bool
+    {
+
+        guard data.count > 0
+        else
+        {
+            return false
+        }
+
+        let sHead:String = String(decoding:data.prefix(8192), as:UTF8.self)
+
+        guard sHead.contains("<Workbook")
+        else
+        {
+            return false                // not a SpreadsheetML workbook at all - leave it to the normal paths...
+        }
+
+        let sTail:String = String(decoding:data.suffix(256), as:UTF8.self)
+
+        return !sTail.contains("</Workbook>")
+
+    }   // End of private static func isTruncatedWorkbook(_:).
+
     private func resetParserState() 
     {
 
@@ -303,6 +352,12 @@ class SpreadsheetXMLParser:NSObject
         self.isInData            = false
         
         self.parseError          = nil
+        self.currentStyleID      = nil
+        self.currentStyle        = nil
+        self.currentColumnLayoutIndex = 0
+        self.bFreezePanes        = false
+        self.iSplitHorizontal    = 0
+        self.iSplitVertical      = 0
 
     }   // End of private func resetParserState().
 
@@ -360,12 +415,97 @@ extension SpreadsheetXMLParser:XMLParserDelegate
             isInWorksheet    = true
             let sheetName    = getAttributeValue(from: attributeDict, name: "Name") ?? "Sheet\(workbook?.worksheets.count ?? 0 + 1)"
             currentWorksheet = SpreadsheetXMLWorksheet(name: sheetName)
+            currentWorksheet?.isProtected = (getAttributeValue(from:attributeDict, name:"Protected") == "1")
             currentRowIndex  = 0
             maxColumnIndex   = 0
 
             appLogMsg("\(sCurrMethodDisp) Found <Worksheet> element: '\(sheetName)'...")
         case "Table":
             isInTable = true
+            currentColumnLayoutIndex = 0
+
+            if let sW = getAttributeValue(from:attributeDict, name:"DefaultColumnWidth"), let dW = Double(sW)
+            {
+                currentWorksheet?.defaultColumnWidth = dW
+            }
+
+            if let sH = getAttributeValue(from:attributeDict, name:"DefaultRowHeight"), let dH = Double(sH)
+            {
+                currentWorksheet?.defaultRowHeight = dH
+            }
+        case "Style":
+            if let sID = getAttributeValue(from:attributeDict, name:"ID")
+            {
+                currentStyleID = sID
+                currentStyle   = SpreadsheetXMLStyle()
+            }
+        case "Alignment":
+            if currentStyle != nil
+            {
+                currentStyle?.horizontal = getAttributeValue(from:attributeDict, name:"Horizontal")
+                currentStyle?.vertical   = getAttributeValue(from:attributeDict, name:"Vertical")
+                currentStyle?.wrapText   = (getAttributeValue(from:attributeDict, name:"WrapText") == "1")
+            }
+        case "Border":
+            if currentStyle != nil,
+               let sPos = getAttributeValue(from:attributeDict, name:"Position"),
+               getAttributeValue(from:attributeDict, name:"LineStyle") != nil
+            {
+                currentStyle?.borders[sPos] = (Int(getAttributeValue(from:attributeDict, name:"Weight") ?? "1") ?? 1)
+            }
+        case "Font":
+            if currentStyle != nil
+            {
+                currentStyle?.fontName  = getAttributeValue(from:attributeDict, name:"FontName")
+                currentStyle?.fontSize  = Double(getAttributeValue(from:attributeDict, name:"Size") ?? "")
+                currentStyle?.fontColor = getAttributeValue(from:attributeDict, name:"Color")
+                currentStyle?.bold      = (getAttributeValue(from:attributeDict, name:"Bold")      == "1")
+                currentStyle?.italic    = (getAttributeValue(from:attributeDict, name:"Italic")    == "1")
+                currentStyle?.underline = (getAttributeValue(from:attributeDict, name:"Underline") != nil)
+            }
+        case "Interior":
+            if currentStyle != nil,
+               let sColor = getAttributeValue(from:attributeDict, name:"Color"),
+               (getAttributeValue(from:attributeDict, name:"Pattern") ?? "Solid") == "Solid"
+            {
+                currentStyle?.fillColor = sColor
+            }
+        case "NumberFormat":
+            if currentStyle != nil
+            {
+                currentStyle?.numberFormat = getAttributeValue(from:attributeDict, name:"Format")
+            }
+        case "Protection":
+            if currentStyle != nil, getAttributeValue(from:attributeDict, name:"Protected") == "0"
+            {
+                currentStyle?.isLocked = false
+            }
+        case "Column":
+            if let sIdx = getAttributeValue(from:attributeDict, name:"Index"), let iIdx = Int(sIdx)
+            {
+                currentColumnLayoutIndex = (iIdx - 1)
+            }
+
+            let iSpan:Int = (Int(getAttributeValue(from:attributeDict, name:"Span") ?? "0") ?? 0)
+
+            if let sW = getAttributeValue(from:attributeDict, name:"Width"), let dW = Double(sW)
+            {
+                for iOff in 0...iSpan
+                {
+                    currentWorksheet?.columnWidths[currentColumnLayoutIndex + iOff] = dW
+                }
+            }
+
+            currentColumnLayoutIndex += (iSpan + 1)
+        case "WorksheetOptions":
+            bFreezePanes     = false
+            iSplitHorizontal = 0
+            iSplitVertical   = 0
+        case "FreezePanes":
+            bFreezePanes = true
+        case "SplitHorizontal", "SplitVertical":
+            currentElementValue = ""
+            isInData            = true             // reuse the character collector for these 2 simple elements...
 
             appLogMsg("\(sCurrMethodDisp) Found <Table> element...")
         case "Row":
@@ -383,6 +523,11 @@ extension SpreadsheetXMLParser:XMLParserDelegate
             }
 
             currentRow = SpreadsheetXMLRow(rowIndex:currentRowIndex)
+
+            if let sRowStyle = getAttributeValue(from:attributeDict, name:"StyleID")
+            {
+                currentRow?.styleID = sRowStyle
+            }
 
             // Check for row height...
 
@@ -443,6 +588,7 @@ extension SpreadsheetXMLParser:XMLParserDelegate
             }
         case "Data":
             isInData = true
+            currentCell?.hasData = true
 
             // Get data type...
 
@@ -480,6 +626,28 @@ extension SpreadsheetXMLParser:XMLParserDelegate
             isInWorkbook = false
 
             appLogMsg("\(sCurrMethodDisp) Closed </Workbook> element...")
+        case "Style":
+            if let sID = currentStyleID, let style = currentStyle
+            {
+                workbook?.styles[sID] = style
+            }
+
+            currentStyleID = nil
+            currentStyle   = nil
+        case "SplitHorizontal":
+            isInData            = false
+            iSplitHorizontal    = (Int(currentElementValue.trimmingCharacters(in:.whitespacesAndNewlines)) ?? 0)
+            currentElementValue = ""
+        case "SplitVertical":
+            isInData            = false
+            iSplitVertical      = (Int(currentElementValue.trimmingCharacters(in:.whitespacesAndNewlines)) ?? 0)
+            currentElementValue = ""
+        case "WorksheetOptions":
+            if (bFreezePanes == true)
+            {
+                currentWorksheet?.freezeRows    = iSplitHorizontal
+                currentWorksheet?.freezeColumns = iSplitVertical
+            }
         case "Worksheet":
             isInWorksheet = false
 
@@ -538,7 +706,10 @@ extension SpreadsheetXMLParser:XMLParserDelegate
 
             if currentCell != nil 
             {
-                currentCell?.value = currentElementValue.trimmingCharacters(in:.whitespacesAndNewlines)
+            //  currentCell?.value = currentElementValue.trimmingCharacters(in:.whitespacesAndNewlines)
+                // <<CHICKEN-TRACKS>> (2026-10-05) Only newlines are trimmed now - Excel keeps a value's leading/trailing
+                //                    SPACES (e.g. 'Eric Powell  Admin ') and so must a faithful .xlsx conversion...
+                currentCell?.value = currentElementValue.trimmingCharacters(in:.newlines)
 
                 appLogMsg("\(sCurrMethodDisp) Set cell value: [\(currentCell?.value ?? "")] (type: \(currentCell?.type.rawValue ?? "unknown"))...")
             }

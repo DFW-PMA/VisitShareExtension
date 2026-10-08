@@ -1,6 +1,6 @@
 //
 //  AppGlassEffectCompatModifier.swift
-//  NomadPack
+//  JMABigTestReview
 //
 //  Created by Daryl Cox on 09/10/2026.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.

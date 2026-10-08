@@ -2,7 +2,11 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.7503...
+//  AppGlobalInfo.swift - v1.7901...
+//  Updated by Daryl Cox on 10/07/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA).
+//  Updated by Claude/Daryl Cox on 10/02/2026. (Requires "-DINSTANTIATE_APP_IPHONEDUOHINGE" -> Re-applied the iPhone Duo fold/hinge state additions - 'AppGlobalFoldHingeStatus' enum, 'eGlobalFoldHingeStatus'/'dblGlobalFoldHingeAngleDegrees'/'bGlobalDeviceIsFoldable' vars, 'setFoldHingeState()' - originally written 09/29/2026 on JMABigTestReview's 'Prep4iPhoneDuo' branch, then lost when a later cross-app sync replaced this file with a copy that never had them).
+//  Updated by Claude/Daryl Cox on 10/01/2026. (Added 'sAppBuildUUID' - the running binary's Mach-O LC_UUID, via 'getAppBuildUUID()' - captured at init and logged by displayUIDeviceInformation()).
+//  Updated by Claude/Daryl Cox on 09/15/2026. (Added 'parseCoreCredentialsProvider' closure hook plus AppGlobalInfoConfig-mirrored Parse default credentials & 'bAppExpectsParseCoreCredentialsProvider' guard-rail logging — 'initializeParseCore()' now prefers a runtime-registered override over the hardcoded defaults).
 //  Updated by Claude/Daryl Cox on 09/09/2026. (Added bGlobalDeviceHWSupportsOnDeviceAI — 3rd on-device-AI flag, distinguishes hardware ineligibility from OS-too-old).
 //  Updated by Claude/Daryl Cox on 09/09/2026. (Added bGlobalDeviceOSSupportsOnDeviceAI / bGlobalDeviceHasOnDeviceAI on-device-AI detection flags).
 //  Updated by Daryl Cox on 08/27/2026. (Added ENABLE_DRC_BUILD_DISTRIBUTION).
@@ -30,6 +34,7 @@
 //
 
 import Foundation
+import MachO
 import SwiftUI
 
 #if os(macOS)
@@ -203,6 +208,29 @@ enum AppGlobalAuthType:Int, CaseIterable
     
 }   // End of AppGlobalAuthType:Int, CaseIterable.
 
+// App 'global' Fold/Hinge STATUS (iPhone Duo and any future foldable hardware):
+
+// <<CHICKEN-TRACKS>> (2026-09-29, iPhone Duo prep, discussed/agreed with Daryl before coding; re-applied
+// 2026-10-02 after a cross-app sync dropped it) — this enum is OUR OWN stable vocabulary, deliberately NOT a
+// typealias/re-export of whatever the OS SDK calls its hinge status type. Only the (separate)
+// 'AppFoldStateObservable.swift' file touches the real iOS 27.1 SDK hinge API directly and translates INTO
+// this enum at the boundary - so 'AppGlobalInfo.swift' itself stays buildable on every project's CURRENT
+// Xcode/SDK, unchanged, with zero availability guards, exactly like every other property in this file. Do not
+// add a case that mirrors an SDK type's raw name - keep this our own, small, and stable.
+
+enum AppGlobalFoldHingeStatus:Int, CaseIterable
+{
+
+    case appGlobalFoldHingeStatusUndefined     = 0     // Not yet reported - true for the entire life of
+                                                        // the process on any non-foldable device, which
+                                                        // is the expected value on nearly every app's
+                                                        // hardware today...
+    case appGlobalFoldHingeStatusClosed        = 1     // Folded flat, closed...
+    case appGlobalFoldHingeStatusPartiallyOpen = 2     // Mid-fold - the 'division' reserved region is active...
+    case appGlobalFoldHingeStatusFullyOpen     = 3     // Fully unfolded, flat open...
+
+}   // End of AppGlobalFoldHingeStatus:Int, CaseIterable.
+
 // App 'global' Device TYPE Environment 'key':
 
 struct AppGlobalDeviceTypeEnvironmentKey:EnvironmentKey
@@ -330,6 +358,7 @@ public class AppGlobalInfo:NSObject
     //                              ENABLE_APP_USER_AUTH_TYPE
     //                              ENABLE_APP_PARSECORE_FOR_SWIFT
     //                              ENABLE_APP_GLOBALINFO_FOR_PARSECORE
+    //                              ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA
     //                              ENABLE_APP_IAP_CAPABILITY
     //                              ENABLE_APP_ALARM_CAPABILITY
     //                              ENABLE_APP_LEGACY_CORELOC2
@@ -359,6 +388,7 @@ public class AppGlobalInfo:NSObject
     //                              INSTANTIATE_APP_BIGTESTTRACKING
     //                              INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
     //                              INSTANTIATE_APP_GLOBALMEMORYOVERLAY
+    //                              INSTANTIATE_APP_IPHONEDUOHINGE
     //
     // ------------------------------------------------------------------------------------------------------
 
@@ -412,6 +442,15 @@ public class AppGlobalInfo:NSObject
     static let isEnabledGlobalInfoForParseCore:Bool                      =
     {
     #if ENABLE_APP_GLOBALINFO_FOR_PARSECORE
+        return true
+    #else
+        return false
+    #endif
+    }()
+
+    static let isEnabledGlobalInfoForParseCoreData:Bool                  =
+    {
+    #if ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA
         return true
     #else
         return false
@@ -688,6 +727,15 @@ public class AppGlobalInfo:NSObject
     #endif
     }()
 
+    static let bInstantiateAppiPhoneDuoHinge:Bool                        =
+    {
+    #if INSTANTIATE_APP_IPHONEDUOHINGE
+        return true
+    #else
+        return false
+    #endif
+    }()
+
     // Various 'app' component controls:
 
     static let eUseLatitudeLongitudePrecision:CLLocationPrecision        = AppGlobalInfoConfig.eUseLatitudeLongitudePrecision
@@ -940,6 +988,9 @@ public class AppGlobalInfo:NSObject
            var sAppDisplayName:String                                    = "-unknown-"
            var sAppBundleIdentifier:String                               = "-unknown-"
            var sAppVersionAndBuildNumber:String                          = "-unknown-"
+           // <<CHICKEN-TRACKS>> 10/01/2026 - the running binary's Mach-O LC_UUID (same value 'dwarfdump --uuid' reports
+           // for the matching dSYM) - the reliable key from a crash log back to its archive/dSYM. See 'getAppBuildUUID()'.
+           var sAppBuildUUID:String                                      = "-unknown-"
            var sAppCopyright:String                                      = "-unknown-"
            var sAppUserDefaultsFileLocation:String                       = "-unknown-"
 
@@ -958,6 +1009,31 @@ public class AppGlobalInfo:NSObject
            var bAppIsInTheBackground:Bool                                = false
                                                                            // false: App is NOT in the Background...
                                                                            // true:  App is NOW in the Background...
+
+           // <<CHICKEN-TRACKS>> (2026-09-29, iPhone Duo prep; re-applied 2026-10-02) — unlike
+           // 'bAppIsInTheBackground' above (set by THIS class's own NotificationCenter observers - a genuine
+           // OS/process-level event AppGlobalInfo can subscribe to on its own), iOS has NO screen- or
+           // device-level API for fold/hinge state - it is delivered ONLY to a live View (SwiftUI's
+           // '.onHingeChange', or UIKit's 'UIHingeInteraction'/'UIView.reservedRegions()'). So for this one
+           // piece of state the flow is necessarily inverted: View -> 'AppFoldStateObservable' -> here, via
+           // 'setFoldHingeState()' below, rather than an OS hook owned by this class. See that Observable's
+           // own header CHICKEN-TRACKS for why it writes here BEFORE touching any of its own '@Published'
+           // properties - the ~18+ non-View consumers of this singleton (per the CHICKEN-TRACKS on
+           // 'appGlobalInfo' itself) have no Combine subscription to be notified through, so they must never
+           // read a value here that's stale relative to what the same hinge event is about to deliver to Views.
+
+           var eGlobalFoldHingeStatus:AppGlobalFoldHingeStatus          = .appGlobalFoldHingeStatusUndefined
+           var dblGlobalFoldHingeAngleDegrees:Double                    = 0.0000
+           var bGlobalDeviceIsFoldable:Bool                             = false
+                                                                           // Stays 'false' for the life of the
+                                                                           // process on non-foldable hardware.
+                                                                           // Latched 'true' the FIRST time ANY
+                                                                           // real (non-'undefined') hinge event
+                                                                           // arrives - inferred from actual
+                                                                           // behavior, never asserted from
+                                                                           // device identity/model string (Apple's
+                                                                           // own iPhone Duo guidance explicitly
+                                                                           // discourages device-type detection).
 
     #if os(iOS)
            var dispatchSourceMemoryPressure:DispatchSourceMemoryPressure? = nil
@@ -989,11 +1065,47 @@ public class AppGlobalInfo:NSObject
     // each had a different half-fix for this; consolidated here 'once and for all')...
 
 #if ENABLE_APP_GLOBALINFO_FOR_PARSECORE
-           var parseConfig:ParseClientConfiguration?                     = nil
+            var parseConfig:ParseClientConfiguration?                    = nil
 
     private let parseCoreInitCondition:NSCondition                       = NSCondition()
     private var bIsParseCoreInitialized:Bool                             = false
     private var bHasParseCoreInitBeenCalled:Bool                         = false
+
+    // <<CHICKEN-TRACKS>> (2026-09-15) — optional runtime override hook. An App that has its own
+    // Parse-settings UI/manager (e.g. WorkRoute's ParseServerSettingsManager) registers this
+    // closure at launch (see WorkRouteApp.swift's 'registerParseCoreCredentialsProvider()' - it
+    // MUST run before 'jmAppDelegateVisitor' is first touched, see that file's own CHICKEN-TRACKS)
+    // to supply real/user-edited server credentials instead of the hardcoded defaults above.
+    // Deliberately typed as a plain tuple, never a reference to any Parse-settings-specific model
+    // type (e.g. NOT 'ParseServerSettings') - this file is synced byte-for-byte into every App
+    // (PACK Apps included), and a type it doesn't have would break every App that lacks it. Nil
+    // (the default) means "no override registered - use the hardcoded AppGlobalInfoConfig values",
+    // which is the correct, silent, expected behavior for any App with no Parse-settings UI at all.
+    //
+    // <<CHICKEN-TRACKS>> Marked '@MainActor' because the realistic registrant (a per-App
+    // ObservableObject settings manager, e.g. WorkRoute's ParseServerSettingsManager) is itself
+    // @MainActor - same reasoning as every other @MainActor closure already threaded through this
+    // 'nonisolated(unsafe)' class. Called via 'runOnMainActorSync()' below (see that method's own
+    // CHICKEN-TRACKS), not directly - 'initializeParseCore()' is itself nonisolated.
+
+    public var parseCoreCredentialsProvider:(@MainActor () -> (sScheme:String, sHost:String, sPath:String, sApplicationId:String, sRestApiKey:String, sClientKey:String, sMasterKey:String)?)? = nil
+#endif
+
+#if ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA
+    // <<CHICKEN-TRACKS>> (2026-09-15) — mirrors of AppGlobalInfoConfig's Parse default credentials
+    // (same pattern as every other AppGlobalInfoConfig-forwarded constant in this file) - this is
+    // how the literal hardcoded values get INTO this file without ever being physically typed here,
+    // keeping this shared/synced file's own text identical to what it always was for any App that
+    // doesn't define ENABLE_APP_GLOBALINFO_FOR_PARSECORE at all (the PACK Apps).
+
+    static  let sParseCoreDefaultScheme:String                           = AppGlobalInfoConfig.sParseCoreDefaultScheme
+    static  let sParseCoreDefaultHost:String                             = AppGlobalInfoConfig.sParseCoreDefaultHost
+    static  let sParseCoreDefaultPath:String                             = AppGlobalInfoConfig.sParseCoreDefaultPath
+    static  let sParseCoreDefaultApplicationId:String                    = AppGlobalInfoConfig.sParseCoreDefaultApplicationId
+    static  let sParseCoreDefaultRestApiKey:String                       = AppGlobalInfoConfig.sParseCoreDefaultRestApiKey
+    static  let sParseCoreDefaultClientKey:String                        = AppGlobalInfoConfig.sParseCoreDefaultClientKey
+    static  let sParseCoreDefaultMasterKey:String                        = AppGlobalInfoConfig.sParseCoreDefaultMasterKey
+    static  let bAppExpectsParseCoreCredentialsProvider:Bool             = AppGlobalInfoConfig.bAppExpectsParseCoreCredentialsProvider
 #endif
 
     // <<CHICKEN-TRACKS>> Swift 6 — added 2026-07-16 for VisitVerify (VV), revised same day after a
@@ -1026,13 +1138,12 @@ public class AppGlobalInfo:NSObject
     // latter to its long-proven original behavior. Since Thread.isMainThread is already true at
     // every existing call site in the 20+ @main apps (that's why assumeIsolated worked there), this
     // is a strict behavioral no-op for them too.
+
     private func runOnMainActorSync<T>(_ body: @escaping @MainActor () -> T) -> T
     {
-
         typealias NonIsolated = () -> T
         return unsafeBitCast(body, to: NonIsolated.self)()
-
-    }   // End of private func runOnMainActorSync<T>(_ body:).
+    }
 
     // Private 'init()' to make this class a 'singleton':
 
@@ -1284,6 +1395,7 @@ public class AppGlobalInfo:NSObject
         self.sAppDisplayName                        = JmXcodeBuildSettings.jmAppDisplayName
         self.sAppBundleIdentifier                   = JmXcodeBuildSettings.jmAppBundleIdentifier
         self.sAppVersionAndBuildNumber              = JmXcodeBuildSettings.jmAppVersionAndBuildNumber
+        self.sAppBuildUUID                          = AppGlobalInfo.getAppBuildUUID()
         self.sAppCopyright                          = JmXcodeBuildSettings.jmAppCopyright      
         self.sAppUserDefaultsFileLocation           = JmXcodeBuildSettings.getAppUserDefaultsFileLocation(bIsBootstrapInit:true)
 
@@ -1467,13 +1579,94 @@ public class AppGlobalInfo:NSObject
         //     Parse.initialize(with: parseConfig)
         // --------------------------------------------------------------------------------------------------
 
+        // <<CHICKEN-TRACKS>> (2026-09-15) — prefer a runtime-registered override
+        // ('parseCoreCredentialsProvider', declared above) over the AppGlobalInfoConfig-mirrored
+        // hardcoded defaults. Also validates whatever the override returns (an App's own
+        // Parse-settings manager could itself be empty/misconfigured) rather than trusting it
+        // blindly — falls back to the hardcoded defaults either way if the override is missing OR
+        // invalid, logging exactly which case occurred so a bad setup is never silent.
+
+        var sResolvedScheme:String        = AppGlobalInfo.sParseCoreDefaultScheme
+        var sResolvedHost:String          = AppGlobalInfo.sParseCoreDefaultHost
+        var sResolvedApplicationId:String = AppGlobalInfo.sParseCoreDefaultApplicationId
+        var sResolvedClientKey:String     = AppGlobalInfo.sParseCoreDefaultClientKey
+
+        // <<CHICKEN-TRACKS>> (2026-09-15) — 'self' rebind is the standard fix for "Sending 'self'
+        // risks causing data races" when 'self' (non-Sendable) is captured into a closure passed to
+        // a '@escaping @MainActor () -> T' parameter (runOnMainActorSync above) - same idiom used
+        // throughout the rest of this file for this exact diagnostic shape.
+
+        nonisolated(unsafe) let unsafeSelf = self
+
+        let providedCredentialsOptional = self.runOnMainActorSync
+        { () -> (sScheme:String, sHost:String, sPath:String, sApplicationId:String, sRestApiKey:String, sClientKey:String, sMasterKey:String)? in
+
+            return unsafeSelf.parseCoreCredentialsProvider?()
+
+        }
+
+        if let providedCredentials = providedCredentialsOptional
+        {
+            if (providedCredentials.sScheme.isEmpty        == false &&
+                providedCredentials.sHost.isEmpty           == false &&
+                providedCredentials.sApplicationId.isEmpty  == false &&
+                (providedCredentials.sRestApiKey.isEmpty == false ||
+                 providedCredentials.sClientKey.isEmpty  == false ||
+                 providedCredentials.sMasterKey.isEmpty  == false))
+            {
+                appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Using the REGISTERED 'parseCoreCredentialsProvider' override (not the hardcoded AppGlobalInfoConfig defaults)...")
+
+                sResolvedScheme        = providedCredentials.sScheme
+                sResolvedHost          = providedCredentials.sHost
+                sResolvedApplicationId = providedCredentials.sApplicationId
+
+                // ParseCore's 'ParseClientConfiguration' has no separate REST-API-Key/Master-Key
+                // slot - it wants a Client Key specifically. Prefer the real Client Key; a REST API
+                // Key is the next-closest substitute (also a request-level key, unlike Master Key,
+                // which is never used as a silent substitute here). If neither is set (a
+                // Master-Key-only settings record — valid per ParseServerSettings' own "at least
+                // one of the 3" rule, but NOT sufficient for the SDK path), leave it empty and say
+                // so below rather than guessing.
+
+                if (providedCredentials.sClientKey.isEmpty == false)
+                {
+                    sResolvedClientKey = providedCredentials.sClientKey
+                }
+                else if (providedCredentials.sRestApiKey.isEmpty == false)
+                {
+                    sResolvedClientKey = providedCredentials.sRestApiKey
+                }
+                else
+                {
+                    sResolvedClientKey = ""
+                    appLogMsg("\(sCurrMethodDisp) <ParseCoreCredentialsProviderNoUsableClientKey> The registered override has a Master Key but no Client Key or REST API Key - ParseCore (Client) SDK calls will likely fail authentication with this configuration - Error!")
+                }
+            }
+            else
+            {
+                appLogMsg("\(sCurrMethodDisp) <ParseCoreCredentialsProviderInvalid> 'parseCoreCredentialsProvider' returned incomplete/invalid credentials (missing scheme/host/applicationId, or all 3 keys empty) - falling back to the hardcoded AppGlobalInfoConfig defaults - Error!")
+            }
+        }
+        else if (AppGlobalInfo.bAppExpectsParseCoreCredentialsProvider == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) <ParseCoreCredentialsProviderMissing> This App declares (via AppGlobalInfoConfig.bAppExpectsParseCoreCredentialsProvider) that it registers a Parse credentials override, but 'parseCoreCredentialsProvider' was nil at ParseCore init time - falling back to the hardcoded AppGlobalInfoConfig defaults. Likely cause: the App's own @main App struct's registration property was reordered, removed, or never ran before 'jmAppDelegateVisitor' was touched - Error!")
+        }
+
         appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Creating the ParseCore (Client) 'configuration'...")
 
         self.parseConfig = ParseClientConfiguration
                                {
-                                   $0.applicationId = "VDN7Gs0vvYMg5yokvC4I7Nh521hbm9NF2jluCgW3"
-                                   $0.clientKey     = "txwqvA4yxFiShXAiVyY3tMNG00vKpiW6UmdugVnI"
-                                   $0.server        = "https://pg-app-1ye5iesplk164f4dsvq8gtaddgv1xc.scalabl.cloud/1/"
+                                   $0.applicationId = sResolvedApplicationId
+                                   $0.clientKey     = sResolvedClientKey
+
+                                   // Deliberately NOT derived from a settings record's 'path'
+                                   // ('/1/classes/' - that field is for REST class-query URLs, see
+                                   // ParseServerSettings.constructURL()/schemaURL, which similarly
+                                   // never uses 'path' for the schema endpoint either) - ParseCore's
+                                   // SDK server root is always 'scheme://host/1/', matching this
+                                   // App's original hardcoded value exactly.
+
+                                   $0.server        = "\(sResolvedScheme)://\(sResolvedHost)/1/"
                                }
 
         appLogMsg("\(sCurrMethodDisp) <ParseCoreTrace> Passing the ParseCore (Client) 'configuration' on to ParseCore...")
@@ -1794,6 +1987,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppGoogleAdMobMobileAds' is [\(String(describing: AppGlobalInfo.bInstantiateAppGoogleAdMobMobileAds))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppGlobalMemoryOverlay' is [\(String(describing: AppGlobalInfo.bInstantiateAppGlobalMemoryOverlay))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateVVScreenCaptureOverlay' is [\(String(describing: AppGlobalInfo.bInstantiateVVScreenCaptureOverlay))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bInstantiateAppiPhoneDuoHinge' is [\(String(describing: AppGlobalInfo.bInstantiateAppiPhoneDuoHinge))]...")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.eUseLatitudeLongitudePrecision' is [\(String(describing: AppGlobalInfo.eUseLatitudeLongitudePrecision))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.bAppIsADrcBuildDistribution' is [\(String(describing: AppGlobalInfo.bAppIsADrcBuildDistribution))]...")
@@ -1913,6 +2107,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sAppDisplayName' is [\(String(describing: self.sAppDisplayName))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sAppBundleIdentifier' is [\(String(describing: self.sAppBundleIdentifier))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sAppVersionAndBuildNumber' is [\(String(describing: self.sAppVersionAndBuildNumber))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sAppBuildUUID' is [\(String(describing: self.sAppBuildUUID))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sAppCopyright' is [\(String(describing: self.sAppCopyright))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sAppUserDefaultsFileLocation' is [\(String(describing: self.sAppUserDefaultsFileLocation))]...")
 
@@ -2255,6 +2450,42 @@ public class AppGlobalInfo:NSObject
         
     }   // End of func setAppInBackground().
 
+    // <<CHICKEN-TRACKS>> (2026-09-29, iPhone Duo prep, agreed with Daryl before coding; re-applied 2026-10-02) —
+    // this is the ONLY writer of 'eGlobalFoldHingeStatus'/'dblGlobalFoldHingeAngleDegrees'/
+    // 'bGlobalDeviceIsFoldable'. Unlike 'setAppInForeground()'/'setAppInBackground()' above (driven by THIS
+    // class's own NotificationCenter observers), iOS has no screen/device-level API for fold/hinge state - it's
+    // delivered only to a live View. The caller (the 'AppFoldStateObservable' singleton) MUST call this BEFORE
+    // touching any of its own '@Published' properties, so every non-View reader of this singleton (this class's
+    // own CHICKEN-TRACKS above counts ~18+ such consuming files) sees this value updated no later than any
+    // View/Combine fanout the same hinge event triggers - never later.
+
+    func setFoldHingeState(status:AppGlobalFoldHingeStatus, angleDegrees:Double)
+    {
+
+        let sCurrMethod:String     = #function;
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+
+        appLogMsg("\(sCurrMethodDisp) <AppFoldHinge> Invoked - status:[\(status)] angleDegrees:[\(angleDegrees)]...")
+
+        self.eGlobalFoldHingeStatus         = status
+        self.dblGlobalFoldHingeAngleDegrees = angleDegrees
+
+        if (status != .appGlobalFoldHingeStatusUndefined)
+        {
+            // Any REAL status at all means this hardware has a hinge - latch it, once, for the life
+            // of the process (see the property's own CHICKEN-TRACKS above)...
+
+            self.bGlobalDeviceIsFoldable = true
+        }
+
+        // Exit...
+
+        appLogMsg("\(sCurrMethodDisp) <AppFoldHinge> Exiting...")
+
+        return
+
+    }   // End of func setFoldHingeState(status:AppGlobalFoldHingeStatus, angleDegrees:Double).
+
     @objc func checkAppInForegroundOrBackground()->Bool
     {
 
@@ -2316,6 +2547,47 @@ public class AppGlobalInfo:NSObject
     // ------------------------------------------------------------------------------------------------------
     // MARK: CPU/Device Detection Methods (cross-platform)
     // ------------------------------------------------------------------------------------------------------
+
+    // <<CHICKEN-TRACKS>> 10/01/2026 - Returns the LC_UUID of the MAIN executable image (dyld image index 0 is
+    // always the main executable) as an uppercase, dashed UUID string - the same form 'dwarfdump --uuid' prints
+    // for the matching dSYM. Foundation/MachO only (no logging inside) so it is safe to call very early in launch.
+    // Returns "-unknown-" if the header or an LC_UUID load command cannot be found.
+
+    public static func getAppBuildUUID()->String
+    {
+
+        guard let ptrHeader = _dyld_get_image_header(0)
+        else
+        {
+            return "-unknown-"
+        }
+
+        guard (ptrHeader.pointee.magic == MH_MAGIC_64)
+        else
+        {
+            return "-unknown-"
+        }
+
+        let cLoadCommands:Int           = Int(ptrHeader.pointee.ncmds)
+        var ptrCommand:UnsafeRawPointer = UnsafeRawPointer(ptrHeader).advanced(by:MemoryLayout<mach_header_64>.size)
+
+        for _ in 0..<cLoadCommands
+        {
+            let loadCommand:load_command = ptrCommand.load(as:load_command.self)
+
+            if (loadCommand.cmd == UInt32(LC_UUID))
+            {
+                let uuidCommand:uuid_command = ptrCommand.load(as:uuid_command.self)
+
+                return UUID(uuid:uuidCommand.uuid).uuidString
+            }
+
+            ptrCommand = ptrCommand.advanced(by:Int(loadCommand.cmdsize))
+        }
+
+        return "-unknown-"
+
+    }   // End of public static func getAppBuildUUID()->String.
 
     private func getDeviceMachineIdentifier()->String
     {

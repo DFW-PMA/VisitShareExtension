@@ -17,13 +17,14 @@ import XCGLogger
 import UIKit
 #if INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
 import GoogleMobileAds
+import UserMessagingPlatform
 #endif
 #endif
 
 //@available(macOS 15, *)
 @available(iOS 14.0, *)
 @objc(JmAppDelegateVisitor)
-@JmEntityInfo(vers:"v1.8601")
+@JmEntityInfo(vers:"v1.8701")
 public class JmAppDelegateVisitor:NSObject, ObservableObject
 {
 
@@ -98,8 +99,19 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     // 'Internal' Trace flag:
 
-    private 
+    private
     var bInternalTraceFlag:Bool                                    = false
+
+#if os(iOS)
+#if INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
+    // <<CHICKEN-TRACKS>> App Store submission audit (2026-09-18) - guards against calling
+    // 'MobileAds.shared.start()' more than once (the Google UMP consent flow below has two
+    // paths - the 'canRequestAds' fast-path checked in parallel with the async consent-info
+    // update - that can otherwise both fire the start call).
+    private
+    var bHasStartedGoogleMobileAdsSDK:Bool                         = false
+#endif
+#endif
 
     // App <global> Message(s) 'stack' cached before XCGLogger is available:
 
@@ -379,7 +391,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
     // suppressed from auto-dismissing the current alert - the alert MUST be manually
     // dismissed by the user.  Set via 'setAppDelegateVisitorSignalMustCompletionAlert()'
     // and cleared by 'resetAppDelegateVisitorSignalCompletionAlert()'.
-    // Used exclusively by NomadPack alarm path - NOT @objc (pure Swift only).
+    // Used exclusively by JMABigTestReview alarm path - NOT @objc (pure Swift only).
 
             var bAppDelegateVisitorAlertMustComplete:Bool          = false
 
@@ -720,30 +732,42 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     #if os(iOS)
     #if INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
-        // Google AdMob shared instance 'start' <maybe>:
+        // Google AdMob shared instance 'start' <maybe> - gated behind Google UMP consent:
 
         if (AppGlobalInfo.bEnableAppAdsTesting    == true ||
             AppGlobalInfo.bEnableAppAdsProduction == true)
         {
-            // Instantiate the Gooble AdMob Manager...
-            // ----------------------------------------------------------------------------------------------
-            // NOTE:
-            //     *** Terminating app due to uncaught exception 'GADInvalidInitializationException',
-            //     reason: 'The Google Mobile Ads SDK was initialized without an application ID.
-            //              Google AdMob publishers, follow instructions at 
-            //              https://goo.gle/admob-ios-update-plist to set a valid application ID.
-            //              Google Ad Manager publishers, 
-            //              follow instructions at https://goo.gle/ad-manager-ios-update-plist.'
-            //
-            //     *** First throw call stack:
-            //         (0x18ff0b21c 0x18d3a9abc 0x18ff0d5fc 0x101e1189c 0x101e11a18 0x1013dc584
-            //         0x1013f6064 0x101414e30 0x1013eff30 0x1013f08c8 0x21a4549d0 0x21a454aac)
-            //         terminating due to uncaught exception of type NSException
-            // ----------------------------------------------------------------------------------------------
+            // <<CHICKEN-TRACKS>> App Store submission audit (2026-09-18) - was calling
+            // 'MobileAds.shared.start()' unconditionally with no consent gathering at all.
+            // Google's AdMob Publisher Policy has required UMP-based consent messaging for
+            // EEA/UK users since March 2024 - this SDK ships as 'GoogleUserMessagingPlatform'
+            // and was already linked as a package dependency but never actually invoked. Now
+            // routes through 'gatherGoogleUMPConsentThenStartMobileAds()' below, which follows
+            // Google's documented integration shape: request consent info, present the UMP
+            // form only if required, then start the Mobile Ads SDK once 'canRequestAds' is
+            // true - while also checking the fast-path (consent already gathered in a prior
+            // session) in parallel, same as Google's own sample code does. Deferred by 0.5s -
+            // 'runPostInitializationTasks()' fires from 'didFinishLaunchingWithOptions' (see
+            // JmUIAppDelegate.swift), before SwiftUI has attached a window/rootViewController -
+            // 'findTopViewController()' needs one to present the consent form if required.
+            appLogMsg("\(sCurrMethodDisp) <GoogleUMP> Scheduling 'self.gatherGoogleUMPConsentThenStartMobileAds()'...")
 
-            appLogMsg("\(sCurrMethodDisp) <GoogleMobileAds> Starting the 'MobileAds.shared.start()' shared instance...")
-            MobileAds.shared.start(completionHandler:nil)
-            appLogMsg("\(sCurrMethodDisp) <GoogleMobileAds> Started  the 'MobileAds.shared.start()' shared instance...")
+            // <<CHICKEN-TRACKS>> Swift 6 'sending self risks causing data races' - same fix
+            // already used at 'processNextUIKitGlobalAlert()' (search 'nonisolated(unsafe) let
+            // unsafeSelf' elsewhere in this file) - rebind to 'nonisolated(unsafe)' AND mark the
+            // closure '{ @MainActor in }' explicitly. A plain strong capture (not '[weak ...]')
+            // matches that existing precedent - this is a single one-shot dispatch at App launch,
+            // not a repeating timer, so there's no retain-cycle concern to weakify against.
+
+            nonisolated(unsafe) let unsafeSelf = self
+
+            DispatchQueue.main.asyncAfter(deadline:(.now() + 0.5))
+            { @MainActor in
+
+                appLogMsg("\(sCurrMethodDisp) <GoogleUMP> Invoking 'self.gatherGoogleUMPConsentThenStartMobileAds()'...")
+                unsafeSelf.gatherGoogleUMPConsentThenStartMobileAds()
+                appLogMsg("\(sCurrMethodDisp) <GoogleUMP> Invoked  'self.gatherGoogleUMPConsentThenStartMobileAds()'...")
+            }
         }
     #endif
     #endif
@@ -755,6 +779,140 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
         return
 
     }   // End of @objc public func runPostInitializationTasks().
+
+#if os(iOS)
+#if INSTANTIATE_APP_GOOGLEADMOBMOBILEADS
+    // <<CHICKEN-TRACKS>> App Store submission audit (2026-09-18) - added to gather Google UMP
+    // (User Messaging Platform) consent before starting the Mobile Ads SDK, per Google's AdMob
+    // Publisher Policy (required for EEA/UK users since March 2024). Shape follows Google's own
+    // documented integration sample: request a consent-info update, present the UMP form only
+    // if the SDK decides one is required for this user's region, then start Mobile Ads once
+    // 'canRequestAds' is true. Also checks the fast-path in parallel (consent already on file
+    // from a prior session), so returning users don't wait on a network round-trip before ads
+    // can load. 'bHasStartedGoogleMobileAdsSDK' guards against both paths firing the real
+    // 'MobileAds.shared.start()' call twice.
+
+    private func gatherGoogleUMPConsentThenStartMobileAds()
+    {
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
+
+        appLogMsg("\(sCurrMethodDisp) <GoogleUMP> Invoked...")
+
+        let umpRequestParameters:RequestParameters = RequestParameters()
+
+        ConsentInformation.shared.requestConsentInfoUpdate(with:umpRequestParameters)
+        {
+            [weak self] (requestConsentInfoUpdateError:Error?) in
+
+            guard let self = self
+            else
+            {
+                return
+            }
+
+            if let requestConsentInfoUpdateError
+            {
+                appLogMsg("\(sCurrMethodDisp) <GoogleUMP> 'requestConsentInfoUpdate()' FAILED - error is [\(requestConsentInfoUpdateError.localizedDescription)] - Warning! (starting Mobile Ads SDK anyway, matching Google's documented fallback behavior)...")
+
+                self.startGoogleMobileAdsSDKIfNeeded()
+
+                return
+            }
+
+            appLogMsg("\(sCurrMethodDisp) <GoogleUMP> 'requestConsentInfoUpdate()' succeeded - invoking 'ConsentForm.loadAndPresentIfRequired()'...")
+
+            // <<CHICKEN-TRACKS>> Not using the file's existing 'findTopViewController()' -
+            // that helper lives behind '#if INSTANTIATE_APP_VV_UIKIT_ALERTS' (VV's UIKit-alert
+            // machinery), which is NOT enabled in JMABigTestReview's build - confirmed via a
+            // compile-only 'xcodebuild' check (2026-09-18). Same 'UIApplication.shared.keyWindow'
+            // lookup already used elsewhere in this file (see 'AppMemoryMonitorOverlayManager.shared.install(in:)'
+            // above), just walking to '.rootViewController' here instead.
+
+            guard let topViewControllerForConsentForm = UIApplication.shared.keyWindow?.rootViewController
+            else
+            {
+                appLogMsg("\(sCurrMethodDisp) <GoogleUMP> NO rootViewController available to present the consent form from - Warning! (starting Mobile Ads SDK anyway if 'canRequestAds' allows it - 'loadAndPresentIfRequired()' requires a presenting ViewController, there is no headless fallback)...")
+
+                if (ConsentInformation.shared.canRequestAds == true)
+                {
+                    self.startGoogleMobileAdsSDKIfNeeded()
+                }
+
+                return
+            }
+
+            ConsentForm.loadAndPresentIfRequired(from:topViewControllerForConsentForm)
+            {
+                (loadAndPresentIfRequiredError:Error?) in
+
+                if let loadAndPresentIfRequiredError
+                {
+                    appLogMsg("\(sCurrMethodDisp) <GoogleUMP> 'loadAndPresentIfRequired()' FAILED - error is [\(loadAndPresentIfRequiredError.localizedDescription)] - Warning!...")
+                }
+
+                if (ConsentInformation.shared.canRequestAds == true)
+                {
+                    appLogMsg("\(sCurrMethodDisp) <GoogleUMP> 'canRequestAds' is TRUE after consent gathering - starting Mobile Ads SDK...")
+
+                    self.startGoogleMobileAdsSDKIfNeeded()
+                }
+                else
+                {
+                    appLogMsg("\(sCurrMethodDisp) <GoogleUMP> 'canRequestAds' is FALSE after consent gathering - NOT starting Mobile Ads SDK (user has not granted the consent this App's ad requests require)...")
+                }
+            }
+        }
+
+        // Fast-path: consent already gathered/on file from a prior session - don't make a
+        // returning user wait on the async 'requestConsentInfoUpdate()' round-trip above...
+
+        if (ConsentInformation.shared.canRequestAds == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) <GoogleUMP> 'canRequestAds' already TRUE (fast-path) - starting Mobile Ads SDK...")
+
+            self.startGoogleMobileAdsSDKIfNeeded()
+        }
+
+        appLogMsg("\(sCurrMethodDisp) <GoogleUMP> Exiting...")
+
+    }   // End of private func gatherGoogleUMPConsentThenStartMobileAds().
+
+    private func startGoogleMobileAdsSDKIfNeeded()
+    {
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
+
+        guard (self.bHasStartedGoogleMobileAdsSDK == false)
+        else
+        {
+            appLogMsg("\(sCurrMethodDisp) <GoogleMobileAds> Already started - ignoring duplicate call...")
+
+            return
+        }
+
+        self.bHasStartedGoogleMobileAdsSDK = true
+
+        // ----------------------------------------------------------------------------------------------
+        // NOTE:
+        //     *** Terminating app due to uncaught exception 'GADInvalidInitializationException',
+        //     reason: 'The Google Mobile Ads SDK was initialized without an application ID.
+        //              Google AdMob publishers, follow instructions at
+        //              https://goo.gle/admob-ios-update-plist to set a valid application ID.
+        //              Google Ad Manager publishers,
+        //              follow instructions at https://goo.gle/ad-manager-ios-update-plist.'
+        //
+        //     *** First throw call stack:
+        //         (0x18ff0b21c 0x18d3a9abc 0x18ff0d5fc 0x101e1189c 0x101e11a18 0x1013dc584
+        //         0x1013f6064 0x101414e30 0x1013eff30 0x1013f08c8 0x21a4549d0 0x21a454aac)
+        //         terminating due to uncaught exception of type NSException
+        // ----------------------------------------------------------------------------------------------
+
+        appLogMsg("\(sCurrMethodDisp) <GoogleMobileAds> Starting the 'MobileAds.shared.start()' shared instance...")
+        MobileAds.shared.start(completionHandler:nil)
+        appLogMsg("\(sCurrMethodDisp) <GoogleMobileAds> Started  the 'MobileAds.shared.start()' shared instance...")
+
+    }   // End of private func startGoogleMobileAdsSDKIfNeeded().
+#endif
+#endif
 
     // Method(s) to setup the file and console 'logging' output:
 
@@ -4568,7 +4726,7 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
     // <<CHICKEN-TRACKS>> Must-complete wrapper: sets 'bAppDelegateVisitorAlertMustComplete'
     // true then delegates to 'setAppDelegateVisitorSignalCompletionAlert'.
-    // NOT @objc - NomadPack (pure Swift) use ONLY.  If ObjC capability is ever required,
+    // NOT @objc - JMABigTestReview (pure Swift) use ONLY.  If ObjC capability is ever required,
     // add to the bridging header and mark @objc at that time.
 
     public func setAppDelegateVisitorSignalMustCompletionAlert(_ alertMsg:String? = nil,

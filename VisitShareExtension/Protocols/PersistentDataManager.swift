@@ -63,3 +63,20 @@ protocol JsonDataItem: Codable
     var id: UUID { get }
 
 }   // End of protocol JsonDataItem.
+
+// MARK: - JsonNaturalKeyItem Protocol (optional 'natural key' de-dup for JSON-backed types):
+//
+// <<CHICKEN-TRACKS>> (2026-09-23) — JsonDataItem's UUID 'id' is the DEFAULT upsert/de-dup identity, but
+// some types are rebuilt with a brand-new UUID every time they are re-created from their source (e.g.
+// ParsePFTherapistFileItem is re-built from Sashido on every launch, so upsert-by-'id' APPENDED a new
+// row per therapist per launch - #(2745) -> #(2811) -> #(2877) rows for #(66) real therapists). A type
+// that conforms to JsonNaturalKeyItem supplies a 'naturalKey' (e.g. the TID); AppJsonDataManager then
+// upserts/de-dups by that key instead of by 'id'. Types that do NOT conform are unaffected.
+// The key must be unique per logical record and stable across rebuilds.
+
+protocol JsonNaturalKeyItem: JsonDataItem
+{
+
+    var naturalKey: AnyHashable { get }
+
+}   // End of protocol JsonNaturalKeyItem.

@@ -26,6 +26,7 @@ public struct AppDocumentImportContentTypes
                                                                 .xml,
                                                                  UTType(filenameExtension:"xml")!,
                                                                  UTType(filenameExtension:"xls")!,
+                                                                 UTType(filenameExtension:"xlsx")!,         // <<CHICKEN-TRACKS>> (2026-10-05) .xlsx import...
                                                                  .delimitedText,
                                                                  .commaSeparatedText,
                                                                  .tabSeparatedText,

@@ -121,7 +121,7 @@ func jmAppSyncUpdateUIOnMainThreadLogged(_ operation:@MainActor ()->Void,
 // to the nonisolated caller can't be proven safe for an unconstrained T). No actual callers of this
 // function exist anywhere in the codebase (confirmed via grep), so Daryl chose the compiler's own
 // suggested fix — adding 'T: Sendable' — over nonisolated(unsafe), since this is shared JmUtils
-// infrastructure pushed to other PACK Apps via JMACodeSync and the constraint is the more honest,
+// infrastructure pushed to other PACK Apps via JMABigTestReview and the constraint is the more honest,
 // self-enforcing fix for whatever future callers show up there.
 @inlinable
 func jmAppSyncReadUIOnMainThread<T:Sendable>(_ operation:@MainActor ()->T)->T

@@ -11,32 +11,24 @@ import Foundation
 import SwiftUI
 import SwiftData
 
-@JmEntityInfo(vers:"v1.0601")
+@JmEntityInfo(vers:"v1.1101")
 final public class AppSwiftDataModeler
 {
     
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "AppSwiftDataModeler"
-        //  static let sClsVers      = "v1.0501"
-        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2024-2026. All Rights Reserved."
-        //  static let bClsTrace     = true
-        //  static let bClsFileLog   = true
-    //  }
-
     class public func getSwiftDataModelTypes()->[any PersistentModel.Type]
     {
 
-        //  let sCurrMethod:String = #function
-        //  let sCurrMethodDisp    = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
         appLogMsg("\(sCurrMethodDisp) Invoked...")
 
         let listSwiftDataModelTypes:[any PersistentModel.Type] =
             [
+        //   CoreLocationSiteTrackingItem.self,
+        //   CLRequestGoodItem.self,
+        //   StatusItemMenuItem.self,
         //   AlarmSwiftDataItem.self,
+        //   Item.self,
             ]
 
         // Exit:

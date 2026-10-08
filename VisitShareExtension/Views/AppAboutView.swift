@@ -39,7 +39,7 @@ struct AppAboutView:View
 
     // <<CHICKEN-TRACKS>> Added (v1.2601, 2026-08-07) — optional "Credits" section, sourced entirely
     // from an 'AppAboutCredits.md' file at the bundle root (checked via 'sAppBundlePath' above, per
-    // Daryl's direction) rather than hardcoded in this View. Lives in NomadPack/Resources/ — a
+    // Daryl's direction) rather than hardcoded in this View. Lives in JMABigTestReview/Resources/ — a
     // PBXFileSystemSynchronizedRootGroup, so any file placed there lands at the bundle root
     // automatically (same mechanism 'HelpBasic.md' already uses via HelpBasicLoader.swift — no
     // .xcodeproj edits needed to add/change it). If the file is absent, 'sAppAboutCreditsMarkdown'

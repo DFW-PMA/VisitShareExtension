@@ -15,19 +15,14 @@ import SwiftData
 // AppSwiftDataModeler remains untouched until AppSwiftDataManager migrates in Phase 2.
 // Once Phase 2 is complete, AppSwiftDataManager will call this class instead of AppSwiftDataModeler.
 
-@JmEntityInfo(vers:"v1.0601")
+@JmEntityInfo(vers:"v1.2001")
 final public class AppPersistentDataModeler
 {
 
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "AppPersistentDataModeler"
-        //  static let sClsVers      = "v1.0203"
-        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2024-2026. All Rights Reserved."
-        //  static let bClsTrace     = true
-        //  static let bClsFileLog   = true
-    //  }
+    // 'Internal' Trace flag:
+
+    static
+    let bInternalTraceFlag:Bool                                   = false
 
     // Per-type backend config map.
     // One entry per persistent type. Change a value here to flip that type's backend.
@@ -37,7 +32,7 @@ final public class AppPersistentDataModeler
 
     static let dictPersistenceBackend:[String:PersistenceBackend] =
         [
-            :
+            ""                             : .json,
         // <<CHICKEN-TRACKS>> Flipped to .json (v1.0203) — ParsePFTherapistFileItem migrated to JSON backend.
         //                    Bootstrap export confirmed good (1876 items, 2026-06-16).
         //  "CoreLocationSiteTrackingItem" : .swiftData,
@@ -60,78 +55,86 @@ final public class AppPersistentDataModeler
 
     // Returns the persistence backend for a given type name.
 
-    class public func getPersistenceBackend(for sTypeName:String) -> PersistenceBackend
+    class public func getPersistenceBackend(for sTypeName:String)->PersistenceBackend
     {
-
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
-        appLogMsg("\(sCurrMethodDisp) Invoked - 'sTypeName' is [\(sTypeName)]...")
+        if (self.bInternalTraceFlag == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) Invoked - 'sTypeName' is [\(sTypeName)]...")
+        }
 
         let persistenceBackend:PersistenceBackend = dictPersistenceBackend[sTypeName] ?? .json
 
-        // Exit:
-
-        appLogMsg("\(sCurrMethodDisp) Exiting - 'persistenceBackend' is [\(persistenceBackend)] for type [\(sTypeName)]...")
+        if (self.bInternalTraceFlag == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) Exiting - 'persistenceBackend' is [\(persistenceBackend)] for type [\(sTypeName)]...")
+        }
 
         return persistenceBackend
-
-    }   // End of class public func getPersistenceBackend(for sTypeName:String)->PersistenceBackend.
+    }
 
     // Returns the SwiftData PersistentModel types for ModelSchema / ModelContainer initialization.
     // <<CHICKEN-TRACKS>> Explicit type list kept in sync with .swiftData entries in dictPersistenceBackend.
     //                    Not yet wired into AppSwiftDataManager — that swap happens in Phase 2.
     //                    AppSwiftDataModeler.getSwiftDataModelTypes() remains the active call until then.
 
-    class public func getSwiftDataModelTypes() -> [any PersistentModel.Type]
+    class public func getSwiftDataModelTypes()->[any PersistentModel.Type]
     {
-
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
-        appLogMsg("\(sCurrMethodDisp) Invoked...")
+        if (self.bInternalTraceFlag == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) Invoked...")
+        }
+
+        // <<CHICKEN-TRACKS>> StatusItemMenuItem.self commented out (v1.0801, 2026-06-25) — flipped to
+        //                    .json above; this was the App's last SwiftData holdout, so this list is
+        //                    now empty. @Model attribute stays on StatusItemMenuItem per CLAUDE.md
+        //                    §10e/§13 (not removed until confirmed stable) but the type no longer
+        //                    needs to be registered for ModelContainer/ModelSchema initialization.
 
         let listSwiftDataModelTypes:[any PersistentModel.Type] =
             [
             //  CoreLocationSiteTrackingItem.self,
             //  CLRequestGoodItem.self,
+            //  StatusItemMenuItem.self,
             //  ParsePFTherapistFileItem.self,
             //  DataItemDBQuery.self,
             ]
 
-        // Exit:
-
-        appLogMsg("\(sCurrMethodDisp) Exiting - 'listSwiftDataModelTypes' is [\(listSwiftDataModelTypes)]...")
+        if (self.bInternalTraceFlag == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) Exiting - 'listSwiftDataModelTypes' is [\(listSwiftDataModelTypes)]...")
+        }
 
         return listSwiftDataModelTypes
-
-    }   // End of class public func getSwiftDataModelTypes()->[any PersistentModel.Type].
+    }
 
     // Returns the type name strings for all JSON-backed types.
     // Used during AppJsonDataManager initialization (future session).
     // <<STUB v1>> Returns empty until first type flips to .json in dictPersistenceBackend.
 
-    class public func getJsonModelTypeNames() -> [String]
+    class public func getJsonModelTypeNames()->[String]
     {
-
-        //  let sCurrMethod:String     = #function
-        //  let sCurrMethodDisp:String = "\(ClassInfo.sClsDisp)'"+sCurrMethod+"':"
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
-        appLogMsg("\(sCurrMethodDisp) Invoked...")
+        if (self.bInternalTraceFlag == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) Invoked...")
+        }
 
         let listJsonTypeNames:[String] = dictPersistenceBackend
             .filter  { $0.value == .json }
             .map     { $0.key }
 
-        // Exit:
-
-        appLogMsg("\(sCurrMethodDisp) Exiting - 'listJsonTypeNames' is [\(listJsonTypeNames)]...")
+        if (self.bInternalTraceFlag == true)
+        {
+            appLogMsg("\(sCurrMethodDisp) Exiting - 'listJsonTypeNames' is [\(listJsonTypeNames)]...")
+        }
 
         return listJsonTypeNames
-
-    }   // End of class public func getJsonModelTypeNames()->[String].
+    }
 
 }   // End of final public class AppPersistentDataModeler.
+

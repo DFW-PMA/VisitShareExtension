@@ -24,7 +24,7 @@ final class AppGlobalInfoConfig:NSObject
 {
     
     static let sGlobalInfoAppId:String                                   = "VisitShareExtensionAppEx"
-    static let sGlobalInfoAppVers:String                                 = "v1.6901"
+    static let sGlobalInfoAppVers:String                                 = "v1.7301"
     static let sGlobalInfoAppDisp:String                                 = sGlobalInfoAppId+".("+sGlobalInfoAppVers+"): "
     static let sGlobalInfoAppCopyRight:String                            = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
     static let sGlobalInfoAppLogFilespecMaxSize:Int64                    = 10000000
@@ -69,6 +69,13 @@ final class AppGlobalInfoConfig:NSObject
     static let bPerformAppDevTesting:Bool                                = false
     static let bEnableAppReleaseDownloads:Bool                           = false
     static let bEnableAppAdsPlaceholder:Bool                             = false
+    // <<CHICKEN-TRACKS>> (2026-10-02) *** APP STORE SCREENSHOT MODE — TEMPORARY, REVERT BEFORE THE RELEASE ARCHIVE ***
+    //                     Test ads show a "Test mode" banner that looks unfinished in App Store screenshots. With
+    //                     Placeholder, Testing, and Production ALL false, every banner screen (clock, Map, Compass,
+    //                     Radar, About — they all gate on these three constants) shows no ad at all. For the real
+    //                     release, 'bEnableAppAdsProduction' must be TRUE (and Testing false); this line is NOT the
+    //                     release setting. Original line kept below, commented out, per the no-deletion rule.
+//  static let bEnableAppAdsTesting:Bool                                 = true
     static let bEnableAppAdsTesting:Bool                                 = false
     static let sAdSenseAppAdsTesting:String                              = "ca-app-pub-3940256099942544/2435281174"     // Google AdMod 'test' Ads...
     static let bEnableAppAdsProduction:Bool                              = false
@@ -125,6 +132,35 @@ final class AppGlobalInfoConfig:NSObject
 
     static let bUseFirebaseAuth:Bool                                     = false
     static let sVaporBaseURL:String                                      = ""
+
+#if ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA
+    // <<CHICKEN-TRACKS>> (2026-09-15) — Parse/Sashido default (fallback) server credentials, the
+    // ONE physical copy for this App. AppGlobalInfo.swift mirrors these (same gate) and uses them
+    // in 'initializeParseCore()' whenever no runtime override has been registered via
+    // 'AppGlobalInfo.appGlobalInfo.parseCoreCredentialsProvider' (see WorkRouteApp.swift, which
+    // wires that closure from ParseServerSettingsManager). 'ParseServerSettings.createDefault()'
+    // also reads these same constants (via AppGlobalInfo, never duplicating them locally) so there
+    // is exactly one hardcoded copy of these values anywhere in this App — see
+    // project_workroute_swiftui_port memory (2026-09-15 entries) for the full design discussion.
+    // Gated by ENABLE_APP_GLOBALINFO_FOR_PARSECORE so this never needs to exist in any App that
+    // doesn't use ParseCore (the PACK Apps).
+
+    static let sParseCoreDefaultScheme:String                            = "https"
+    static let sParseCoreDefaultHost:String                              = "pg-app-1ye5iesplk164f4dsvq8gtaddgv1xc.scalabl.cloud"
+    static let sParseCoreDefaultPath:String                              = "/1/classes/"
+    static let sParseCoreDefaultApplicationId:String                     = "VDN7Gs0vvYMg5yokvC4I7Nh521hbm9NF2jluCgW3"
+    static let sParseCoreDefaultRestApiKey:String                        = "ZoljeR1eJjs6aFoGji9JZBgPpZoSB9Z73yVZ6MTZ"
+    static let sParseCoreDefaultClientKey:String                         = "txwqvA4yxFiShXAiVyY3tMNG00vKpiW6UmdugVnI"
+    static let sParseCoreDefaultMasterKey:String                         = "0zV6oy1jSXm6WHBxNLI0pyiD1fhM1D5vIF9yRsEh"
+
+    // Set 'true' for any App that registers 'AppGlobalInfo.appGlobalInfo.parseCoreCredentialsProvider'
+    // at launch (see WorkRouteApp.swift) - lets 'initializeParseCore()' log a loud, specific error
+    // if that registration didn't actually happen (reordered/removed/never-ran) instead of silently
+    // using these hardcoded fallback values forever. Leave 'false' for any App that has no such
+    // registration (nothing to detect - using the hardcoded defaults IS the intended behavior there).
+
+    static let bAppExpectsParseCoreCredentialsProvider:Bool              = true
+#endif
 
     // Debug / development
 
@@ -187,6 +223,19 @@ final class AppGlobalInfoConfig:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.sAppUploadNotifyFrom' is [\(String(describing: AppGlobalInfoConfig.sAppUploadNotifyFrom))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.iAlertViaSwiftUITimeout' is #(\(String(describing: AppGlobalInfoConfig.iAlertViaSwiftUITimeout)))...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.iAlertViaUIKitTimeout' is #(\(String(describing: AppGlobalInfoConfig.iAlertViaUIKitTimeout)))...")
+
+    #if ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA
+        // Secrets masked - never write the raw key values to the log...
+
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.sParseCoreDefaultScheme' is [\(AppGlobalInfoConfig.sParseCoreDefaultScheme)]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.sParseCoreDefaultHost' is [\(AppGlobalInfoConfig.sParseCoreDefaultHost)]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.sParseCoreDefaultPath' is [\(AppGlobalInfoConfig.sParseCoreDefaultPath)]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.sParseCoreDefaultApplicationId' is [\(AppGlobalInfoConfig.sParseCoreDefaultApplicationId.isEmpty ? "<not set>" : "<set>")]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.sParseCoreDefaultRestApiKey' is [\(AppGlobalInfoConfig.sParseCoreDefaultRestApiKey.isEmpty ? "<not set>" : "<set>")]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.sParseCoreDefaultClientKey' is [\(AppGlobalInfoConfig.sParseCoreDefaultClientKey.isEmpty ? "<not set>" : "<set>")]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.sParseCoreDefaultMasterKey' is [\(AppGlobalInfoConfig.sParseCoreDefaultMasterKey.isEmpty ? "<not set>" : "<set>")]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.bAppExpectsParseCoreCredentialsProvider' is [\(String(describing: AppGlobalInfoConfig.bAppExpectsParseCoreCredentialsProvider))]...")
+    #endif
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.vvColorVisitScheduled' is [\(String(describing: AppGlobalInfoConfig.vvColorVisitScheduled))]...")
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfoConfig.vvColorVisitActual' is [\(String(describing: AppGlobalInfoConfig.vvColorVisitActual))]...")

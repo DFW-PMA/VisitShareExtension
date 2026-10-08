@@ -12,7 +12,29 @@ import SwiftUI
 
 // MARK: - SpreadsheetXML Data Models
 
+// <<CHICKEN-TRACKS>> (2026-10-05) Style info captured from <Styles>/<Style> so a SpreadsheetML file can be
+//                    converted to .xlsx WITHOUT losing the fills/borders/fonts/number formats Accounting relies on.
 @JmEntityInfo(vers:"v1.0101")
+struct SpreadsheetXMLStyle
+{
+
+    var fontName:String?     = nil
+    var fontSize:Double?     = nil
+    var fontColor:String?    = nil          // "#RRGGBB"
+    var bold:Bool            = false
+    var italic:Bool          = false
+    var underline:Bool       = false
+    var fillColor:String?    = nil          // "#RRGGBB" (solid pattern only)
+    var borders:[String:Int] = [String:Int]()   // Position (Left/Right/Top/Bottom) -> ss:Weight (1 thin, 2 medium, 3 thick)
+    var horizontal:String?   = nil          // Left / Center / Right ...
+    var vertical:String?     = nil          // Top / Center / Bottom ...
+    var wrapText:Bool        = false
+    var numberFormat:String? = nil
+    var isLocked:Bool        = true         // ss:Protected="0" -> false
+
+}   // End of struct SpreadsheetXMLStyle.
+
+@JmEntityInfo(vers:"v1.0201")
 struct SpreadsheetXMLWorkbook:Identifiable 
 {
 
@@ -31,6 +53,7 @@ struct SpreadsheetXMLWorkbook:Identifiable
     var worksheets:[SpreadsheetXMLWorksheet] = [SpreadsheetXMLWorksheet]()
     var parseDate:Date                       = Date()
     var fileURL:URL?                         = nil
+    var styles:[String:SpreadsheetXMLStyle]  = [String:SpreadsheetXMLStyle]()      // <<CHICKEN-TRACKS>> keyed by ss:ID
 
     var isEmpty:Bool 
     {
@@ -50,7 +73,7 @@ struct SpreadsheetXMLWorkbook:Identifiable
 
 }   // End of struct SpreadsheetXMLWorkbook:Identifiable.
 
-@JmEntityInfo(vers:"v1.0101")
+@JmEntityInfo(vers:"v1.0201")
 struct SpreadsheetXMLWorksheet:Identifiable 
 {
 
@@ -69,6 +92,13 @@ struct SpreadsheetXMLWorksheet:Identifiable
     var rows:[SpreadsheetXMLRow] = [SpreadsheetXMLRow]()
     var columnCount:Int          = 0
     var rowCount:Int             = 0
+    // <<CHICKEN-TRACKS>> (2026-10-05) layout info for faithful .xlsx conversion...
+    var columnWidths:[Int:Double] = [Int:Double]()      // 0-based column -> ss:Width (points)
+    var defaultColumnWidth:Double? = nil
+    var defaultRowHeight:Double?   = nil
+    var freezeRows:Int             = 0
+    var freezeColumns:Int          = 0
+    var isProtected:Bool           = false
 
     var isEmpty:Bool 
     {
@@ -88,7 +118,7 @@ struct SpreadsheetXMLWorksheet:Identifiable
 
 }   // End of struct SpreadsheetXMLWorksheet:Identifiable.
 
-@JmEntityInfo(vers:"v1.0101")
+@JmEntityInfo(vers:"v1.0201")
 struct SpreadsheetXMLRow:Identifiable 
 {
 
@@ -107,10 +137,11 @@ struct SpreadsheetXMLRow:Identifiable
     var cells:[SpreadsheetXMLCell] = [SpreadsheetXMLCell]()
     var height:Double?             = nil
     var isHidden:Bool              = false
+    var styleID:String?            = nil        // <<CHICKEN-TRACKS>> (2026-10-05) row-level ss:StyleID
 
 }   // End of struct SpreadsheetXMLRow:Identifiable.
 
-@JmEntityInfo(vers:"v1.0201")
+@JmEntityInfo(vers:"v1.0301")
 struct SpreadsheetXMLCell:Identifiable 
 {
 
@@ -132,6 +163,7 @@ struct SpreadsheetXMLCell:Identifiable
     var styleID:String?             = nil
     var mergeAcross:Int             = 0
     var mergeDown:Int               = 0
+    var hasData:Bool                = false     // <<CHICKEN-TRACKS>> (2026-10-05) a <Data> element was present (even if empty)
 
     var displayValue:String 
     {

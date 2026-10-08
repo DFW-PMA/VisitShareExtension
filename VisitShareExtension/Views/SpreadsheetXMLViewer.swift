@@ -11,7 +11,7 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
-@JmEntityInfo(vers:"v1.0902")
+@JmEntityInfo(vers:"v1.0903")
 struct SpreadsheetXMLViewer:View
 {
     
@@ -369,6 +369,19 @@ struct SpreadsheetXMLViewer:View
             .disabled(workbook == nil)
         }
         
+        // <<CHICKEN-TRACKS>> (2026-10-05) Export the whole workbook (all worksheets/tabs) as a real .xlsx...
+        ToolbarItem(placement:.primaryAction)
+        {
+            Button(action:
+                   {
+                       exportWorkbookToXlsx()
+                   })
+            {
+                Label("Export XLSX", systemImage:"tablecells")
+            }
+            .disabled(workbook == nil)
+        }
+
     //  ToolbarItem(placement:.navigationBarTrailing)
         ToolbarItem(placement:.primaryAction)
         {
@@ -499,8 +512,11 @@ struct SpreadsheetXMLViewer:View
             //      }
             //  }
 
+                // <<CHICKEN-TRACKS>> (2026-10-05) .xlsx files go through CoreXLSX (AppXlsxConverter) into the
+                //                    same SpreadsheetXMLWorkbook model; everything else is SpreadsheetML/CSV as before...
                 let parser      = SpreadsheetXMLParser()
-                let parseResult = parser.parse(url:url)
+                let parseResult = ((url.pathExtension.lowercased() == "xlsx") ? AppXlsxConverter.readXlsx(url:url)
+                                                                              : parser.parse(url:url))
                 
                 DispatchQueue.main.async
                 {
@@ -605,6 +621,39 @@ struct SpreadsheetXMLViewer:View
 
     }   // End of private func exportWorksheetToCSV().
     
+    // <<CHICKEN-TRACKS>> (2026-10-05) SpreadsheetXML (.xls that is really XML) / CSV / .xlsx -> real .xlsx.
+    private func exportWorkbookToXlsx()
+    {
+
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
+
+        guard let workbook = workbook
+        else
+        {
+            appLogMsg("\(sCurrMethodDisp) No workbook loaded...")
+
+            return
+        }
+
+        let sBaseName:String = URL(fileURLWithPath:workbook.fileName).deletingPathExtension().lastPathComponent
+        let sXlsxName:String = "\(sBaseName.isEmpty ? "Workbook" : sBaseName).xlsx"
+
+        appLogMsg("\(sCurrMethodDisp) Exporting workbook to [\(sXlsxName)]...")
+
+        switch AppXlsxConverter.writeXlsx(workbook:workbook, sXlsxFilename:sXlsxName)
+        {
+        case .success(let xlsxURL):
+            exportURL        = xlsxURL
+            showExportPicker = true
+        case .failure(let error):
+            appLogMsg("\(sCurrMethodDisp) Failed - Error: [\(error.localizedDescription)]...")
+
+            showAlert(title:  "Export XLSX Failed",
+                      message:error.localizedDescription)
+        }
+
+    }   // End of private func exportWorkbookToXlsx().
+
     private func handleExportResult(_ result:Result<URL, Error>)
     {
         
@@ -618,7 +667,7 @@ struct SpreadsheetXMLViewer:View
             appLogMsg("\(sCurrMethodDisp) Export succeeded - URL: [\(url.path)]...")
             
             showAlert(title:  "Export (tab) Successful",
-                      message:"CSV file exported to:\n\(url.lastPathComponent)")
+                      message:"\(url.pathExtension.lowercased() == "xlsx" ? "XLSX" : "CSV") file exported to:\n\(url.lastPathComponent)")
         case .failure(let error):
             appLogMsg("\(sCurrMethodDisp) Export failed - Error: [\(error.localizedDescription)]...")
             
