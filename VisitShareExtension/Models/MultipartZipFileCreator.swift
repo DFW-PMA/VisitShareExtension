@@ -10,7 +10,7 @@ import JmEntityInfo
 import Foundation
 import SwiftUI
 
-@JmEntityInfo(vers:"v1.0301")
+@JmEntityInfo(vers:"v1.0401")
 class MultipartZipFileCreator:NSObject
 {
 
@@ -27,6 +27,11 @@ class MultipartZipFileCreator:NSObject
     //  }
 
     // App Data field(s):
+
+    // <<CHICKEN-TRACKS>> 2026-10-09 v1.0401 - 'why did the Zip fail' text, set on every failure path and read by
+    // MultipartRequestDriver so it can be put at the top of the (text) upload / email body - no device log needed.
+
+            var sLastFailureDetails:String                = ""
 
     private var bInternalTest:Bool                        = false
     private var bInternalZipTest:Bool                     = true
@@ -76,6 +81,8 @@ class MultipartZipFileCreator:NSObject
         {
             appLogMsg("\(sCurrMethodDisp) Unable to Zip the 'source' filespec of [\(String(describing: sForZipOperationsSourceFilespec))] - the 'target' Zip filename is 'nil' - Error!")
 
+            self.sLastFailureDetails = "the 'target' Zip filename is empty (source [\(sForZipOperationsSourceFilespec)])"
+
             // Exit:
 
             urlCreatedZipFile = nil
@@ -98,6 +105,8 @@ class MultipartZipFileCreator:NSObject
             if (self.bGenerateInternalTextFiles == false)
             {
                 appLogMsg("\(sCurrMethodDisp) Unable to Zip the 'source' filespec of [\(String(describing: sForZipOperationsSourceFilespec))] - the file does NOT Exist - Error!")
+
+                self.sLastFailureDetails = "the 'source' file does NOT exist [\(sForZipOperationsSourceFilespec)]"
 
                 // Exit:
 
@@ -144,6 +153,8 @@ class MultipartZipFileCreator:NSObject
                 {
                     appLogMsg("\(sCurrMethodDisp) Failed to create the 'path' of [.documentDirectory] - Details: \(error) - Error!")
 
+                    self.sLastFailureDetails = "failed to create the test 'source' file in [.documentDirectory] - \(error)"
+
                     // Exit:
 
                     urlCreatedZipFile = nil
@@ -179,6 +190,8 @@ class MultipartZipFileCreator:NSObject
         catch
         {
             appLogMsg("\(sCurrMethodDisp) <do/catch> Failed to create the 'target' Zip file [\(sForZipOperationsTargetFilename)] - Details: [\(error)] - Error!")
+
+            self.sLastFailureDetails = "failed to create the 'target' Zip file [\(sForZipOperationsTargetFilename)] from [\(sForZipOperationsSourceFilespec)] - \(error)"
 
             // Exit:
 

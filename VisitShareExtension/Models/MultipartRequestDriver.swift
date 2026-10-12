@@ -10,7 +10,7 @@ import JmEntityInfo
 import Foundation
 import SwiftUI
 
-@JmEntityInfo(vers:"v1.2007")
+@JmEntityInfo(vers:"v1.2104")
 @available(iOS 14.0, *)
 //class MultipartRequestDriver: NSObject
 final class MultipartRequestDriver: Sendable
@@ -257,6 +257,11 @@ final class MultipartRequestDriver: Sendable
 
         // Check that we have a 'target' file (string) that is NOT nil, an Mime 'type' that is NOT zip, then zip...
 
+        // <<CHICKEN-TRACKS>> 2026-10-09 v1.2104 - 'why the Zip failed' text; if set, it is put at the TOP of the text upload (which is the
+        // email body) so the reason is readable without device logs. Empty means no Zip failure.
+
+        var sZipFailureNote:String = ""
+
         var sCheckAppZipFilename:String = localMultipartRequestInfo?.sAppZipFilename ?? ""
 
         if (localMultipartRequestInfo?.sAppZipFilename == "-N/A-")
@@ -309,9 +314,26 @@ final class MultipartRequestDriver: Sendable
 
                     appLogMsg("\(sCurrMethodDisp) Failed to produce a Zip file - the 'target' Zip filename was [\(localMultipartRequestInfo?.sAppZipFilename ?? "-undefined-")] - Error!")
 
+                    sZipFailureNote = "ZIP-FAILED - the upload was NOT zipped (sent raw). Source [\(localMultipartRequestInfo?.sAppSourceFilespec ?? "-undefined-")], Zip filename [\(localMultipartRequestInfo?.sAppZipFilename ?? "-undefined-")]. Reason: \(multipartZipFileCreator.sLastFailureDetails.isEmpty ? "-not recorded-" : multipartZipFileCreator.sLastFailureDetails)"
+
                     localMultipartRequestInfo?.sAppZipFilename  = "-N/A-"
                     localMultipartRequestInfo?.sAppFileMimeType = "text/plain"
-                    localMultipartRequestInfo?.dataAppFile      = FileManager.default.contents(atPath: localMultipartRequestInfo?.sAppSourceFilespec ?? "-undefined-")
+                // <<CHICKEN-TRACKS>> 2026-10-09 v1.2101 - was an unconditional assignment that REPLACED a good 'dataAppFile' (supplied
+                // by the caller) with 'nil' whenever the 'source' filespec could not be re-read, which then trapped on the force-unwrap
+                // at the 'multipart.add(key:"file"...)' call below (VV trap 10-09). Only replace 'dataAppFile' if the re-read produced data.
+                //  localMultipartRequestInfo?.dataAppFile      = FileManager.default.contents(atPath: localMultipartRequestInfo?.sAppSourceFilespec ?? "-undefined-")
+                    if let dataRawSourceFile = FileManager.default.contents(atPath: localMultipartRequestInfo?.sAppSourceFilespec ?? "-undefined-")
+                    {
+
+                        localMultipartRequestInfo?.dataAppFile  = dataRawSourceFile
+
+                    }
+                    else
+                    {
+
+                        appLogMsg("\(sCurrMethodDisp) Unable to re-read the 'source' filespec of [\(localMultipartRequestInfo?.sAppSourceFilespec ?? "-undefined-")] - keeping the existing 'dataAppFile' of #(\(localMultipartRequestInfo?.dataAppFile?.count ?? -1)) byte(s) - Warning!")
+
+                    }
 
                     appLogMsg("\(sCurrMethodDisp) Reset the 'multipartRequestInfo' to upload the <raw> file without 'zipping'...")
 
@@ -337,14 +359,120 @@ final class MultipartRequestDriver: Sendable
 
         }
 
+        // <<CHICKEN-TRACKS>> 2026-10-09 v1.2101 - guard the 'dataAppFile' (was a force-unwrap that trapped when nil). Last chance:
+        // try the 'source' filespec once more; if there is still no data, there is nothing to send - log and exit (no trap).
+
+        if (localMultipartRequestInfo?.dataAppFile == nil)
+        {
+
+            appLogMsg("\(sCurrMethodDisp) 'dataAppFile' is nil - attempting a last 'read' of the 'source' filespec of [\(localMultipartRequestInfo?.sAppSourceFilespec ?? "-undefined-")]...")
+
+            localMultipartRequestInfo?.dataAppFile = FileManager.default.contents(atPath: localMultipartRequestInfo?.sAppSourceFilespec ?? "-undefined-")
+
+        }
+
+        // <<CHICKEN-TRACKS>> 2026-10-09 v1.2102 - Daryl: if there is still no data, send a small text PLACEHOLDER (same filenames, so the
+        // server/email side still sees it) instead of skipping - we need to know how often this happens. Look for 'UPLOAD-PLACEHOLDER'.
+
+        var dataAppFileToUpload:Data     = localMultipartRequestInfo?.dataAppFile ?? Data()
+        var bUploadIsPlaceholder:Bool    = false
+
+        if (localMultipartRequestInfo?.dataAppFile == nil)
+        {
+
+            let sPlaceholderSourceFilespec:String = localMultipartRequestInfo?.sAppSourceFilespec ?? "-undefined-"
+            let bPlaceholderSourceExists:Bool     = FileManager.default.fileExists(atPath:sPlaceholderSourceFilespec)
+
+            // <<CHICKEN-TRACKS>> 2026-10-09 v1.2103 - extra 'environment' diagnostics: the code path is unchanged from builds that worked,
+            // so the trigger is suspected to be external (e.g. iOS file protection while the device is locked / app launched in the
+            // background, or a file moved/removed by another process). Capture the facts that would distinguish those.
+
+            let dictPlaceholderAttrs:[FileAttributeKey:Any] = (try? FileManager.default.attributesOfItem(atPath:sPlaceholderSourceFilespec)) ?? [:]
+            let sPlaceholderFileSize:String       = String(describing: dictPlaceholderAttrs[.size] ?? "-n/a-")
+            let sPlaceholderFileProtection:String = String(describing: dictPlaceholderAttrs[.protectionKey] ?? "-n/a-")
+            var sPlaceholderProtectedData:String  = "-n/a-"
+            var sPlaceholderAppState:String       = "-n/a-"
+
+            #if canImport(UIKit)
+            let (bProtectedDataAvailable, iAppStateRawValue) = await MainActor.run { (UIApplication.shared.isProtectedDataAvailable, UIApplication.shared.applicationState.rawValue) }
+
+            sPlaceholderProtectedData             = "\(bProtectedDataAvailable)"
+            sPlaceholderAppState                  = "\(iAppStateRawValue) (0=active 1=inactive 2=background)"
+            #endif
+
+            let sPlaceholderText:String           =
+                "UPLOAD-PLACEHOLDER - the file to upload was missing or unreadable when the upload ran.\r\n" +
+                (sZipFailureNote.isEmpty ? "" : "\(sZipFailureNote)\r\n") +
+                "Timestamp:       \(Date())\r\n" +
+                "App:             \(AppGlobalInfo.sGlobalInfoAppId)\r\n" +
+                "Source filespec: \(sPlaceholderSourceFilespec)\r\n" +
+                "Source filename: \(localMultipartRequestInfo?.sAppSourceFilename ?? "-undefined-")\r\n" +
+                "Source exists:   \(bPlaceholderSourceExists)\r\n" +
+                "Source size:     \(sPlaceholderFileSize)\r\n" +
+                "File protection: \(sPlaceholderFileProtection)\r\n" +
+                "ProtectedData:   \(sPlaceholderProtectedData)\r\n" +
+                "App state:       \(sPlaceholderAppState)\r\n" +
+                "Zip filename:    \(localMultipartRequestInfo?.sAppZipFilename ?? "-undefined-")\r\n" +
+                "Save-as:         \(localMultipartRequestInfo?.sAppSaveAsFilename ?? "-undefined-")\r\n"
+
+            appLogMsg("\(sCurrMethodDisp) No 'dataAppFile' available for the 'source' filespec of [\(sPlaceholderSourceFilespec)] (exists: \(bPlaceholderSourceExists)) - uploading a text PLACEHOLDER instead - Error!")
+
+            dataAppFileToUpload                         = sPlaceholderText.data(using:.utf8) ?? Data("UPLOAD-PLACEHOLDER".utf8)
+            bUploadIsPlaceholder                        = true
+
+            localMultipartRequestInfo?.sAppZipFilename  = "-N/A-"
+            localMultipartRequestInfo?.sAppFileMimeType = "text/plain"
+            localMultipartRequestInfo?.dataAppFile      = dataAppFileToUpload
+
+        }
+
+        // If the Zip failed and the (raw) payload is text, put the failure reason at the top - the text payload IS the email body.
+        // Binary payloads are left untouched (prepending would corrupt them); the reason is still in the app log.
+
+        if (sZipFailureNote.isEmpty == false &&
+            bUploadIsPlaceholder == false &&
+            localMultipartRequestInfo?.sAppFileMimeType == "text/plain")
+        {
+
+            if let sRawText = String(data:dataAppFileToUpload, encoding:.utf8)
+            {
+
+                dataAppFileToUpload                    = ("*** \(sZipFailureNote) ***\r\n\r\n" + sRawText).data(using:.utf8) ?? dataAppFileToUpload
+                localMultipartRequestInfo?.dataAppFile = dataAppFileToUpload
+
+            }
+            else
+            {
+
+                appLogMsg("\(sCurrMethodDisp) The raw payload is not UTF-8 text - NOT prepending the Zip failure note: [\(sZipFailureNote)]...")
+
+            }
+
+        }
+
         multipart.add(key:          "file",
                       fileName:     localMultipartRequestInfo!.sAppSourceFilename,
                       fileMimeType: localMultipartRequestInfo!.sAppFileMimeType,
-                      fileData:     (localMultipartRequestInfo?.dataAppFile)!)
+                      fileData:     dataAppFileToUpload)
 
         // Create a regular HTTP URL request & use multipart components:
 
-        let url     = URL(string:localMultipartRequestInfo!.sAppUploadURL)!
+        // <<CHICKEN-TRACKS>> 2026-10-09 v1.2101 - guard the 'url' (was a force-unwrap).
+
+        guard let url = URL(string:localMultipartRequestInfo!.sAppUploadURL)
+        else
+        {
+
+            appLogMsg("\(sCurrMethodDisp) The 'sAppUploadURL' of [\(localMultipartRequestInfo!.sAppUploadURL)] is not a valid URL - nothing uploaded - Error!")
+
+            // Exit:
+
+            appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+            return
+
+        }
+
         var request = URLRequest(url:url)
 
         request.httpMethod     = "POST"
@@ -412,8 +540,11 @@ final class MultipartRequestDriver: Sendable
             localMultipartRequestInfo!.urlResponse     = urlResponse as? HTTPURLResponse
             localMultipartRequestInfo!.urlResponseData = urlResponseData
 
-            appLogMsg("\(sCurrMethodDisp) Returned HTTP 'url' StatusCode is (\(localMultipartRequestInfo!.urlResponse!.statusCode))...")
-            appLogMsg("\(sCurrMethodDisp) Returned 'url' Response DATA was [\(String(data:localMultipartRequestInfo!.urlResponseData!, encoding:.utf8)!)]...")
+            // <<CHICKEN-TRACKS>> 2026-10-09 v1.2101 - removed force-unwraps on the response (non-HTTP response / non-UTF8 body would trap).
+            let sResponseDataText:String = String(data:urlResponseData, encoding:.utf8) ?? "-non-UTF8 data of #(\(urlResponseData.count)) byte(s)-"
+
+            appLogMsg("\(sCurrMethodDisp) Returned HTTP 'url' StatusCode is (\(String(describing: localMultipartRequestInfo!.urlResponse?.statusCode)))...")
+            appLogMsg("\(sCurrMethodDisp) Returned 'url' Response DATA was [\(sResponseDataText)]...")
 
             var iUrlStatusCode:Int = 0
 
@@ -437,7 +568,7 @@ final class MultipartRequestDriver: Sendable
             if (self.bGenerateResponseLongMsg == true)
             {
 
-                sUploadAlertDetails = "Status [\(iUrlStatusCode)] Response [\(String(data:localMultipartRequestInfo!.urlResponseData!, encoding:.utf8)!)]"
+                sUploadAlertDetails = "Status [\(iUrlStatusCode)] Response [\(sResponseDataText)]"
 
             }
 
