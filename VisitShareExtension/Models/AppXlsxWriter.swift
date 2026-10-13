@@ -21,7 +21,7 @@ import Compression
 // Formulas are converted R1C1 -> A1, written WITH a cached <v> from AppXlsxFormulaEngine, and the workbook is
 // flagged fullCalcOnLoad so Excel recalculates everything on open regardless.
 
-@JmEntityInfo(vers:"v1.0101")
+@JmEntityInfo(vers:"v1.0201")
 final class AppXlsxWriter
 {
 
@@ -38,6 +38,9 @@ final class AppXlsxWriter
     private var dictNumFmts:[String:Int] = [String:Int]()
     private var listXfs:[String]         = [String]()
     private var dictXfs:[String:Int]     = [String:Int]()           // StyleID -> xf index
+    // <<CHICKEN-TRACKS>> (2026-10-13) Differential formats (<dxfs>) for conditional formatting: <Format Style='...'/> string -> dxf index...
+    private var listDxfs:[String]        = [String]()
+    private var dictDxfs:[String:Int]    = [String:Int]()
 
     private var listSharedStrings:[String]     = [String]()
     private var dictSharedStrings:[String:Int] = [String:Int]()
@@ -217,6 +220,80 @@ final class AppXlsxWriter
 
     }
 
+    // MARK: - Differential formats (conditional formatting)
+
+    /// <<CHICKEN-TRACKS>> (2026-10-13) SpreadsheetML conditional-format style ("color:#9C0006;background:#FFC7CE") -> <dxf> index.
+    /// Understood keys: color (font colour), background / background-color (fill), font-weight:bold, font-style:italic.
+    private func dxfIndex(forFormatStyle sFormatStyle:String)->Int
+    {
+
+        if let i = dictDxfs[sFormatStyle]
+        {
+            return i
+        }
+
+        func argb(_ sValue:String)->String?
+        {
+            var sHex:String = sValue.trimmingCharacters(in:.whitespaces)
+
+            guard sHex.hasPrefix("#")
+            else
+            {
+                return nil
+            }
+
+            sHex = String(sHex.dropFirst()).uppercased()
+
+            guard (sHex.count == 6)
+            else
+            {
+                return nil
+            }
+
+            return ("FF" + sHex)
+        }
+
+        var sFont:String = ""
+        var sFill:String = ""
+
+        for sPair in sFormatStyle.components(separatedBy:";")
+        {
+            let listKV:[String] = sPair.components(separatedBy:":")
+
+            guard (listKV.count == 2)
+            else
+            {
+                continue
+            }
+
+            let sKey:String   = listKV[0].trimmingCharacters(in:.whitespaces).lowercased()
+            let sValue:String = listKV[1].trimmingCharacters(in:.whitespaces)
+
+            switch sKey
+            {
+            case "color":
+                if let sRgb = argb(sValue) { sFont += "<color rgb=\"\(sRgb)\"/>" }
+            case "background", "background-color":
+                if let sRgb = argb(sValue) { sFill = "<fill><patternFill><bgColor rgb=\"\(sRgb)\"/></patternFill></fill>" }
+            case "font-weight":
+                if (sValue.lowercased() == "bold") { sFont = "<b/>" + sFont }
+            case "font-style":
+                if (sValue.lowercased() == "italic") { sFont = "<i/>" + sFont }
+            default:
+                break
+            }
+        }
+
+        let sDxf:String = "<dxf>" + (sFont.isEmpty ? "" : "<font>\(sFont)</font>") + sFill + "</dxf>"
+        let i:Int       = listDxfs.count
+
+        listDxfs.append(sDxf)
+        dictDxfs[sFormatStyle] = i
+
+        return i
+
+    }   // End of private func dxfIndex(forFormatStyle:).
+
     // MARK: - Styles
 
     private func stylesXml()->String
@@ -243,6 +320,12 @@ final class AppXlsxWriter
         s += "<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>"
         s += "<cellXfs count=\"\(listXfs.count)\">" + listXfs.joined() + "</cellXfs>"
         s += "<cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles>"
+
+        if (!listDxfs.isEmpty)
+        {
+            s += "<dxfs count=\"\(listDxfs.count)\">" + listDxfs.joined() + "</dxfs>"
+        }
+
         s += "</styleSheet>"
 
         return s
@@ -616,6 +699,45 @@ final class AppXlsxWriter
             }
 
             s += "</mergeCells>"
+        }
+
+        // <<CHICKEN-TRACKS>> (2026-10-13) Conditional formatting (the BigTest report's red highlighting). Schema order: after mergeCells,
+        // before pageMargins. The formula is R1C1 relative to the range's top-left cell; the sheet's OWN name prefix is dropped (Excel
+        // writes same-sheet CF references unqualified, and it keeps working if uniqueSheetName() had to rename the sheet).
+
+        if (!worksheet.conditionalFormats.isEmpty)
+        {
+            var iPriority:Int = 1
+
+            for cf in worksheet.conditionalFormats
+            {
+                let sRef:String = ((cf.rowStart == cf.rowEnd && cf.colStart == cf.colEnd)
+                                   ? "\(AppXlsxWriter.colName(cf.colStart))\(cf.rowStart + 1)"
+                                   : "\(AppXlsxWriter.colName(cf.colStart))\(cf.rowStart + 1):\(AppXlsxWriter.colName(cf.colEnd))\(cf.rowEnd + 1)")
+
+                var sRules:String = ""
+
+                for cond in cf.conditions
+                {
+                    guard (cond.qualifier == nil)           // only 'expression' conditions exist in the BigTest report
+                    else
+                    {
+                        continue
+                    }
+
+                    let sOwn:String     = cond.formula.replacingOccurrences(of:"'\(worksheet.name)'!", with:"")
+                    let sFormula:String = AppXlsxWriter.r1c1ToA1(sOwn, row:cf.rowStart, col:cf.colStart)
+
+                    sRules += "<cfRule type=\"expression\" dxfId=\"\(self.dxfIndex(forFormatStyle:cond.formatStyle))\" priority=\"\(iPriority)\"><formula>\(AppXlsxWriter.text(sFormula))</formula></cfRule>"
+
+                    iPriority += 1
+                }
+
+                if (!sRules.isEmpty)
+                {
+                    s += "<conditionalFormatting sqref=\"\(sRef)\">\(sRules)</conditionalFormatting>"
+                }
+            }
         }
 
         s += "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"

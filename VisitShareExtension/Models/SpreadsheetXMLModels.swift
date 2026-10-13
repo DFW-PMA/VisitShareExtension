@@ -73,7 +73,33 @@ struct SpreadsheetXMLWorkbook:Identifiable
 
 }   // End of struct SpreadsheetXMLWorkbook:Identifiable.
 
-@JmEntityInfo(vers:"v1.0201")
+// <<CHICKEN-TRACKS>> (2026-10-13) Conditional formatting captured from <ConditionalFormatting>/<Condition> so the BigTest report's red
+//                    highlighting survives the .xls/.xml -> .xlsx conversion (only 'expression' conditions - no <Qualifier> - exist in the
+//                    BigTest report; the 236,000 EMPTY <ConditionalFormatting> blocks the generator emits, one per cell, are NOT captured).
+@JmEntityInfo(vers:"v1.0101")
+struct SpreadsheetXMLCondition
+{
+
+    var formula:String       = ""           // <Value1>, R1C1 (e.g. "LEN(TRIM('Summary'!RC))")
+    var qualifier:String?    = nil          // <Qualifier> - nil means an 'expression' condition
+    var formula2:String?     = nil          // <Value2>
+    var formatStyle:String   = ""           // <Format Style='color:#9C0006;background:#FFC7CE'/>
+
+}   // End of struct SpreadsheetXMLCondition.
+
+@JmEntityInfo(vers:"v1.0101")
+struct SpreadsheetXMLConditionalFormat
+{
+
+    var rowStart:Int                       = 0      // 0-based
+    var colStart:Int                       = 0      // 0-based
+    var rowEnd:Int                         = 0      // 0-based, inclusive
+    var colEnd:Int                         = 0      // 0-based, inclusive
+    var conditions:[SpreadsheetXMLCondition] = [SpreadsheetXMLCondition]()
+
+}   // End of struct SpreadsheetXMLConditionalFormat.
+
+@JmEntityInfo(vers:"v1.0301")
 struct SpreadsheetXMLWorksheet:Identifiable 
 {
 
@@ -99,6 +125,7 @@ struct SpreadsheetXMLWorksheet:Identifiable
     var freezeRows:Int             = 0
     var freezeColumns:Int          = 0
     var isProtected:Bool           = false
+    var conditionalFormats:[SpreadsheetXMLConditionalFormat] = [SpreadsheetXMLConditionalFormat]()    // <<CHICKEN-TRACKS>> (2026-10-13)
 
     var isEmpty:Bool 
     {

@@ -9,7 +9,7 @@
 import JmEntityInfo
 import Foundation
 
-@JmEntityInfo(vers:"v1.0302")
+@JmEntityInfo(vers:"v1.0402")
 class SpreadsheetXMLParser:NSObject 
 {
 
@@ -53,6 +53,13 @@ class SpreadsheetXMLParser:NSObject
     private var bFreezePanes:Bool                         = false
     private var iSplitHorizontal:Int                      = 0
     private var iSplitVertical:Int                        = 0
+
+    // <<CHICKEN-TRACKS>> (2026-10-13) Conditional-formatting capture state (see SpreadsheetXMLConditionalFormat)...
+    private var bInConditionalFormat:Bool                 = false
+    private var currentCFFormat:SpreadsheetXMLConditionalFormat? = nil
+    private var currentCFCondition:SpreadsheetXMLCondition?      = nil
+    private var sCFField:String?                          = nil
+    private var sCFText:String                            = ""
 
     // MARK: - Public Parse Method...
 
@@ -358,6 +365,11 @@ class SpreadsheetXMLParser:NSObject
         self.bFreezePanes        = false
         self.iSplitHorizontal    = 0
         self.iSplitVertical      = 0
+        self.bInConditionalFormat = false
+        self.currentCFFormat     = nil
+        self.currentCFCondition  = nil
+        self.sCFField            = nil
+        self.sCFText             = ""
 
     }   // End of private func resetParserState().
 
@@ -586,6 +598,21 @@ extension SpreadsheetXMLParser:XMLParserDelegate
             {
                 currentCell?.formula = formula
             }
+        case "ConditionalFormatting":
+            bInConditionalFormat = true
+            currentCFFormat      = SpreadsheetXMLConditionalFormat()
+            currentCFCondition   = nil
+            sCFField             = nil
+        case "Range" where bInConditionalFormat,
+             "Value1" where bInConditionalFormat,
+             "Value2" where bInConditionalFormat,
+             "Qualifier" where bInConditionalFormat:
+            sCFField = elementName
+            sCFText  = ""
+        case "Condition" where bInConditionalFormat:
+            currentCFCondition = SpreadsheetXMLCondition()
+        case "Format" where bInConditionalFormat:
+            currentCFCondition?.formatStyle = (getAttributeValue(from:attributeDict, name:"Style") ?? "")
         case "Data":
             isInData = true
             currentCell?.hasData = true
@@ -610,6 +637,11 @@ extension SpreadsheetXMLParser:XMLParserDelegate
         if isInData 
         {
             currentElementValue += string
+        }
+
+        if (sCFField != nil)
+        {
+            sCFText += string
         }
 
     }   // End of func parser(_ parser:XMLParser, foundCharacters string:String).
@@ -699,6 +731,66 @@ extension SpreadsheetXMLParser:XMLParserDelegate
 
             currentCell         = nil
             currentColumnIndex += 1
+        case "Range" where (sCFField == "Range"):
+            // "R12C22" (one cell) or "R1C1:R3C4" - 1-based in the file, 0-based in the model...
+            let listParts:[String] = sCFText.trimmingCharacters(in:.whitespacesAndNewlines).components(separatedBy:":")
+
+            func parseRC(_ sRC:String)->(Int, Int)?
+            {
+                let sTrim:String = sRC.trimmingCharacters(in:.whitespaces)
+                guard sTrim.hasPrefix("R"), let rangeC = sTrim.range(of:"C"),
+                      let iRow = Int(sTrim[sTrim.index(after:sTrim.startIndex)..<rangeC.lowerBound]),
+                      let iCol = Int(sTrim[rangeC.upperBound...])
+                else
+                {
+                    return nil
+                }
+
+                return ((iRow - 1), (iCol - 1))
+            }
+
+            if let first = parseRC(listParts[0])
+            {
+                let last = ((listParts.count > 1) ? (parseRC(listParts[1]) ?? first) : first)
+
+                currentCFFormat?.rowStart = first.0
+                currentCFFormat?.colStart = first.1
+                currentCFFormat?.rowEnd   = last.0
+                currentCFFormat?.colEnd   = last.1
+            }
+            else
+            {
+                currentCFFormat = nil           // unusable range - drop this block
+            }
+
+            sCFField = nil
+        case "Value1" where (sCFField == "Value1"):
+            currentCFCondition?.formula  = sCFText.trimmingCharacters(in:.whitespacesAndNewlines)
+            sCFField = nil
+        case "Value2" where (sCFField == "Value2"):
+            currentCFCondition?.formula2 = sCFText.trimmingCharacters(in:.whitespacesAndNewlines)
+            sCFField = nil
+        case "Qualifier" where (sCFField == "Qualifier"):
+            currentCFCondition?.qualifier = sCFText.trimmingCharacters(in:.whitespacesAndNewlines)
+            sCFField = nil
+        case "Condition" where bInConditionalFormat:
+            if let cond = currentCFCondition, (cond.formula.isEmpty == false)
+            {
+                currentCFFormat?.conditions.append(cond)
+            }
+
+            currentCFCondition = nil
+        case "ConditionalFormatting":
+            // Keep only blocks that actually carry a condition (the generator emits ~236,000 empty ones)...
+            if let cf = currentCFFormat, (cf.conditions.isEmpty == false)
+            {
+                currentWorksheet?.conditionalFormats.append(cf)
+            }
+
+            bInConditionalFormat = false
+            currentCFFormat      = nil
+            currentCFCondition   = nil
+            sCFField             = nil
         case "Data":
             isInData = false
 
