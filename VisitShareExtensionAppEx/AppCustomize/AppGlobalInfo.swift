@@ -2,7 +2,7 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.7901...
+//  AppGlobalInfo.swift - v1.8001...
 //  Updated by Daryl Cox on 10/07/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA).
 //  Updated by Claude/Daryl Cox on 10/02/2026. (Requires "-DINSTANTIATE_APP_IPHONEDUOHINGE" -> Re-applied the iPhone Duo fold/hinge state additions - 'AppGlobalFoldHingeStatus' enum, 'eGlobalFoldHingeStatus'/'dblGlobalFoldHingeAngleDegrees'/'bGlobalDeviceIsFoldable' vars, 'setFoldHingeState()' - originally written 09/29/2026 on JMABigTestReview's 'Prep4iPhoneDuo' branch, then lost when a later cross-app sync replaced this file with a copy that never had them).
 //  Updated by Claude/Daryl Cox on 10/01/2026. (Added 'sAppBuildUUID' - the running binary's Mach-O LC_UUID, via 'getAppBuildUUID()' - captured at init and logged by displayUIDeviceInformation()).
@@ -655,9 +655,13 @@ public class AppGlobalInfo:NSObject
     #endif
     }()
 
+    // <<CHICKEN-TRACKS>> (11/10/2026) v1.8001 - 'Sashido CLLoc auto-sync is present' is now decided by the App's own flag (Sashido exists ONLY in VV and VMA),
+    //                    not by INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT (that flag is no longer consulted for this decision)...
+
     static let bInstantiateAppCoreLocationAutoSyncSupport:Bool           =
     {
-    #if INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+//  #if INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    #if INSTANTIATE_APP_VV || INSTANTIATE_APP_VMA
         return true
     #else
         return false
@@ -845,7 +849,10 @@ public class AppGlobalInfo:NSObject
 
            var sGlobalSystemUptime:String
            {
-               let dblCurrentAppUptime:Double = self.tiGlobalAppStartTime
+               // <<CHICKEN-TRACKS>> Was reading the stored 'tiGlobalAppStartTime' (system uptime captured at app launch - frozen).
+               //                    Now reads the LIVE system uptime on every access, so this reports the current 'System Uptime'.
+           //  let dblCurrentAppUptime:Double = self.tiGlobalAppStartTime
+               let dblCurrentAppUptime:Double = ProcessInfo.processInfo.systemUptime
                let cAppUptimeDays:Int         = (Int(dblCurrentAppUptime) / 86400)
                let cAppUptimeHours:Int        = (Int(dblCurrentAppUptime) / 3600 % 24)
                let cAppUptimeMinutes:Int      = (Int(dblCurrentAppUptime) / 60   % 60)
@@ -949,6 +956,13 @@ public class AppGlobalInfo:NSObject
            var sGlobalDeviceLocalizedModel:String                        = "-unknown-"
 
   @nonobjc var uuidGlobalDeviceIdForVendor:UUID?                         = nil
+
+           // <<CHICKEN-TRACKS>> (11/10/2026) 'sGlobalDeviceUniqueId' - ONE identity string valid on every platform, identical in every App on the device:
+           //                    iOS   = 'identifierForVendor' (same across all JustMacApps apps under the one team ID)
+           //                    macOS = the hardware UUID ('IOPlatformUUID') - hardware-bound, so it does NOT follow a Time Machine clone
+           //                    (unlike the per-App 'uuidGlobalDeviceIdForVendor' Mac value above, which is generated + stored in UserDefaults for SSE echo suppression).
+           //                    Any other platform keeps "-unknown-".
+           var sGlobalDeviceUniqueId:String                              = "-unknown-"
 
        #if os(iOS)
   @nonobjc var idiomGlobalDeviceUserInterfaceIdiom:UIUserInterfaceIdiom? = nil
@@ -1254,6 +1268,10 @@ public class AppGlobalInfo:NSObject
 
             appLogMsg("\(sCurrMethodDisp) <SSEBroker> Mac device UUID (generated) = [\(newUUID.uuidString)]...")
         }
+
+        // <<CHICKEN-TRACKS>> (11/10/2026) Unique device id for macOS = the hardware UUID (see 'sGlobalDeviceUniqueId')...
+
+        self.sGlobalDeviceUniqueId                  = self.getMacHardwareUUID()
     #elseif os(iOS)
         // Get various 'device' setting(s):
         // (Alternate test: if UIDevice.current.userInterfaceIdiom == .pad { ... } ).
@@ -1323,6 +1341,7 @@ public class AppGlobalInfo:NSObject
         unsafeSelf.idiomGlobalDeviceUserInterfaceIdiom    = UIDevice.current.userInterfaceIdiom
         unsafeSelf.iGlobalDeviceUserInterfaceIdiom        = ((unsafeSelf.idiomGlobalDeviceUserInterfaceIdiom?.rawValue ?? 0) as Int)
         unsafeSelf.uuidGlobalDeviceIdForVendor            = UIDevice.current.identifierForVendor
+        unsafeSelf.sGlobalDeviceUniqueId                  = (UIDevice.current.identifierForVendor?.uuidString ?? "-unknown-")   // <<CHICKEN-TRACKS>> (11/10/2026) iOS unique device id.
         unsafeSelf.fGlobalDeviceCurrentBatteryLevel       = UIDevice.current.batteryLevel
 
         if let screenSize = UIScreen.main.bounds as CGRect?
@@ -2075,6 +2094,7 @@ public class AppGlobalInfo:NSObject
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.iGlobalDeviceCPULogicalCores' is (\(String(describing: self.iGlobalDeviceCPULogicalCores)))...")
 
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.uuidGlobalDeviceIdForVendor' is [\(String(describing: self.uuidGlobalDeviceIdForVendor))]...")
+        appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.sGlobalDeviceUniqueId' is [\(String(describing: self.sGlobalDeviceUniqueId))]...")
         
     #if os(iOS)
         appLogMsg("\(sCurrMethodDisp) 'AppGlobalInfo.idiomGlobalDeviceUserInterfaceIdiom' is (\(String(describing: self.idiomGlobalDeviceUserInterfaceIdiom)))...")
@@ -2204,7 +2224,10 @@ public class AppGlobalInfo:NSObject
 
         self.setAppInForeground()
 
-    #if INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    // <<CHICKEN-TRACKS>> (11/10/2026) v1.8001 - gate was INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT; the list can change from the LOCAL duplicate pass too,
+    //                    so this refresh now follows the module being present (CoreLocation support), not Sashido...
+//  #if INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    #if INSTANTIATE_APP_CORELOCATIONSUPPORT
         // Refresh the CLRequestGoodItem list from SwiftData so the UI reflects
         // any items upserted during the background sync step.
         // This is a read-only fetch+sort on the observable - no network, no writes.
@@ -2242,11 +2265,19 @@ public class AppGlobalInfo:NSObject
 
         self.setAppInBackground()
 
-    #if INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    // <<CHICKEN-TRACKS>> (11/10/2026) v1.8001 - gate was INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT; the module is now ACTIVE in every App that has CoreLocation support
+    //                    (local duplicate pass everywhere; the Sashido steps inside it exist only in VV/VMA, decided by the module itself)...
+//    #if INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    #if INSTANTIATE_APP_CORELOCATIONSUPPORT
         // Trigger one step of the CLLocation auto-sync cycle.
         // Runs inside a UIApplication background task so iOS grants ~30 seconds
         // after backgrounding.  currentAutoSyncStep is persisted in @AppStorage
         // so an interrupted cycle resumes on the next background entry.
+
+        // <<CHICKEN-TRACKS>> (11/04/2026) - a real backgrounding has its own trigger (below): drop any pending debounced 'inactive' step so the
+        //                    same backgrounding cannot also run a second step 5 seconds later...
+
+        JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.cancelInactiveSyncTrigger()
 
         appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()'...")
         JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.triggerBackgroundSyncStep()
@@ -2271,8 +2302,21 @@ public class AppGlobalInfo:NSObject
 
         self.setAppWillDeactivate()
 
+    // <<CHICKEN-TRACKS>> (11/10/2026) v1.8001 - gate was INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT; the module is now ACTIVE in every App that has CoreLocation support
+    //                    (local duplicate pass everywhere; the Sashido steps inside it exist only in VV/VMA, decided by the module itself)...
+//    #if INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    #if INSTANTIATE_APP_CORELOCATIONSUPPORT
+        // <<CHICKEN-TRACKS>> (11/04/2026) - debounced 'inactive' trigger for the CLLocation auto-sync cycle: if the App is STILL inactive after
+        //                    'JmAppAutoSyncCLLocModels.dblInactiveTriggerDelaySeconds', one cycle step is run (an iPad in windowed multitasking
+        //                    mode goes inactive but often never backgrounds). Cancelled by 'setAppInForeground()' / 'appMovedToBackground()'.
+
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <InactiveTrigger> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Calling 'JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.scheduleInactiveSyncTrigger()'...")
+        JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.scheduleInactiveSyncTrigger()
+        appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <InactiveTrigger> <AppBGTasks> <AutoSyncCLLocs> Intermediate - Called  'JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.scheduleInactiveSyncTrigger()'...")
+    #endif
+
         // Exit...
-        
+
         appLogMsg("\(sCurrMethodDisp) <AppForegroundBackgroundDeactivate> <VisitorCrashLogic> Exiting...")
         
         return
@@ -2367,6 +2411,15 @@ public class AppGlobalInfo:NSObject
         // Finish setting the App in the Foreground 'state'...
 
         self.bAppIsInTheBackground = false
+
+    // <<CHICKEN-TRACKS>> (11/10/2026) v1.8001 - gate was INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT; the module is now ACTIVE in every App that has CoreLocation support
+    //                    (local duplicate pass everywhere; the Sashido steps inside it exist only in VV/VMA, decided by the module itself)...
+//    #if os(iOS) && INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    #if os(iOS) && INSTANTIATE_APP_CORELOCATIONSUPPORT
+        // <<CHICKEN-TRACKS>> (11/04/2026) - the App is active again: drop any pending debounced 'inactive' auto-sync step...
+
+        JmAppAutoSyncCLLocModels.jmAppAutoSyncCLLocModels.cancelInactiveSyncTrigger()
+    #endif
 
     #if USE_APP_LOGGING_BY_VISITOR
         if (jmAppGlobalInfoDelegateVisitor != nil)
@@ -2689,6 +2742,38 @@ public class AppGlobalInfo:NSObject
         return (physical:physicalCores, logical:logicalCores)
         
     }   // End of private func getCPUCoreCount()->(physical:Int, logical:Int).
+
+#if os(macOS)
+    // <<CHICKEN-TRACKS>> (11/10/2026) Mac hardware UUID ('IOPlatformUUID' on 'IOPlatformExpertDevice') - hardware-bound, same in every App, not carried by a clone.
+
+    private func getMacHardwareUUID()->String
+    {
+        // <<CHICKEN-TRACKS>> This file has no 'import JmEntityInfo' - uses its own hand-typed preamble, same as every other method here.
+
+        let sCurrMethod:String     = #function
+        let sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'"+sCurrMethod+"':"
+
+        let ioService:io_service_t = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
+
+        if (ioService == 0)
+        {
+            appLogMsg("\(sCurrMethodDisp) Exiting - 'IOPlatformExpertDevice' service not found - returning '-unknown-'...")
+            return "-unknown-"
+        }
+
+        defer { IOObjectRelease(ioService) }
+
+        if let sHardwareUUID:String = IORegistryEntryCreateCFProperty(ioService, "IOPlatformUUID" as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() as? String
+        {
+            appLogMsg("\(sCurrMethodDisp) Exiting with the hardware UUID of [\(sHardwareUUID)]...")
+            return sHardwareUUID
+        }
+
+        appLogMsg("\(sCurrMethodDisp) Exiting - 'IOPlatformUUID' property not available - returning '-unknown-'...")
+        return "-unknown-"
+
+    }   // End of private func getMacHardwareUUID()->String.
+#endif
 
     private func mapMachineIdentifierToCPUType(sMachineId:String)->String
     {

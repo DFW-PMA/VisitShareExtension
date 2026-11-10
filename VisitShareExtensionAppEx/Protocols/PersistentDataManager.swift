@@ -80,3 +80,18 @@ protocol JsonNaturalKeyItem: JsonDataItem
     var naturalKey: AnyHashable { get }
 
 }   // End of protocol JsonNaturalKeyItem.
+
+// MARK: - JsonDeferredWriteItem Protocol (optional 'coalesced write' opt-in for JSON-backed types):
+//
+// <<CHICKEN-TRACKS>> (11/03/2026) — Marker protocol (no requirements). By default AppJsonDataManager is WRITE-THROUGH:
+// 'await upsert(...)' returns only once the file is on disk. A type that conforms to JsonDeferredWriteItem instead gets
+// COALESCED writes: upserts/deletes only update the manager's in-memory cache and the file is rewritten ONCE per burst
+// (quiet period / max latency), and always flushed when the App resigns active, enters background or terminates.
+// Intended for large, rebuildable CACHE-style types (e.g. the CoreLocation and TherapistFile caches) where losing the
+// last couple of seconds of changes on a hard crash is acceptable. Conformance is added by an empty extension in the
+// App's AppPersistentDataModeler. Types that do NOT conform are unaffected.
+
+protocol JsonDeferredWriteItem
+{
+
+}   // End of protocol JsonDeferredWriteItem.

@@ -24,7 +24,7 @@ import UserMessagingPlatform
 //@available(macOS 15, *)
 @available(iOS 14.0, *)
 @objc(JmAppDelegateVisitor)
-@JmEntityInfo(vers:"v1.8701")
+@JmEntityInfo(vers:"v1.8801")
 public class JmAppDelegateVisitor:NSObject, ObservableObject
 {
 
@@ -5667,7 +5667,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         }
 
-    #if INSTANTIATE_APP_CORELOCATIONSUPPORT && INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    // <<CHICKEN-TRACKS>> (11/10/2026) v1.8801 - this is the 4-step SASHIDO foreground sync, so it follows the Apps that HAVE Sashido (VV/VMA),
+    //                    not INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT...
+//  #if INSTANTIATE_APP_CORELOCATIONSUPPORT && INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    #if INSTANTIATE_APP_CORELOCATIONSUPPORT && (INSTANTIATE_APP_VV || INSTANTIATE_APP_VMA)
         // Checking for a stale 'auto-sync' CLLocs...
 
         appLogMsg("\(sCurrMethodDisp) <AppBGTasks> App entering foreground - checking for stale sync...")
@@ -5900,7 +5903,10 @@ public class JmAppDelegateVisitor:NSObject, ObservableObject
 
         self.appGlobalInfo.setAppInForeground()
 
-    #if INSTANTIATE_APP_CORELOCATIONSUPPORT && INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    // <<CHICKEN-TRACKS>> (11/10/2026) v1.8801 - this is the 4-step SASHIDO foreground sync, so it follows the Apps that HAVE Sashido (VV/VMA),
+    //                    not INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT...
+//  #if INSTANTIATE_APP_CORELOCATIONSUPPORT && INSTANTIATE_APP_CORELOCATIONAUTOSYNCSUPPORT
+    #if INSTANTIATE_APP_CORELOCATIONSUPPORT && (INSTANTIATE_APP_VV || INSTANTIATE_APP_VMA)
         appLogMsg("\(sCurrMethodDisp) <AppBGTasks> App entering foreground - checking for stale sync...")
 
         Task.detached(priority:.background) 

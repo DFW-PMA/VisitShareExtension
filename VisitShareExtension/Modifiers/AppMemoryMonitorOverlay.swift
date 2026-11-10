@@ -88,7 +88,48 @@ import Combine
 //
 //  ---------------------------------------------------------------------------------------------------------
 
-@JmEntityInfo(vers:"v1.0213")
+// <<CHICKEN-TRACKS>> (11/10/2026) Device allowlist - the overlay is a developer diagnostic, so even with the
+//                    -D INSTANTIATE_APP_GLOBALMEMORYOVERLAY compiled in, it is only INSTALLED on the developer's own devices.
+//                    Each device is identified by 'AppGlobalInfo.sGlobalDeviceUniqueId' (iOS = identifierForVendor,
+//                    macOS = hardware UUID). To add a device: open the 'Device Information' section in DevToolsPack on that
+//                    device, copy its 'Unique Device ID', and add a line below.
+
+@JmEntityInfo(vers:"v1.0103")
+struct AppMemoryMonitorOverlayDevices
+{
+
+    // Allowed device(s) - 'unique device id' : 'who it is' (the name is only for humans / the log)...
+
+    static let dictAllowedDevices:[String:String] = [
+        "8BAF9881-AD0A-5F0B-BBA1-051FC3F8BC53" : "DRCMBP6",
+        "F7A5D468-32E6-4088-8109-FCEF82340F08" : "iPad Pro 11-inch M4",
+        "9D37A158-829B-4E6A-A1FA-B842F7E3CE51" : "iPhone 14 Pro Max",
+
+        // <<CHICKEN-TRACKS>> (11/10/2026) On iOS 'identifierForVendor' is per VENDOR (bundle-ID prefix), not per device - the same iPad reports a
+        //                    DIFFERENT id to the DFW-PMA suite (VMA, VV...) than to the JustMacApps apps. Add one line per vendor per iOS device.
+        //                    (macOS uses the hardware UUID, identical for every app, so a Mac needs only one line.)
+
+        "E5B704EA-A552-4BEF-81FA-A8F21739E4AE" : "iPad Pro 11-inch M4 (DFW-PMA vendor - VMA)",
+        "BE875C41-DDF1-4246-ACA5-A5B93BEC2334" : "iPhone 14 Pro Max (DFW-PMA vendor - VMA)"
+    ]
+
+    // Returns the allowed device's name if THIS device is on the list, otherwise nil...
+
+    static func getAllowedDeviceName()->String?
+    {
+        let sUniqueDeviceId:String = AppGlobalInfo.appGlobalInfo.sGlobalDeviceUniqueId.uppercased()
+
+        return dictAllowedDevices[sUniqueDeviceId]
+    }
+
+    static func isAllowedDevice()->Bool
+    {
+        return (getAllowedDeviceName() != nil)
+    }
+
+}   // End of struct AppMemoryMonitorOverlayDevices.
+
+@JmEntityInfo(vers:"v1.0301")
 struct AppMemoryMonitorOverlay:View
 {
 
@@ -255,7 +296,7 @@ private final class AppOverlayPassthroughWindow: UIWindow
 // this class IS fundamentally main-thread-only UI work, and the one real call site
 // (JmAppDelegateVisitor.swift:5584) already runs inside DispatchQueue.main.async, which Swift 6
 // infers as @MainActor, so this required zero changes at the call site.
-@JmEntityInfo(vers:"v1.0206")
+@JmEntityInfo(vers:"v1.0301")
 @MainActor
 final class AppMemoryMonitorOverlayManager: NSObject
 {
@@ -290,6 +331,22 @@ final class AppMemoryMonitorOverlayManager: NSObject
                   private var overlayWindow:UIWindow?
                   private var isInstalled:Bool          = false
 
+    // <<CHICKEN-TRACKS>> (11/10/2026) Both 'install' paths funnel through this check - the overlay only appears on the developer's own devices...
+
+    private func isAllowedToInstall()->Bool
+    {
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
+
+        if let sDeviceName:String = AppMemoryMonitorOverlayDevices.getAllowedDeviceName()
+        {
+            appLogMsg("\(sCurrMethodDisp) <AppMemory> Device is on the overlay allowlist as [\(sDeviceName)] - installing the overlay...")
+            return true
+        }
+
+        appLogMsg("\(sCurrMethodDisp) <AppMemory> Device 'sGlobalDeviceUniqueId' of [\(AppGlobalInfo.appGlobalInfo.sGlobalDeviceUniqueId)] is NOT on the overlay allowlist - overlay NOT installed...")
+        return false
+    }
+
     // Scene-based install (iOS 13+ scene lifecycle).
     // Called from .task{} in the SwiftUI @main App struct — the earliest
     // safe point at which a UIWindowScene is guaranteed to exist.
@@ -302,6 +359,9 @@ final class AppMemoryMonitorOverlayManager: NSObject
         else { return }
 
         guard let scene = scene
+        else { return }
+
+        guard isAllowedToInstall()
         else { return }
 
         isInstalled = true
@@ -325,6 +385,9 @@ final class AppMemoryMonitorOverlayManager: NSObject
         if #available(iOS 13.0, *)
         {
             guard let scene = window.windowScene
+            else { return }
+
+            guard isAllowedToInstall()
             else { return }
 
             isInstalled = true

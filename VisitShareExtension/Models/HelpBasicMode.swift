@@ -1,6 +1,6 @@
 //
 //  HelpBasicMode.swift
-//  JustDevTools3
+//  DevToolsPack
 //
 //  Created by JustMacApps.net on 05/09/2024.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.

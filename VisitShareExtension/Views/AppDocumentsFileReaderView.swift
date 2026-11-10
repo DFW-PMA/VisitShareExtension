@@ -10,6 +10,7 @@ import JmEntityInfo
 import Foundation
 import SwiftUI
 import Combine
+import UniformTypeIdentifiers      // <<CHICKEN-TRACKS>> (11/03/2026) - UTType '.item' for the 'Download File' picker...
 
 // MARK: - ItemDetailsPresentation item
 
@@ -154,7 +155,7 @@ final class FileItem:Identifiable, Hashable, ObservableObject
 
 // MARK: - AppDocumentsFileReaderView (Main View with Navigation)
 
-@JmEntityInfo(vers:"v1.2101")
+@JmEntityInfo(vers:"v1.2201")
 struct AppDocumentsFileReaderView:View
 {
 
@@ -202,6 +203,12 @@ struct AppDocumentsFileReaderView:View
     @State private var bIsShowingDeleteConfirm:Bool   = false
     @State private var itemToDelete:FileItem?         = nil
     @State private var bIsShowingClearAllConfirm:Bool = false
+
+    // <<CHICKEN-TRACKS>> (11/03/2026) v1.2201 - state for the 'Download File' (straight file import into the SELECTED directory) toolbar item...
+
+    @State private var isAppDownloadPickerShowing:Bool = false
+    @State private var isAppDownloadResultShowing:Bool = false
+    @State private var sAppDownloadResultMessage:String = ""
 
     // Selected directory for viewing (starts with .documents)...
 
@@ -526,6 +533,42 @@ struct AppDocumentsFileReaderView:View
             }
         //  .navigationTitle("[\(selectedDirectoryURL.lastPathComponent)]")
             .navigationTitle("[\(sCurrentSelectedDirectory)]")
+        // <<CHICKEN-TRACKS>> (11/03/2026) v1.2201 - 'Download File' picker + result alert (imports into 'selectedDirectoryURL').
+        //                    The alert is raised from 'onDismiss' so it is not dropped while the picker is still closing...
+        #if os(iOS)
+            .fullScreenCover(isPresented:$isAppDownloadPickerShowing,
+                             onDismiss:
+                             {
+                                 if (self.sAppDownloadResultMessage.isEmpty == false)
+                                 {
+                                     self.isAppDownloadResultShowing = true
+                                 }
+                             })
+            {
+                AppDocumentImportPickerView(contentTypes:[.item], allowsMultipleSelection:true)
+                { result in
+
+                    let _ = appLogMsg("\(ClassInfo.sClsDisp):fullScreenCover.'Download File' - returned from 'AppDocumentImportPickerView(...)' - importing into [\(String(describing:self.selectedDirectoryURL))]...")
+
+                    self.sAppDownloadResultMessage = AppDocumentsFileImporter.importPickedFiles(result, into:self.selectedDirectoryURL)
+
+                    self.readDocumentsDirectory()
+
+                    self.isAppDownloadPickerShowing = false
+                }
+            }
+        #endif
+            .alert("Download File", isPresented:$isAppDownloadResultShowing)
+            {
+                Button("Ok", role:.cancel)
+                {
+                    let _ = appLogMsg("\(ClassInfo.sClsDisp) User pressed 'Ok' on the 'Download File' result...")
+                }
+            }
+            message:
+            {
+                Text(self.sAppDownloadResultMessage)
+            }
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -664,6 +707,28 @@ struct AppDocumentsFileReaderView:View
                         Text("LogData").font(.caption2)
                     }
                     .help("Print directory tree to log...")
+                }
+                // <<CHICKEN-TRACKS>> (11/03/2026) v1.2201 - 'Download File': straight file IMPORT into the SELECTED directory.
+                ToolbarItem(placement:.primaryAction)
+                {
+                    Button
+                    {
+                        let _ = appLogMsg("\(ClassInfo.sClsDisp):Button('Download File') performed - presenting the file picker for the directory [\(String(describing:self.selectedDirectoryURL))]...")
+
+                        self.sAppDownloadResultMessage  = ""
+                        self.isAppDownloadPickerShowing = true
+                    }
+                    label:
+                    {
+                        VStack(alignment:.center)
+                        {
+                            Label("", systemImage:"arrow.down.doc")
+                                .help(Text("Import a file into the selected directory"))
+                                .imageScale(.small)
+                            Text("Download File")
+                                .font(.caption2)
+                        }
+                    }
                 }
                 ToolbarItem(placement:.primaryAction)
                 {
@@ -1060,7 +1125,7 @@ struct AppDocumentsFileReaderView:View
 
 // MARK: - SubdirectoryView (For navigated subdirectories)
 
-@JmEntityInfo(vers:"v1.0901")
+@JmEntityInfo(vers:"v1.1001")
 struct SubdirectoryView:View
 {
 
@@ -1085,7 +1150,13 @@ struct SubdirectoryView:View
     @State private var errorMessage:String                                       = ""
     @State private var bIsShowingDeleteConfirm:Bool                              = false
     @State private var itemToDelete:FileItem?                                    = nil
-    
+
+    // <<CHICKEN-TRACKS>> (11/03/2026) v1.1001 - state for the 'Download File' (straight file import into THIS directory) toolbar item...
+
+    @State private var isAppDownloadPickerShowing:Bool                           = false
+    @State private var isAppDownloadResultShowing:Bool                           = false
+    @State private var sAppDownloadResultMessage:String                          = ""
+
     // Presentation items for Item Details and File Preview...
     
     @State private var itemDetailsPresentationItem:ItemDetailsPresentationItem?  = nil
@@ -1295,7 +1366,45 @@ struct SubdirectoryView:View
 
             // File list...
 
+            // <<CHICKEN-TRACKS>> (11/03/2026) v1.1001 - 'Download File' picker + result alert, attached to the list node (NOT the
+            //                    outer VStack that already carries the Item Details / File Preview covers). The alert is raised from
+            //                    'onDismiss' so it is not dropped while the picker is still closing. Works for an EMPTY folder too...
+
             fileListContent
+            #if os(iOS)
+                .fullScreenCover(isPresented:$isAppDownloadPickerShowing,
+                                 onDismiss:
+                                 {
+                                     if (self.sAppDownloadResultMessage.isEmpty == false)
+                                     {
+                                         self.isAppDownloadResultShowing = true
+                                     }
+                                 })
+                {
+                    AppDocumentImportPickerView(contentTypes:[.item], allowsMultipleSelection:true)
+                    { result in
+
+                        let _ = appLogMsg("\(ClassInfo.sClsDisp):fullScreenCover.'Download File' - returned from 'AppDocumentImportPickerView(...)' - importing into [\(self.urlDirectory.path)]...")
+
+                        self.sAppDownloadResultMessage = AppDocumentsFileImporter.importPickedFiles(result, into:self.urlDirectory)
+
+                        self.readDirectory()
+
+                        self.isAppDownloadPickerShowing = false
+                    }
+                }
+            #endif
+                .alert("Download File", isPresented:$isAppDownloadResultShowing)
+                {
+                    Button("Ok", role:.cancel)
+                    {
+                        let _ = appLogMsg("\(ClassInfo.sClsDisp) User pressed 'Ok' on the 'Download File' result...")
+                    }
+                }
+                message:
+                {
+                    Text(self.sAppDownloadResultMessage)
+                }
         }
         .navigationTitle(urlDirectory.lastPathComponent)
     #if os(iOS)
@@ -1312,6 +1421,28 @@ struct SubdirectoryView:View
                     { _, _ in
                         readDirectory()
                     }
+            }
+            // <<CHICKEN-TRACKS>> (11/03/2026) v1.1001 - 'Download File': straight file IMPORT into THIS directory ('urlDirectory').
+            ToolbarItem(placement:.primaryAction)
+            {
+                Button
+                {
+                    let _ = appLogMsg("\(ClassInfo.sClsDisp):Button('Download File') performed - presenting the file picker for the directory [\(self.urlDirectory.path)]...")
+
+                    self.sAppDownloadResultMessage  = ""
+                    self.isAppDownloadPickerShowing = true
+                }
+                label:
+                {
+                    VStack(alignment:.center)
+                    {
+                        Label("", systemImage:"arrow.down.doc")
+                            .help(Text("Import a file into this directory"))
+                            .imageScale(.small)
+                        Text("Download File")
+                            .font(.caption2)
+                    }
+                }
             }
         }
         // <<CHICKEN-TRACKS>> (2026-06-24) — this view is pushed via '.navigationDestination'
@@ -1712,9 +1843,127 @@ struct FileItemRow:View
 }   // End of struct FileItemRow:View.
 
 
+// MARK: - AppDocumentsFileImporter
+
+// <<CHICKEN-TRACKS>> (11/03/2026) v1.0101 - 'Download File' = straight file IMPORT, shared by the DIRECTORY views
+//                    (SubdirectoryView and the root AppDocumentsFileReaderView). Each picked file (the picker hands back a
+//                    COPY in the App's tmp directory) is MOVED into the supplied directory (copy as a fallback if the move
+//                    fails). No unzip/processing of any kind. A same-named file already there is REPLACED. Returns the
+//                    message for the 'Download File' result alert. First use: putting large JSON cache files back into
+//                    'jsonPersistedData' to exercise the AppJsonFileSizeGuard.
+
+@JmEntityInfo(vers:"v1.0101")
+struct AppDocumentsFileImporter
+{
+
+    static func importPickedFiles(_ result:Result<[URL], Error>, into urlDirectory:URL?) -> String
+    {
+
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
+
+        appLogMsg("\(sCurrMethodDisp) Invoked - 'urlDirectory' is [\(String(describing:urlDirectory))]...")
+
+        var sMessage:String = ""
+
+        switch result
+        {
+        case .failure(let error):
+
+            sMessage = "The file import failed - Error: [\(error.localizedDescription)]"
+
+            appLogMsg("\(sCurrMethodDisp) The picker returned an error - Error: [\(error)] - Error!")
+
+        case .success(let listPickedURLs):
+
+            guard let urlDirectory:URL = urlDirectory
+            else
+            {
+                appLogMsg("\(sCurrMethodDisp) Exiting - there is no target directory - Error!")
+
+                return "The file import failed - there is no target directory."
+            }
+
+            var listImported:[String] = [String]()
+            var listFailed:[String]   = [String]()
+            var cReplaced:Int         = 0
+
+            appLogMsg("\(sCurrMethodDisp) Importing #(\(listPickedURLs.count)) file(s) into the directory [\(urlDirectory.path)]...")
+
+            for urlPicked in listPickedURLs
+            {
+                let sName:String = urlPicked.lastPathComponent
+                let urlDest:URL  = urlDirectory.appendingPathComponent(sName)
+
+                do
+                {
+                    if (FileManager.default.fileExists(atPath:urlDest.path) == true)
+                    {
+                        try FileManager.default.removeItem(at:urlDest)
+
+                        cReplaced += 1
+                    }
+
+                    do
+                    {
+                        try FileManager.default.moveItem(at:urlPicked, to:urlDest)
+                    }
+                    catch
+                    {
+                        // The move can fail across volumes - fall back to a copy...
+
+                        try FileManager.default.copyItem(at:urlPicked, to:urlDest)
+                    }
+
+                    let iSize:Int64 = ((try? FileManager.default.attributesOfItem(atPath:urlDest.path))?[.size] as? NSNumber)?.int64Value ?? 0
+
+                    listImported.append("\(sName) (\(ByteCountFormatter.string(fromByteCount:iSize, countStyle:.file)))")
+
+                    appLogMsg("\(sCurrMethodDisp) Imported [\(sName)] - #(\(iSize)) byte(s) - into [\(urlDirectory.path)]...")
+                }
+                catch
+                {
+                    listFailed.append("\(sName) - \(error.localizedDescription)")
+
+                    appLogMsg("\(sCurrMethodDisp) Failed to import [\(sName)] into [\(urlDirectory.path)] - Error: [\(error)] - Error!")
+                }
+            }
+
+            sMessage = "Imported #(\(listImported.count)) file(s) into [\(urlDirectory.lastPathComponent)]:"
+
+            for sImported in listImported
+            {
+                sMessage += "\n  \(sImported)"
+            }
+
+            if (cReplaced > 0)
+            {
+                sMessage += "\nReplaced #(\(cReplaced)) existing file(s) of the same name."
+            }
+
+            if (listFailed.count > 0)
+            {
+                sMessage += "\n\nFAILED #(\(listFailed.count)):"
+
+                for sFailed in listFailed
+                {
+                    sMessage += "\n  \(sFailed)"
+                }
+            }
+
+            sMessage += "\n\nRestart the App for the imported file(s) to be re-read."
+        }
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return sMessage
+
+    }   // End of static func importPickedFiles(_ result:Result<[URL], Error>, into urlDirectory:URL?)->String.
+
+}   // End of struct AppDocumentsFileImporter.
+
 // MARK: - AppDocumentsFileItemDetails
 
-@JmEntityInfo(vers:"v1.1301")
+@JmEntityInfo(vers:"v1.1501")
 struct AppDocumentsFileItemDetails:View
 {
 
@@ -1735,6 +1984,17 @@ struct AppDocumentsFileItemDetails:View
 
     @ObservedObject         var item:FileItem
     @State          private var isAppUploadFileShowing:Bool                        = false
+
+    // <<CHICKEN-TRACKS>> (11/03/2026) v1.1501 - RETIRED (kept under '#if false', never deleted): the 'Download File' import
+    //                    belongs on a DIRECTORY view (you need an existing file to even reach this 'File Details' screen).
+    //                    It now lives on SubdirectoryView and the root AppDocumentsFileReaderView, both using the shared
+    //                    'AppDocumentsFileImporter' helper above.
+#if false
+    @State          private var isAppDownloadPickerShowing:Bool                    = false
+    @State          private var isAppDownloadResultShowing:Bool                    = false
+    @State          private var sAppDownloadResultMessage:String                   = ""
+#endif
+
     @State                  var fileUrl:URL?
     @State          private var showingFileView:Bool                               = false
     @State          private var fileViewPresentationItem:FileViewPresentationItem? = nil
@@ -1763,6 +2023,41 @@ struct AppDocumentsFileItemDetails:View
                 .padding()
             }
             .navigationTitle("File Details")
+        // <<CHICKEN-TRACKS>> (11/03/2026) v1.1501 - RETIRED (see the state vars above) - kept under '#if false'.
+        #if false
+        #if os(iOS)
+            .fullScreenCover(isPresented:$isAppDownloadPickerShowing,
+                             onDismiss:
+                             {
+                                 if (self.sAppDownloadResultMessage.isEmpty == false)
+                                 {
+                                     self.isAppDownloadResultShowing = true
+                                 }
+                             })
+            {
+                AppDocumentImportPickerView(contentTypes:[.item], allowsMultipleSelection:true)
+                { result in
+
+                    let _ = appLogMsg("\(ClassInfo.sClsDisp):fullScreenCover.'Download File' - returned from 'AppDocumentImportPickerView(...)' - importing the picked file(s)...")
+
+                    self.importPickedFilesIntoCurrentDirectory(result)
+
+                    self.isAppDownloadPickerShowing = false
+                }
+            }
+        #endif
+            .alert("Download File", isPresented:$isAppDownloadResultShowing)
+            {
+                Button("Ok", role:.cancel)
+                {
+                    let _ = appLogMsg("\(ClassInfo.sClsDisp) User pressed 'Ok' on the 'Download File' result...")
+                }
+            }
+            message:
+            {
+                Text(self.sAppDownloadResultMessage)
+            }
+        #endif
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -1832,6 +2127,31 @@ struct AppDocumentsFileItemDetails:View
                         }
                     }
                 }
+                // <<CHICKEN-TRACKS>> (11/03/2026) v1.1501 - 'Download File' RETIRED from this per-file screen (kept under '#if false'):
+                //                    it now lives on the DIRECTORY views (SubdirectoryView / root AppDocumentsFileReaderView).
+            #if false
+                ToolbarItem(placement:.primaryAction)
+                {
+                    Button
+                    {
+                        let _ = appLogMsg("\(ClassInfo.sClsDisp):Button('Download File') performed - presenting the file picker (target directory is derived from [\(String(describing:self.item.url))])...")
+
+                        self.sAppDownloadResultMessage = ""
+                        self.isAppDownloadPickerShowing = true
+                    }
+                    label:
+                    {
+                        VStack(alignment:.center)
+                        {
+                            Label("", systemImage: "arrow.down.doc")
+                                .help(Text("Import a file into this directory"))
+                                .imageScale(.large)
+                            Text("Download File")
+                                .font(.caption)
+                        }
+                    }
+                }
+            #endif
                 ToolbarItem(placement:.primaryAction)
                 {
                     Button { self.presentationMode.wrappedValue.dismiss() }
@@ -1917,6 +2237,115 @@ struct AppDocumentsFileItemDetails:View
         return formatter.string(from:date)
 
     }
+
+    // <<CHICKEN-TRACKS>> (11/03/2026) v1.1401 - 'Download File' = straight file IMPORT. Each picked file (the picker hands back a
+    //                    COPY in the App's tmp directory) is MOVED into the directory this view is for: the file's own folder,
+    //                    or the folder itself when a folder is shown. No unzip/processing of any kind. A same-named file already
+    //                    there is REPLACED. Reported to the user in the 'Download File' result alert. First use: putting large
+    //                    JSON cache files back into 'jsonPersistedData' to exercise the AppJsonFileSizeGuard.
+
+    // <<CHICKEN-TRACKS>> (11/03/2026) v1.1501 - RETIRED, superseded by the shared 'AppDocumentsFileImporter.importPickedFiles'
+    //                    (same logic) - kept under '#if false' below (through the matching '#endif' after this function).
+#if false
+    private func importPickedFilesIntoCurrentDirectory(_ result:Result<[URL], Error>)
+    {
+
+        let sCurrMethodDisp:String = #JmCurrentMethodInfo
+
+        appLogMsg("\(sCurrMethodDisp) Invoked...")
+
+        var sMessage:String = ""
+
+        switch result
+        {
+        case .failure(let error):
+
+            sMessage = "The file import failed - Error: [\(error.localizedDescription)]"
+
+            appLogMsg("\(sCurrMethodDisp) The picker returned an error - Error: [\(error)] - Error!")
+
+        case .success(let listPickedURLs):
+
+            let urlDirectory:URL = (self.item.bIsDirectory == true) ? self.item.url : self.item.url.deletingLastPathComponent()
+
+            var listImported:[String] = [String]()
+            var listFailed:[String]   = [String]()
+            var cReplaced:Int         = 0
+
+            appLogMsg("\(sCurrMethodDisp) Importing #(\(listPickedURLs.count)) file(s) into the directory [\(urlDirectory.path)]...")
+
+            for urlPicked in listPickedURLs
+            {
+                let sName:String = urlPicked.lastPathComponent
+                let urlDest:URL  = urlDirectory.appendingPathComponent(sName)
+
+                do
+                {
+                    if (FileManager.default.fileExists(atPath:urlDest.path) == true)
+                    {
+                        try FileManager.default.removeItem(at:urlDest)
+
+                        cReplaced += 1
+                    }
+
+                    do
+                    {
+                        try FileManager.default.moveItem(at:urlPicked, to:urlDest)
+                    }
+                    catch
+                    {
+                        // The move can fail across volumes - fall back to a copy...
+
+                        try FileManager.default.copyItem(at:urlPicked, to:urlDest)
+                    }
+
+                    let iSize:Int64 = ((try? FileManager.default.attributesOfItem(atPath:urlDest.path))?[.size] as? NSNumber)?.int64Value ?? 0
+
+                    listImported.append("\(sName) (\(ByteCountFormatter.string(fromByteCount:iSize, countStyle:.file)))")
+
+                    appLogMsg("\(sCurrMethodDisp) Imported [\(sName)] - #(\(iSize)) byte(s) - into [\(urlDirectory.path)]...")
+                }
+                catch
+                {
+                    listFailed.append("\(sName) - \(error.localizedDescription)")
+
+                    appLogMsg("\(sCurrMethodDisp) Failed to import [\(sName)] into [\(urlDirectory.path)] - Error: [\(error)] - Error!")
+                }
+            }
+
+            sMessage = "Imported #(\(listImported.count)) file(s) into [\(urlDirectory.lastPathComponent)]:"
+
+            for sImported in listImported
+            {
+                sMessage += "\n  \(sImported)"
+            }
+
+            if (cReplaced > 0)
+            {
+                sMessage += "\nReplaced #(\(cReplaced)) existing file(s) of the same name."
+            }
+
+            if (listFailed.count > 0)
+            {
+                sMessage += "\n\nFAILED #(\(listFailed.count)):"
+
+                for sFailed in listFailed
+                {
+                    sMessage += "\n  \(sFailed)"
+                }
+            }
+
+            sMessage += "\n\nRestart the App for the imported file(s) to be re-read."
+        }
+
+        self.sAppDownloadResultMessage = sMessage
+
+        appLogMsg("\(sCurrMethodDisp) Exiting...")
+
+        return
+
+    }   // End of private func importPickedFilesIntoCurrentDirectory(_ result:Result<[URL], Error>).
+#endif
 
     private func uploadCurrentAppFileToDevs()
     {
