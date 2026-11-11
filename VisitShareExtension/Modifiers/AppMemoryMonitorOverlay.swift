@@ -88,60 +88,11 @@ import Combine
 //
 //  ---------------------------------------------------------------------------------------------------------
 
-// <<CHICKEN-TRACKS>> (11/10/2026) Device allowlist - the overlay is a developer diagnostic, so even with the
-//                    -D INSTANTIATE_APP_GLOBALMEMORYOVERLAY compiled in, it is only INSTALLED on the developer's own devices.
-//                    Each device is identified by 'AppGlobalInfo.sGlobalDeviceUniqueId' (iOS = identifierForVendor,
-//                    macOS = hardware UUID). To add a device: open the 'Device Information' section in DevToolsPack on that
-//                    device, copy its 'Unique Device ID', and add a line below.
+// <<CHICKEN-TRACKS>> (11/11/2026) The device list ('AppMemoryMonitorOverlayDevices') MOVED to AppGlobalInfo.swift as 'AppGlobalInfoKnownDevices' (now available to every App).
 
-@JmEntityInfo(vers:"v1.0103")
-struct AppMemoryMonitorOverlayDevices
-{
-
-    // Allowed device(s) - 'unique device id' : 'who it is' (the name is only for humans / the log)...
-
-    static let dictAllowedDevices:[String:String] = [
-        "8BAF9881-AD0A-5F0B-BBA1-051FC3F8BC53" : "DRCMBP6",
-        "F7A5D468-32E6-4088-8109-FCEF82340F08" : "iPad Pro 11-inch M4",
-        "9D37A158-829B-4E6A-A1FA-B842F7E3CE51" : "iPhone 14 Pro Max",
-
-        // <<CHICKEN-TRACKS>> (11/10/2026) On iOS 'identifierForVendor' is per VENDOR (bundle-ID prefix), not per device - the same iPad reports a
-        //                    DIFFERENT id to the DFW-PMA suite (VMA, VV...) than to the JustMacApps apps. Add one line per vendor per iOS device.
-        //                    (macOS uses the hardware UUID, identical for every app, so a Mac needs only one line.)
-
-        "E5B704EA-A552-4BEF-81FA-A8F21739E4AE" : "iPad Pro 11-inch M4 (DFW-PMA vendor - VMA)",
-        "BE875C41-DDF1-4246-ACA5-A5B93BEC2334" : "iPhone 14 Pro Max (DFW-PMA vendor - VMA)"
-    ]
-
-    // Returns the allowed device's name if THIS device is on the list, otherwise nil...
-
-    static func getAllowedDeviceName()->String?
-    {
-        let sUniqueDeviceId:String = AppGlobalInfo.appGlobalInfo.sGlobalDeviceUniqueId.uppercased()
-
-        return dictAllowedDevices[sUniqueDeviceId]
-    }
-
-    static func isAllowedDevice()->Bool
-    {
-        return (getAllowedDeviceName() != nil)
-    }
-
-}   // End of struct AppMemoryMonitorOverlayDevices.
-
-@JmEntityInfo(vers:"v1.0301")
+@JmEntityInfo(vers:"v1.0501")
 struct AppMemoryMonitorOverlay:View
 {
-
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "AppMemoryMonitorOverlay"
-        //  static let sClsVers      = "v1.0213"
-        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        //  static let bClsTrace     = false
-        //  static let bClsFileLog   = true
-    //  }
 
     // App Data field(s):
     // NOTE: position, dragOffset, and DragGesture have been intentionally
@@ -160,9 +111,15 @@ struct AppMemoryMonitorOverlay:View
             .font(.system(size:11, weight:.medium, design:.monospaced))
             .padding(.horizontal, 8)
             .padding(.vertical,   4)
-            .background(.ultraThinMaterial)                             // true frosted glass...
-            .foregroundColor(dAppMemoryCurrentFreeInMB < 100 ? .red : .green)
+            // <<CHICKEN-TRACKS>> (11/10/2026) Was '.ultraThinMaterial' + '.green'/'.red' - unreadable in LIGHT mode (VV/Tony only run light):
+            //                    the material turns pale gray and bright green on pale gray has almost no contrast.  Now an opaque dark
+            //                    pill with bright text, so it looks identical in light and dark mode.
+            // .background(.ultraThinMaterial)                          // true frosted glass...
+            // .foregroundColor(dAppMemoryCurrentFreeInMB < 100 ? .red : .green)
+            .background(Color.black.opacity(0.85))
+            .foregroundColor(dAppMemoryCurrentFreeInMB < 100 ? Color(red:1.0, green:0.35, blue:0.35) : Color(red:0.3, green:1.0, blue:0.4))
             .clipShape(RoundedRectangle(cornerRadius:6))
+            .overlay(RoundedRectangle(cornerRadius:6).stroke(Color.white.opacity(0.4), lineWidth:1))
             .shadow(radius:4)
             .onAppear
             {
@@ -180,7 +137,6 @@ struct AppMemoryMonitorOverlay:View
 }   // End of struct AppMemoryMonitorOverlay:View.
 
 #if os(iOS)
-
 // ─────────────────────────────────────────────────────────────────────────────
 //  AppOverlayPassthroughWindow
 //
@@ -219,16 +175,6 @@ struct AppMemoryMonitorOverlay:View
 private final class AppOverlayPassthroughWindow: UIWindow
 {
 
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "AppOverlayPassthroughWindow"
-        //  static let sClsVers      = "v1.0204"
-        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        //  static let bClsTrace     = false
-        //  static let bClsFileLog   = true
-    //  }
-
     // Fix 2: Never take key window status from the main app window.
     // Without this, drag stops working after the user taps elsewhere in the app.
 
@@ -239,7 +185,6 @@ private final class AppOverlayPassthroughWindow: UIWindow
 
     override func hitTest(_ point:CGPoint, with event:UIEvent?) -> UIView?
     {
-
         // Ask the normal hit-test machinery what view owns this point...
 
         let hitView = super.hitTest(point, with:event)
@@ -256,8 +201,7 @@ private final class AppOverlayPassthroughWindow: UIWindow
         }
 
         return hitView      // pill was hit — claim the touch for drag
-
-    }   // End of override func hitTest(_:with:).
+    }
 
 }   // End of private final class AppOverlayPassthroughWindow.
 
@@ -296,20 +240,11 @@ private final class AppOverlayPassthroughWindow: UIWindow
 // this class IS fundamentally main-thread-only UI work, and the one real call site
 // (JmAppDelegateVisitor.swift:5584) already runs inside DispatchQueue.main.async, which Swift 6
 // infers as @MainActor, so this required zero changes at the call site.
-@JmEntityInfo(vers:"v1.0301")
+
+@JmEntityInfo(vers:"v1.0402")
 @MainActor
 final class AppMemoryMonitorOverlayManager: NSObject
 {
-
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "AppMemoryMonitorOverlayManager"
-        //  static let sClsVers      = "v1.0205"
-        //  static let sClsDisp      = sClsId+"(.swift).("+sClsVers+"):"
-        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        //  static let bClsTrace     = false
-        //  static let bClsFileLog   = true
-    //  }
 
     // Overlay widget frame constants:
     // Width is generous enough for "Mem:#(XXX.X:XXX.X)MB" at 11pt monospaced
@@ -337,7 +272,7 @@ final class AppMemoryMonitorOverlayManager: NSObject
     {
         let sCurrMethodDisp:String = #JmCurrentMethodInfo
 
-        if let sDeviceName:String = AppMemoryMonitorOverlayDevices.getAllowedDeviceName()
+        if let sDeviceName:String = AppGlobalInfoKnownDevices.getKnownDeviceName()
         {
             appLogMsg("\(sCurrMethodDisp) <AppMemory> Device is on the overlay allowlist as [\(sDeviceName)] - installing the overlay...")
             return true
@@ -354,7 +289,6 @@ final class AppMemoryMonitorOverlayManager: NSObject
     @available(iOS 13.0, *)
     func install(in scene:UIWindowScene?)
     {
-
         guard !isInstalled
         else { return }
 
@@ -366,8 +300,7 @@ final class AppMemoryMonitorOverlayManager: NSObject
 
         isInstalled = true
         buildOverlay(in:scene)
-
-    }   // End of func install(in scene:UIWindowScene?).
+    }
 
     // Legacy install (application:didFinishLaunchingWithOptions:).
     // Also acts as a no-op in scene-based apps if the scene path already
@@ -375,7 +308,6 @@ final class AppMemoryMonitorOverlayManager: NSObject
 
     func install(in window:UIWindow?)
     {
-
         guard !isInstalled
         else { return }
 
@@ -393,14 +325,13 @@ final class AppMemoryMonitorOverlayManager: NSObject
             isInstalled = true
             buildOverlay(in:scene)
         }
+
         // else: pre-iOS 13 has no UIWindowScene — overlay simply not installed,
         // which is acceptable since this is a debug-only diagnostic tool.
-
-    }   // End of func install(in window:UIWindow?).
+    }
 
 //  func install(in scene:UIWindowScene) 
 //  {
-//
 //      let window                                      = UIWindow(windowScene:scene)
 //      window.windowLevel                              = .statusBar + 1    // above everything
 //      window.backgroundColor                          = .clear
@@ -409,13 +340,11 @@ final class AppMemoryMonitorOverlayManager: NSObject
 //      window.rootViewController?.view.backgroundColor = .clear
 //      window.isHidden                                 = false
 //      self.overlayWindow                              = window
-//
-//  }   // End of func install(in scene:UIWindowScene).
+//  }
 
     @available(iOS 13.0, *)
     private func buildOverlay(in scene:UIWindowScene)
     {
-
         // ── Window ────────────────────────────────────────────────────────────
         // AppOverlayPassthroughWindow ensures:
         //   (1) touches that miss the pill fall through to the main app window
@@ -456,7 +385,6 @@ final class AppMemoryMonitorOverlayManager: NSObject
                                               - OverlayMetrics.rightMargin
         let initialY:CGFloat                = statusBarHeight
                                               + OverlayMetrics.topPadding
-
         host.view.frame                     = CGRect(x:      initialX,
                                                      y:      initialY,
                                                      width:  OverlayMetrics.width,
@@ -487,8 +415,7 @@ final class AppMemoryMonitorOverlayManager: NSObject
         window.rootViewController           = containerVC
         window.isHidden                     = false
         self.overlayWindow                  = window
-
-    }   // End of private func buildOverlay(in scene:UIWindowScene).
+    }
 
     // ── UIPanGestureRecognizer handler ────────────────────────────────────────
     // Moves host.view's frame origin directly within containerVC.view's
@@ -498,13 +425,11 @@ final class AppMemoryMonitorOverlayManager: NSObject
     @objc
     private func handleOverlayPan(_ gesture:UIPanGestureRecognizer)
     {
-
         guard let view = gesture.view
         else { return }
 
         let delta       = gesture.translation(in:nil)
         var newOrigin   = view.frame.origin
-
         newOrigin.x    += delta.x
         newOrigin.y    += delta.y
 
@@ -525,8 +450,7 @@ final class AppMemoryMonitorOverlayManager: NSObject
         // Reset translation each cycle so delta is always incremental...
 
         gesture.setTranslation(.zero, in:nil)
-
-    }   // End of private func handleOverlayPan(_:).
+    }
 
 }   // End of final class AppMemoryMonitorOverlayManager.
 #endif

@@ -2,7 +2,8 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.8001...
+//  AppGlobalInfo.swift - v1.8101...
+//  Updated by Claude/Daryl Cox on 11/11/2026. (Added 'AppGlobalInfoKnownDevices' - the list of the developer's known devices by 'sGlobalDeviceUniqueId' - moved here from AppMemoryMonitorOverlay.swift, where it was 'AppMemoryMonitorOverlayDevices').
 //  Updated by Daryl Cox on 10/07/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA).
 //  Updated by Claude/Daryl Cox on 10/02/2026. (Requires "-DINSTANTIATE_APP_IPHONEDUOHINGE" -> Re-applied the iPhone Duo fold/hinge state additions - 'AppGlobalFoldHingeStatus' enum, 'eGlobalFoldHingeStatus'/'dblGlobalFoldHingeAngleDegrees'/'bGlobalDeviceIsFoldable' vars, 'setFoldHingeState()' - originally written 09/29/2026 on JMABigTestReview's 'Prep4iPhoneDuo' branch, then lost when a later cross-app sync replaced this file with a copy that never had them).
 //  Updated by Claude/Daryl Cox on 10/01/2026. (Added 'sAppBuildUUID' - the running binary's Mach-O LC_UUID, via 'getAppBuildUUID()' - captured at init and logged by displayUIDeviceInformation()).
@@ -60,6 +61,49 @@ import ParseCore
 #if canImport(FoundationModels)
 import FoundationModels
 #endif
+
+// <<CHICKEN-TRACKS>> (11/11/2026) 'AppGlobalInfoKnownDevices' - the developer's KNOWN devices. Moved here from AppMemoryMonitorOverlay.swift (where it was
+//                    'AppMemoryMonitorOverlayDevices', created 11/10/2026) so EVERY App can ask "is this one of my devices, and which?" - AppGlobalInfo is the one
+//                    module all Apps share. Used by the memory overlay (it is a developer diagnostic, only INSTALLED on a known device even with
+//                    -D INSTANTIATE_APP_GLOBALMEMORYOVERLAY compiled in). Each device is identified by 'AppGlobalInfo.sGlobalDeviceUniqueId'
+//                    (iOS = identifierForVendor, macOS = hardware UUID). To add a device: open the 'Device Information' section in DevToolsPack on that
+//                    device, copy its 'Unique Device ID', and add a line below.
+//                    No @JmEntityInfo on purpose: this file does not import JmEntityInfo, and the struct does no logging (nothing uses a ClassInfo).
+
+struct AppGlobalInfoKnownDevices
+{
+
+    // Known device(s) - 'unique device id' : 'who it is' (the name is only for humans / the log)...
+
+    static let dictKnownDevices:[String:String] =
+    [
+        "8BAF9881-AD0A-5F0B-BBA1-051FC3F8BC53" : "DRCMBP6",
+        "F7A5D468-32E6-4088-8109-FCEF82340F08" : "iPad Pro 11-inch M4",
+        "9D37A158-829B-4E6A-A1FA-B842F7E3CE51" : "iPhone 14 Pro Max",
+
+        // <<CHICKEN-TRACKS>> (11/10/2026) On iOS 'identifierForVendor' is per VENDOR (bundle-ID prefix), not per device - the same iPad reports a
+        //                    DIFFERENT id to the DFW-PMA suite (VMA, VV...) than to the JustMacApps apps. Add one line per vendor per iOS device.
+        //                    (macOS uses the hardware UUID, identical for every app, so a Mac needs only one line.)
+
+        "E5B704EA-A552-4BEF-81FA-A8F21739E4AE" : "iPad Pro 11-inch M4 (DFW-PMA vendor - VMA)",
+        "BE875C41-DDF1-4246-ACA5-A5B93BEC2334" : "iPhone 14 Pro Max (DFW-PMA vendor - VMA)"
+    ]
+
+    // Returns the known device's name if THIS device is on the list, otherwise nil...
+
+    static func getKnownDeviceName()->String?
+    {
+        let sUniqueDeviceId:String = AppGlobalInfo.appGlobalInfo.sGlobalDeviceUniqueId.uppercased()
+
+        return dictKnownDevices[sUniqueDeviceId]
+    }
+
+    static func isKnownDevice()->Bool
+    {
+        return (getKnownDeviceName() != nil)
+    }
+
+}   // End of struct AppGlobalInfoKnownDevices.
 
 // MARK: Global functions at module level (outside the class)...
 
