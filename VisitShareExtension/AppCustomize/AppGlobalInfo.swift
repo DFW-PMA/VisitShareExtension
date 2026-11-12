@@ -2,35 +2,36 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.8101...
+//  AppGlobalInfo.swift - v1.8201...
+//  Updated by        Daryl Cox on 11/12/2026. (Added 'isThisAKnownDevice(sCurrentMethodDisp:String)' method to the struct AppGlobalInfoKnownDevices).
 //  Updated by Claude/Daryl Cox on 11/11/2026. (Added 'AppGlobalInfoKnownDevices' - the list of the developer's known devices by 'sGlobalDeviceUniqueId' - moved here from AppMemoryMonitorOverlay.swift, where it was 'AppMemoryMonitorOverlayDevices').
-//  Updated by Daryl Cox on 10/07/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA).
+//  Updated by        Daryl Cox on 10/07/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA).
 //  Updated by Claude/Daryl Cox on 10/02/2026. (Requires "-DINSTANTIATE_APP_IPHONEDUOHINGE" -> Re-applied the iPhone Duo fold/hinge state additions - 'AppGlobalFoldHingeStatus' enum, 'eGlobalFoldHingeStatus'/'dblGlobalFoldHingeAngleDegrees'/'bGlobalDeviceIsFoldable' vars, 'setFoldHingeState()' - originally written 09/29/2026 on JMABigTestReview's 'Prep4iPhoneDuo' branch, then lost when a later cross-app sync replaced this file with a copy that never had them).
 //  Updated by Claude/Daryl Cox on 10/01/2026. (Added 'sAppBuildUUID' - the running binary's Mach-O LC_UUID, via 'getAppBuildUUID()' - captured at init and logged by displayUIDeviceInformation()).
 //  Updated by Claude/Daryl Cox on 09/15/2026. (Added 'parseCoreCredentialsProvider' closure hook plus AppGlobalInfoConfig-mirrored Parse default credentials & 'bAppExpectsParseCoreCredentialsProvider' guard-rail logging — 'initializeParseCore()' now prefers a runtime-registered override over the hardcoded defaults).
 //  Updated by Claude/Daryl Cox on 09/09/2026. (Added bGlobalDeviceHWSupportsOnDeviceAI — 3rd on-device-AI flag, distinguishes hardware ineligibility from OS-too-old).
 //  Updated by Claude/Daryl Cox on 09/09/2026. (Added bGlobalDeviceOSSupportsOnDeviceAI / bGlobalDeviceHasOnDeviceAI on-device-AI detection flags).
-//  Updated by Daryl Cox on 08/27/2026. (Added ENABLE_DRC_BUILD_DISTRIBUTION).
-//  Updated by Daryl Cox on 08/20/2026. (Added ENABLE_APP_DELEGATE_EXTENSIONS).
+//  Updated by        Daryl Cox on 08/27/2026. (Added ENABLE_DRC_BUILD_DISTRIBUTION).
+//  Updated by        Daryl Cox on 08/20/2026. (Added ENABLE_APP_DELEGATE_EXTENSIONS).
 //  Updated by Claude/Daryl Cox on 08/04/2026. (Added 'sGlobalInfoAppExceptionRawFilespec'/'sGlobalInfoAppTrapRawFilespec' mirror constants for the new main.m raw crash-capture files).
-//  Updated by Daryl Cox on 07/15/2026. (Added 'bGlobalInfoInitHasRun').
-//  Updated by Daryl Cox on 07/14/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE).
-//  Updated by Daryl Cox on 06/09/2026. (Added INSTANTIATE_VV_SCREENCAPTURE_OVERLAY).
-//  Updated by Daryl Cox on 05/26/2026. (Added various fields for DivorcePack (Claude) additions).
-//  Updated by Daryl Cox on 05/11/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO6).
-//  Updated by Daryl Cox on 04/27/2026. (Added UIScene.willDeactivateNotification message capture).
-//  Updated by Daryl Cox on 04/14/2026. (Added GCD DispatchSource memory pressure monitoring and 'setupMemoryPressureMonitoring()'; added 'sGlobalInfoAppMemPressureWarning/CriticalMarkerFilespec' constants).
-//  Updated by Daryl Cox on 04/10/2026. (Added ProcessInfo.processInfo call to set 'isiOSAppOnMac' for 'Mac (Designed for iPad)' execution).
-//  Updated by Daryl Cox on 04/07/2026. (Added ENABLE_APP_ALARM_CAPABILITY and ENABLE_APP_LEGACY_CORELOC2).
-//  Updated by Daryl Cox on 04/02/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO5).
-//  Updated by Daryl Cox on 03/16/2026. (Added INSTANTIATE_APP_PFADMINSDATAMODEL).
-//  Updated by Daryl Cox on 03/13/2026. (Added App 'Global' Memory Overlay).
-//  Updated by Daryl Cox on 02/23/2026. (Auto-sync background trigger added)
-//  Updated by Daryl Cox on 02/23/2026.
-//  Updated by Daryl Cox on 02/22/2026.
-//  Updated by Daryl Cox on 02/18/2026.
-//  Updated by Daryl Cox on 02/11/2026.
-//  Created by Daryl Cox on 06/19/2025.
+//  Updated by        Daryl Cox on 07/15/2026. (Added 'bGlobalInfoInitHasRun').
+//  Updated by        Daryl Cox on 07/14/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE).
+//  Updated by        Daryl Cox on 06/09/2026. (Added INSTANTIATE_VV_SCREENCAPTURE_OVERLAY).
+//  Updated by        Daryl Cox on 05/26/2026. (Added various fields for DivorcePack (Claude) additions).
+//  Updated by        Daryl Cox on 05/11/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO6).
+//  Updated by        Daryl Cox on 04/27/2026. (Added UIScene.willDeactivateNotification message capture).
+//  Updated by        Daryl Cox on 04/14/2026. (Added GCD DispatchSource memory pressure monitoring and 'setupMemoryPressureMonitoring()'; added 'sGlobalInfoAppMemPressureWarning/CriticalMarkerFilespec' constants).
+//  Updated by        Daryl Cox on 04/10/2026. (Added ProcessInfo.processInfo call to set 'isiOSAppOnMac' for 'Mac (Designed for iPad)' execution).
+//  Updated by        Daryl Cox on 04/07/2026. (Added ENABLE_APP_ALARM_CAPABILITY and ENABLE_APP_LEGACY_CORELOC2).
+//  Updated by        Daryl Cox on 04/02/2026. (Added INSTANTIATE_APP_PARSECOREBKGDDATAREPO5).
+//  Updated by        Daryl Cox on 03/16/2026. (Added INSTANTIATE_APP_PFADMINSDATAMODEL).
+//  Updated by        Daryl Cox on 03/13/2026. (Added App 'Global' Memory Overlay).
+//  Updated by        Daryl Cox on 02/23/2026. (Auto-sync background trigger added)
+//  Updated by        Daryl Cox on 02/23/2026.
+//  Updated by        Daryl Cox on 02/22/2026.
+//  Updated by        Daryl Cox on 02/18/2026.
+//  Updated by        Daryl Cox on 02/11/2026.
+//  Created by        Daryl Cox on 06/19/2025.
 //  Copyright © JustMacApps 2023-2026. All rights reserved.
 //
 
@@ -77,6 +78,8 @@ struct AppGlobalInfoKnownDevices
 
     static let dictKnownDevices:[String:String] =
     [
+        // Search a log for the string => sGlobalDeviceIdForVendor
+
         "8BAF9881-AD0A-5F0B-BBA1-051FC3F8BC53" : "DRCMBP6",
         "F7A5D468-32E6-4088-8109-FCEF82340F08" : "iPad Pro 11-inch M4",
         "9D37A158-829B-4E6A-A1FA-B842F7E3CE51" : "iPhone 14 Pro Max",
@@ -86,7 +89,10 @@ struct AppGlobalInfoKnownDevices
         //                    (macOS uses the hardware UUID, identical for every app, so a Mac needs only one line.)
 
         "E5B704EA-A552-4BEF-81FA-A8F21739E4AE" : "iPad Pro 11-inch M4 (DFW-PMA vendor - VMA)",
-        "BE875C41-DDF1-4246-ACA5-A5B93BEC2334" : "iPhone 14 Pro Max (DFW-PMA vendor - VMA)"
+        "BE875C41-DDF1-4246-ACA5-A5B93BEC2334" : "iPhone 14 Pro Max (DFW-PMA vendor - VMA)",
+        
+        "268BED6C-17AC-415D-B973-789F814E08BB" : "iPad Pro M4 26.2 (Tony's iMac)",
+        "8B8A323D-D83D-43FB-9F30-1867E67D4F1F" : "Tony's iPhone"
     ]
 
     // Returns the known device's name if THIS device is on the list, otherwise nil...
@@ -101,6 +107,20 @@ struct AppGlobalInfoKnownDevices
     static func isKnownDevice()->Bool
     {
         return (getKnownDeviceName() != nil)
+    }
+
+    static func isThisAKnownDevice(sCurrMethodDisp:String = "AppGlobalInfo.\(AppGlobalInfo.sGlobalInfoAppDisp)'isThisAKnownDevice()':")->Bool
+    {
+    //  let sCurrMethodDisp:String = #JmCurrentMethodInfo
+
+        if let sDeviceName:String = AppGlobalInfoKnownDevices.getKnownDeviceName()
+        {
+            appLogMsg("\(sCurrMethodDisp) <AppMemory> Device is on the 'known' device list as [\(sDeviceName)] - returning 'true'...")
+            return true
+        }
+
+        appLogMsg("\(sCurrMethodDisp) <AppMemory> Device 'sGlobalDeviceUniqueId' of [\(AppGlobalInfo.appGlobalInfo.sGlobalDeviceUniqueId)] is NOT on the 'known' device list - returning 'false'...")
+        return false
     }
 
 }   // End of struct AppGlobalInfoKnownDevices.

@@ -90,7 +90,7 @@ import Combine
 
 // <<CHICKEN-TRACKS>> (11/11/2026) The device list ('AppMemoryMonitorOverlayDevices') MOVED to AppGlobalInfo.swift as 'AppGlobalInfoKnownDevices' (now available to every App).
 
-@JmEntityInfo(vers:"v1.0501")
+@JmEntityInfo(vers:"v1.0601")
 struct AppMemoryMonitorOverlay:View
 {
 
@@ -128,9 +128,15 @@ struct AppMemoryMonitorOverlay:View
             }
             .onReceive(timerAppMemoryCurrentUsage)
             { _ in
-                dAppMemoryCurrentUsageInMB = JmAppMemoryUsageInfo.getAppMemoryCurrentUsageInMB()
-                dAppMemoryCurrentFreeInMB  = JmAppMemoryUsageInfo.getAppMemoryCurrentFreeInMB()
+                let previousAppMemoryUsageInMB = dAppMemoryCurrentUsageInMB
+                dAppMemoryCurrentUsageInMB     = JmAppMemoryUsageInfo.getAppMemoryCurrentUsageInMB()
+                dAppMemoryCurrentFreeInMB      = JmAppMemoryUsageInfo.getAppMemoryCurrentFreeInMB()
+                if ((dAppMemoryCurrentUsageInMB - previousAppMemoryUsageInMB) > 50.0)
+                {
+                    appLogMsg("POTENTIAL MEMORY PRESSURE!!!")
+                }
             }
+
 
     }
 
@@ -241,7 +247,7 @@ private final class AppOverlayPassthroughWindow: UIWindow
 // (JmAppDelegateVisitor.swift:5584) already runs inside DispatchQueue.main.async, which Swift 6
 // infers as @MainActor, so this required zero changes at the call site.
 
-@JmEntityInfo(vers:"v1.0402")
+@JmEntityInfo(vers:"v1.0501")
 @MainActor
 final class AppMemoryMonitorOverlayManager: NSObject
 {
