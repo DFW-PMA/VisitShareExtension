@@ -2,7 +2,8 @@
 //  AppGlobalInfo.swift
 //  <<< App 'dependent' >>>
 //
-//  AppGlobalInfo.swift - v1.8201...
+//  AppGlobalInfo.swift - v1.8301...
+//  Updated by        Daryl Cox on 11/13/2026. (Added an iPhone Duo <Simulator> device for DFW-PMA)
 //  Updated by        Daryl Cox on 11/12/2026. (Added 'isThisAKnownDevice(sCurrentMethodDisp:String)' method to the struct AppGlobalInfoKnownDevices).
 //  Updated by Claude/Daryl Cox on 11/11/2026. (Added 'AppGlobalInfoKnownDevices' - the list of the developer's known devices by 'sGlobalDeviceUniqueId' - moved here from AppMemoryMonitorOverlay.swift, where it was 'AppMemoryMonitorOverlayDevices').
 //  Updated by        Daryl Cox on 10/07/2026. (Added ENABLE_APP_GLOBALINFO_FOR_PARSECORE_DATA).
@@ -90,6 +91,7 @@ struct AppGlobalInfoKnownDevices
 
         "E5B704EA-A552-4BEF-81FA-A8F21739E4AE" : "iPad Pro 11-inch M4 (DFW-PMA vendor - VMA)",
         "BE875C41-DDF1-4246-ACA5-A5B93BEC2334" : "iPhone 14 Pro Max (DFW-PMA vendor - VMA)",
+        "EC5EB8D3-21CC-4A27-89F8-5DEEA4CCBC6A" : "iPhone Duo <Simulator> <DFW-PMA vendor - VMA)",
         
         "268BED6C-17AC-415D-B973-789F814E08BB" : "iPad Pro M4 26.2 (Tony's iMac)",
         "8B8A323D-D83D-43FB-9F30-1867E67D4F1F" : "Tony's iPhone"
