@@ -21,19 +21,9 @@ import CoreImage.CIFilterBuiltins
 // In production: move to its own DeveloperUnlockView.swift file in a shared module.
 // DeveloperFeaturesView stays per-app (different options per app).
 
-@JmEntityInfo(vers:"v1.0901")
+@JmEntityInfo(vers:"v1.1001")
 struct DeveloperUnlockView:View
 {
-
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "DeveloperUnlockView"
-        //  static let sClsVers      = "v1.0601"
-        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        //  static let bClsTrace     = true
-        //  static let bClsFileLog   = true
-    //  }
 
     // App Data field(s):
 
@@ -44,20 +34,19 @@ struct DeveloperUnlockView:View
     // is a singleton whose lifecycle we do NOT own.  The singleton is always alive so
     // @ObservedObject deallocation is not a concern.
 
-    @ObservedObject private var devUnlockMgr:JmDeveloperUnlockManager  = JmDeveloperUnlockManager.shared
+    @ObservedObject private var devUnlockMgr:JmDeveloperUnlockManager = JmDeveloperUnlockManager.shared
 
     // <<CHICKEN-TRACKS>> tfaManager not needed here - the debug display uses
     // devUnlockMgr.sCurrentExpectedCode (the baked-in developer secret) rather than
     // the user's enrolled 2FA account.  Retained commented-out in case a future
     // version of this view needs access to the user's account state.
-//  @ObservedObject private var tfaManager:TwoFactorManager          = TwoFactorManager.shared
+//  @ObservedObject private var tfaManager:TwoFactorManager           = TwoFactorManager.shared
 
-    @State          private var sEnteredCode:String                  = ""
-    @State          private var bShowDevFeatures:Bool                = false
+    @State          private var sEnteredCode:String                   = ""
+    @State          private var bShowDevFeatures:Bool                 = false
 
     var body:some View
     {
-
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body - 'isDevModeActive' is [\(devUnlockMgr.isDevModeActive)]...")
 
         NavigationStack
@@ -302,19 +291,9 @@ struct DeveloperUnlockView:View
 // redirect note, and the Lock button.  Dismiss here to return to Settings where
 // the developer sections are now visible.
 
-@JmEntityInfo(vers:"v1.0601")
+@JmEntityInfo(vers:"v1.0701")
 struct DeveloperFeaturesView:View
 {
-
-    //  struct ClassInfo
-    //  {
-        //  static let sClsId        = "DeveloperFeaturesView"
-        //  static let sClsVers      = "v1.0501"
-        //  static let sClsDisp      = sClsId+".("+sClsVers+"): "
-        //  static let sClsCopyRight = "Copyright (C) JustMacApps 2023-2026. All Rights Reserved."
-        //  static let bClsTrace     = true
-        //  static let bClsFileLog   = true
-    //  }
 
     // App Data field(s):
 
@@ -325,7 +304,6 @@ struct DeveloperFeaturesView:View
 
     var body:some View
     {
-
         let _ = appLogMsg("\(ClassInfo.sClsDisp):body - Invoked...")
 
         NavigationStack

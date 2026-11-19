@@ -3,6 +3,7 @@
 //  <<< App 'dependent' >>>
 //
 //  AppGlobalInfo.swift - v1.8301...
+//  Updated by        Daryl Cox on 11/19/2026. (Added an iPad device for DFW-PMA for Amazon)
 //  Updated by        Daryl Cox on 11/13/2026. (Added an iPhone Duo <Simulator> device for DFW-PMA)
 //  Updated by        Daryl Cox on 11/12/2026. (Added 'isThisAKnownDevice(sCurrentMethodDisp:String)' method to the struct AppGlobalInfoKnownDevices).
 //  Updated by Claude/Daryl Cox on 11/11/2026. (Added 'AppGlobalInfoKnownDevices' - the list of the developer's known devices by 'sGlobalDeviceUniqueId' - moved here from AppMemoryMonitorOverlay.swift, where it was 'AppMemoryMonitorOverlayDevices').
@@ -94,7 +95,9 @@ struct AppGlobalInfoKnownDevices
         "EC5EB8D3-21CC-4A27-89F8-5DEEA4CCBC6A" : "iPhone Duo <Simulator> <DFW-PMA vendor - VMA)",
         
         "268BED6C-17AC-415D-B973-789F814E08BB" : "iPad Pro M4 26.2 (Tony's iMac)",
-        "8B8A323D-D83D-43FB-9F30-1867E67D4F1F" : "Tony's iPhone"
+        "8B8A323D-D83D-43FB-9F30-1867E67D4F1F" : "Tony's iPhone",
+
+        "43A6FD87-E053-4C8F-955D-1F95FCDF0F93" : "Amazon's (slow) iPad",
     ]
 
     // Returns the known device's name if THIS device is on the list, otherwise nil...
